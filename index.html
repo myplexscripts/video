@@ -1589,21 +1589,25 @@ async function fetchExtras(ratingKey){
 }
 const EXTRA_LABELS={trailer:"Trailer",behindthescenes:"Behind the Scenes",deleted:"Deleted Scene",
   featurette:"Featurette",interview:"Interview",scene:"Scene",short:"Short",other:"Extra"};
+function extraCardHTML(e){
+  const label=EXTRA_LABELS[(e.subtype||"").toLowerCase()]||"Extra";
+  return `<button class="card wide extra-card" data-rk="${esc(String(e.ratingKey))}">
+    <div class="art"><img class="wide" loading="lazy" src="${img(e.thumb,480,270)}" alt="">
+      <div class="extra-badge">${esc(label)}</div>
+      ${e.duration?`<div class="extra-dur">${fmtClock(e.duration/1000)}</div>`:""}
+      <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
+    </div>
+    <div class="ct">${esc(e.title)}</div>
+  </button>`;
+}
 function extrasRailHTML(extras){
   if(!extras||!extras.length) return "";
-  const cards=extras.map(e=>{
-    const label=EXTRA_LABELS[(e.subtype||"").toLowerCase()]||"Extra";
-    return `<button class="card wide extra-card" data-rk="${esc(String(e.ratingKey))}">
-      <div class="art"><img class="wide" loading="lazy" src="${img(e.thumb,480,270)}" alt="">
-        <div class="extra-badge">${esc(label)}</div>
-        ${e.duration?`<div class="extra-dur">${fmtClock(e.duration/1000)}</div>`:""}
-        <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
-      </div>
-      <div class="ct">${esc(e.title)}</div>
-    </button>`;
-  }).join("");
-  return `<div class="rail-section"><div class="rail-head"><h3>Extras</h3><span class="count">${extras.length}</span></div>
-    <div class="carousel">${cards}</div></div>`;
+  const trailers=extras.filter(e=>/trailer/i.test(e.subtype||""));
+  const others=extras.filter(e=>!/trailer/i.test(e.subtype||""));
+  const rail=(title,items)=>!items.length?"":
+    `<div class="rail-section"><div class="rail-head"><h3>${title}</h3><span class="count">${items.length}</span></div>
+      <div class="carousel">${items.map(extraCardHTML).join("")}</div></div>`;
+  return rail("Trailers",trailers)+rail("Extras",others);
 }
 function wireExtras(c,extras,trailerBtnId){
   c.querySelectorAll(".extra-card").forEach(b=>{
@@ -1711,7 +1715,7 @@ async function openMovie(it){
     const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
       <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Start over</button>`
       :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
-    c.innerHTML=detailHero(m,true,resume,extras)+crewHTML(m)+extrasRailHTML(extras);
+    c.innerHTML=detailHero(m,true,resume,extras)+extrasRailHTML(extras)+crewHTML(m);
     wireBackdrop(c,m.art||m.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
@@ -1743,9 +1747,9 @@ async function openShow(it,jumpSeasonKey){
     c.innerHTML=detailHero(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
         <div class="season-rail" id="seasonRail"></div></div>`:"")
-      +crewHTML(show)
+      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`
       +extrasRailHTML(extras)
-      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`;
+      +crewHTML(show);
     wireBackdrop(c,show.art||show.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     injectFirstWatched(show.ratingKey,true);
