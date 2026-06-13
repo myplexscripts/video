@@ -287,6 +287,11 @@
   .art .watch-prog{position:absolute;left:6px;right:6px;bottom:6px;height:4px;background:rgba(0,0,0,.5);
     border-radius:3px;overflow:hidden}
   .art .watch-prog > i{display:block;height:100%;background:var(--accent);border-radius:3px}
+  .art .unwatched-dot{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;
+    background:var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.45)}
+  .art .unwatched-badge{position:absolute;top:8px;right:8px;min-width:22px;height:22px;padding:0 6px;
+    border-radius:11px;background:var(--accent);color:#141005;font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(0,0,0,.45)}
 
   /* Spotify-style mosaic cover for playlists/collections with no art of
      their own — built from the first few items' thumbnails. */
@@ -1184,12 +1189,22 @@ function card(it,wide,square){
   const mosaic=src?"":mosaicHTML(it._mosaicItems);
   const fallbackIcon = it.type==="playlist"?"ph-playlist" : it._collection?"ph-stack"
     : it.type==="show"?"ph-television" : "ph-film-slate";
+  let badge="";
+  if(!pct && !it._collection && it.type!=="playlist"){
+    if(it.type==="show"){
+      const unseen=(it.leafCount||0)-(it.viewedLeafCount||0);
+      if(unseen>0) badge=`<div class="unwatched-badge">${unseen}</div>`;
+    }else if(!it.viewCount){
+      badge=`<div class="unwatched-dot" aria-hidden="true"></div>`;
+    }
+  }
   b.innerHTML=`
     <div class="art${src||mosaic?"":" broken"}">
       ${src?`<img class="${useWide&&!square?"wide":""}" loading="lazy" alt="${esc(title)}"
         src="${src}" onerror="this.closest('.art').classList.add('broken')">`:mosaic}
       <i class="ph-fill ${fallbackIcon} art-fallback" aria-hidden="true"></i>
       <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
+      ${badge}
       ${pct?`<div class="watch-prog"><i style="width:${pct}%"></i></div>`:""}
     </div>
     <div class="ct">${esc(title)}</div>
@@ -1241,7 +1256,8 @@ async function showLibraryRecommended(section){
     }else{
       videoHubs.forEach(h=>{
         const wide=h.items.every(x=>x.type==="episode");
-        c.appendChild(railSection(h.title,h.items,wide,false));
+        const seeAllHref=wide?null:`/library/${section.key}/all`;
+        c.appendChild(railSection(h.title,h.items,wide,false,undefined,seeAllHref));
       });
     }
     wireLibTabs(c);
