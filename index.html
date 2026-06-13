@@ -190,6 +190,13 @@
   .hero p{color:var(--dim);line-height:1.6;font-size:14px;max-width:560px;margin-bottom:24px;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-video{position:absolute;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);
+    object-fit:cover;opacity:0;transition:opacity 1s var(--ease);pointer-events:none}
+  .hero-video.show{opacity:1}
+  .hero-trailer-ctrls{position:absolute;right:var(--edge);bottom:24px;z-index:2;display:flex;gap:8px;
+    opacity:0;transition:opacity .4s var(--ease)}
+  .hero-trailer-ctrls.show{opacity:1}
+  .hero-trailer-ctrls .pbtn{width:40px;height:40px;font-size:17px;border-radius:10px}
 
   /* ---- SECTION / RAIL ----
      Each rail can carry its own ambient color wash (.rail-ambient), a
@@ -1045,7 +1052,7 @@ async function playlistMeta(ratingKey){
   catch(_){ return {ratingKey,title:"Playlist"}; }
 }
 async function route(){
-  closeSidebar(); closeLibMenus();
+  closeSidebar(); closeLibMenus(); cleanupHeroVideo();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
   const parts=pathPart.split("/").filter(Boolean).map(p=>{ try{return decodeURIComponent(p);}catch(_){return p;} });
@@ -1154,7 +1161,67 @@ async function heroEl(it){
       const r=pathForItem(target); if(r) navigate(r); else openItem(target);
     };
   },0);
+  setupHeroTrailer(wrap,it);
   return wrap;
+}
+/* ---- HERO TRAILER ----
+   Passive enhancement: if the hero item (or its show, for episodes) has a
+   trailer extra with a direct-playable Part, fade it in muted/looping over
+   the static backdrop after a short delay. Any failure leaves the static
+   .hero-bg in place. */
+let heroVideoEl=null, heroVideoToken=0;
+function cleanupHeroVideo(){
+  heroVideoToken++;
+  if(heroVideoEl){ heroVideoEl.pause(); heroVideoEl.removeAttribute("src"); heroVideoEl.load(); heroVideoEl=null; }
+}
+async function setupHeroTrailer(wrap,it){
+  const token=++heroVideoToken;
+  try{
+    const rk=it.type==="episode"?it.grandparentRatingKey:it.ratingKey;
+    if(!rk) return;
+    const extras=await fetchExtras(rk);
+    if(token!==heroVideoToken) return;
+    let trailer=extras.find(e=>/trailer/i.test(e.subtype||""));
+    if(!trailer) return;
+    if(!partOf(trailer)){
+      const mc=await api(`/library/metadata/${trailer.ratingKey}`);
+      if(token!==heroVideoToken) return;
+      trailer=(mc.Metadata||[])[0]||trailer;
+    }
+    const part=partOf(trailer);
+    if(!part||!part.key) return;
+    const video=document.createElement("video");
+    video.className="hero-video"; video.muted=true; video.loop=true; video.autoplay=true;
+    video.playsInline=true; video.preload="auto"; video.setAttribute("aria-hidden","true");
+    const ctrls=el("div","hero-trailer-ctrls");
+    ctrls.innerHTML=`<button class="pbtn" id="heroMute" aria-label="Unmute trailer"><i class="ph-fill ph-speaker-x" aria-hidden="true"></i></button>
+      <button class="pbtn" id="heroClose" aria-label="Stop trailer preview"><i class="ph ph-x" aria-hidden="true"></i></button>`;
+    let revealed=false;
+    const reveal=()=>{
+      if(revealed||token!==heroVideoToken) return; revealed=true;
+      video.classList.add("show"); ctrls.classList.add("show");
+      video.play().catch(()=>{});
+    };
+    video.addEventListener("canplay",()=>setTimeout(reveal,1200));
+    video.addEventListener("error",()=>{
+      if(heroVideoEl===video) heroVideoEl=null;
+      video.remove(); ctrls.remove();
+    });
+    const muteBtn=ctrls.querySelector("#heroMute");
+    muteBtn.onclick=()=>{
+      video.muted=!video.muted;
+      muteBtn.querySelector("i").className=video.muted?"ph-fill ph-speaker-x":"ph-fill ph-speaker-high";
+      muteBtn.setAttribute("aria-label",video.muted?"Unmute trailer":"Mute trailer");
+    };
+    ctrls.querySelector("#heroClose").onclick=()=>{
+      cleanupHeroVideo();
+      video.remove(); ctrls.remove();
+    };
+    wrap.querySelector(".hero-scrim").insertAdjacentElement("beforebegin",video);
+    wrap.appendChild(ctrls);
+    video.src=`${server.uri}${part.key}?X-Plex-Token=${server.token}`;
+    heroVideoEl=video;
+  }catch(_){}
 }
 
 /* ---- RAIL SECTION ----
