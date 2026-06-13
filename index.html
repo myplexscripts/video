@@ -142,7 +142,7 @@
   #content > .rail-section:first-child,#content > .rail-head:first-child,
   #content > .grid-view:first-child,#content > .empty:first-child,
   #content > .loading:first-child,#content > .err:first-child,
-  #content > .lib-tabs:first-child{margin-top:var(--pill-clear)}
+  #content > .lib-tabs:first-child,#content > .search-head:first-child{margin-top:var(--pill-clear)}
 
   /* ---- FLOATING GLASS BAR ----
      No header bar: a single floating "Liquid Glass" search pill hovers over
@@ -236,6 +236,11 @@
   .lib-toolbar .lib-title{font-size:22px;font-weight:800;letter-spacing:-.02em}
   .lib-toolbar .lib-count{font-size:12px;color:var(--faint);font-weight:500}
   .lib-toolbar .spacer{flex:1 1 auto}
+
+  /* ---- SEARCH RESULTS HEADER ---- */
+  .search-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 var(--edge) 8px}
+  .search-head h2{font-size:28px;font-weight:900;letter-spacing:-.03em}
+  .search-head .count{font-size:13px;color:var(--faint);font-weight:500}
   .lib-ctrl-wrap{position:relative}
   .lib-ctrl{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);
     backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);
@@ -1881,8 +1886,14 @@ async function runSearch(q){
     const hubs=(mc.Hub||[]).map(h=>({title:h.title,
       items:(h.Metadata||[]).filter(x=>["movie","show","episode","season"].includes(x.type))}))
       .filter(h=>h.items.length);
-    c.innerHTML="";
-    if(!hubs.length){ c.innerHTML="<div class='empty'><i class='ph ph-magnifying-glass' aria-hidden='true'></i>No results.</div>"; return; }
+    const total=hubs.reduce((a,h)=>a+h.items.length,0);
+    const head=`<div class="search-head"><h2>"${esc(q)}"</h2>${total?`<span class="count">${total} result${total===1?"":"s"}</span>`:""}</div>`;
+    if(!hubs.length){
+      c.innerHTML=head+`<div class="empty"><i class="ph ph-magnifying-glass" aria-hidden="true"></i>No results for "${esc(q)}"
+        <div style="margin-top:6px;font-size:13px">Try a different title, cast member, or genre.</div></div>`;
+      return;
+    }
+    c.innerHTML=head;
     hubs.forEach(h=>c.appendChild(railSection(h.title,h.items,h.items.every(i=>i.type==="episode"),false)));
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
