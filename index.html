@@ -192,6 +192,39 @@
   .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px;
     padding:4px 36px 16px}
 
+  /* ---- LIBRARY TOOLBAR ----
+     A "Liquid Glass" control strip for the library grid: live, client-side
+     sort / watch-state filter / genre filter — no round-trip, no reload. */
+  .lib-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 44px 6px}
+  .lib-toolbar .lib-title{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .lib-toolbar .lib-count{font-size:12px;color:var(--faint);font-weight:500}
+  .lib-toolbar .spacer{flex:1 1 auto}
+  .lib-ctrl-wrap{position:relative}
+  .lib-ctrl{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);
+    backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);
+    border:1px solid var(--line2);border-radius:100px;height:38px;padding:0 14px;color:var(--text);
+    font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:background-color .15s,border-color .15s}
+  .lib-ctrl:hover{background:var(--surface3)}
+  .lib-ctrl i.lead{font-size:15px;color:var(--faint)}
+  .lib-ctrl .cap{color:var(--faint);font-weight:500}
+  .lib-ctrl i.caret{font-size:12px;color:var(--faint);transition:transform .15s var(--ease)}
+  .lib-ctrl-wrap.open .lib-ctrl{background:var(--surface3);border-color:var(--accent)}
+  .lib-ctrl-wrap.open .lib-ctrl i.caret{transform:rotate(180deg)}
+  .lib-menu{position:absolute;top:46px;right:0;z-index:14;min-width:210px;max-height:min(60vh,420px);
+    overflow-y:auto;background:var(--glass);backdrop-filter:blur(40px) saturate(1.5);
+    -webkit-backdrop-filter:blur(40px) saturate(1.5);border:1px solid var(--line2);
+    border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:6px;display:none}
+  .lib-ctrl-wrap.open .lib-menu{display:block}
+  .lib-menu button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;
+    border:none;color:var(--text);padding:10px 12px;font-size:13px;font-weight:500;border-radius:9px;
+    cursor:pointer;transition:background-color .1s;min-height:40px;font-family:var(--font)}
+  .lib-menu button:hover{background:var(--surface2)}
+  .lib-menu button.active{color:var(--accent)}
+  .lib-menu button i.ck{font-size:15px;color:var(--accent);opacity:0;width:16px;flex:0 0 auto}
+  .lib-menu button.active i.ck{opacity:1}
+  .lib-menu button .ml{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
   /* ---- CARD ----
      Hover feedback is a single, gentle elevation cue (shadow) plus a soft
      play affordance — no movement, scaling, or stacked effects. */
@@ -493,6 +526,7 @@
     .detail-poster.wide{width:240px}
     .section,.season-rail,.ep-list,.stat-row{padding-left:24px;padding-right:24px}
     .rail-head,.carousel,.grid-view{padding-left:24px;padding-right:24px}
+    .lib-toolbar{margin-left:24px;margin-right:24px}
     .coll-hero{padding:28px 24px}
     .coll-art{width:160px}
     .carousel .card{width:150px}.carousel .card.wide{width:240px}
@@ -515,6 +549,9 @@
     .ep-thumb{width:100%}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
+    .lib-toolbar .lib-title{font-size:18px}
+    .lib-ctrl .cap{display:none}
+    .lib-menu{max-width:calc(100vw - 24px)}
 
     /* Collapse the floating search to a glass icon button; it expands to a
        pill once focused so it doesn't dominate small screens. */
@@ -932,6 +969,20 @@ function card(it,wide,square){
 }
 
 /* ============================================================ LIBRARY */
+const LIB_SORTS=[
+  {key:"added",  label:"Recently Added",   icon:"ph-clock-counter-clockwise"},
+  {key:"title",  label:"Title (A–Z)",      icon:"ph-sort-ascending"},
+  {key:"year",   label:"Release Year",     icon:"ph-calendar-blank"},
+  {key:"rating", label:"Rating",           icon:"ph-star"},
+  {key:"watched",label:"Recently Watched", icon:"ph-eye"},
+];
+const LIB_FILTERS=[
+  {key:"all",       label:"All"},
+  {key:"unwatched", label:"Unwatched"},
+  {key:"inprogress",label:"In Progress"},
+  {key:"watched",   label:"Watched"},
+];
+let libState=null;
 async function showLibrary(section){
   setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
@@ -943,12 +994,109 @@ async function showLibrary(section){
     const collItems=(colls.Metadata||colls.Directory||[]);
     if(collItems.length) c.appendChild(railSection("Collections", collItems.map(x=>({...x,_collection:true})), false, false));
     const items=all.Metadata||[];
-    const head=el("div","rail-head"); head.style.marginTop="36px";
-    head.innerHTML=`<h3>All ${section.type==="show"?"Shows":"Movies"}</h3><span class="count">${items.length}</span>`;
-    const grid=el("div","grid-view");
-    items.forEach(it=>grid.appendChild(card(it)));
-    c.appendChild(head); c.appendChild(grid);
+    const genreSet=new Set();
+    items.forEach(it=>(it.Genre||[]).forEach(g=>g.tag&&genreSet.add(g.tag)));
+    const genres=[...genreSet].sort((a,b)=>a.localeCompare(b));
+    libState={section,items,genres,sort:"added",filter:"all",genre:""};
+    const wrap=el("div","lib-wrap");
+    // Clear the fixed floating search/menu pills when the toolbar is topmost.
+    wrap.style.marginTop=collItems.length?"32px":"76px";
+    wrap.innerHTML=libToolbarHTML(section)+`<div class="grid-view" id="libGrid"></div>`;
+    c.appendChild(wrap);
+    wireLibToolbar();
+    renderLibGrid();
   }catch(e){ c.innerHTML=errHTML(e.message); }
+}
+function libToolbarHTML(section){
+  const sort=LIB_SORTS.find(s=>s.key===libState.sort)||LIB_SORTS[0];
+  const filter=LIB_FILTERS.find(f=>f.key===libState.filter)||LIB_FILTERS[0];
+  const menu=(items,kind,cur)=>items.map(o=>{
+    const v=o.key!==undefined?o.key:o;
+    return `<button data-${kind}="${esc(v)}" class="${v===cur?"active":""}" role="menuitemradio" aria-checked="${v===cur}">
+      <i class="ph ph-check ck" aria-hidden="true"></i><span class="ml">${esc(o.label!==undefined?o.label:(v||"All Genres"))}</span></button>`;
+  }).join("");
+  const genreCtrl=libState.genres.length?`
+    <div class="lib-ctrl-wrap" id="libGenreWrap">
+      <button class="lib-ctrl" id="libGenreBtn" aria-haspopup="true" aria-expanded="false">
+        <i class="ph ph-tag lead" aria-hidden="true"></i><span id="libGenreCap">${libState.genre?esc(libState.genre):"All Genres"}</span>
+        <i class="ph ph-caret-down caret" aria-hidden="true"></i></button>
+      <div class="lib-menu" role="menu">${menu([{key:"",label:"All Genres"},...libState.genres.map(g=>({key:g,label:g}))],"genre",libState.genre)}</div>
+    </div>`:"";
+  return `<div class="lib-toolbar">
+    <span class="lib-title">All ${section.type==="show"?"Shows":"Movies"}</span>
+    <span class="lib-count" id="libCount"></span>
+    <span class="spacer"></span>
+    <div class="lib-ctrl-wrap" id="libSortWrap">
+      <button class="lib-ctrl" id="libSortBtn" aria-haspopup="true" aria-expanded="false">
+        <i class="ph ${sort.icon} lead" aria-hidden="true"></i><span class="cap">Sort:</span> <span id="libSortCap">${esc(sort.label)}</span>
+        <i class="ph ph-caret-down caret" aria-hidden="true"></i></button>
+      <div class="lib-menu" role="menu">${menu(LIB_SORTS,"sort",libState.sort)}</div>
+    </div>
+    <div class="lib-ctrl-wrap" id="libFilterWrap">
+      <button class="lib-ctrl" id="libFilterBtn" aria-haspopup="true" aria-expanded="false">
+        <i class="ph ph-funnel lead" aria-hidden="true"></i><span class="cap">Show:</span> <span id="libFilterCap">${esc(filter.label)}</span>
+        <i class="ph ph-caret-down caret" aria-hidden="true"></i></button>
+      <div class="lib-menu" role="menu">${menu(LIB_FILTERS,"filter",libState.filter)}</div>
+    </div>
+    ${genreCtrl}
+  </div>`;
+}
+function wireLibToolbar(){
+  ["libSortWrap","libFilterWrap","libGenreWrap"].forEach(id=>{
+    const w=$("#"+id); if(!w) return;
+    const btn=w.querySelector(".lib-ctrl");
+    btn.onclick=e=>{ e.stopPropagation();
+      const open=w.classList.contains("open"); closeLibMenus();
+      if(!open){ w.classList.add("open"); btn.setAttribute("aria-expanded","true"); } };
+    w.querySelectorAll(".lib-menu button").forEach(b=>{
+      b.onclick=()=>{
+        if("sort" in b.dataset) libState.sort=b.dataset.sort;
+        else if("filter" in b.dataset) libState.filter=b.dataset.filter;
+        else if("genre" in b.dataset) libState.genre=b.dataset.genre;
+        closeLibMenus(); updateLibControls(); renderLibGrid();
+      };
+    });
+  });
+}
+function closeLibMenus(){ document.querySelectorAll(".lib-ctrl-wrap.open").forEach(w=>{
+  w.classList.remove("open"); const b=w.querySelector(".lib-ctrl"); if(b) b.setAttribute("aria-expanded","false"); }); }
+function updateLibControls(){
+  const sort=LIB_SORTS.find(s=>s.key===libState.sort)||LIB_SORTS[0];
+  const filter=LIB_FILTERS.find(f=>f.key===libState.filter)||LIB_FILTERS[0];
+  const set=(sel,txt)=>{const e=$(sel);if(e)e.textContent=txt;};
+  set("#libSortCap",sort.label); set("#libFilterCap",filter.label); set("#libGenreCap",libState.genre||"All Genres");
+  const si=$("#libSortBtn .lead"); if(si) si.className="ph "+sort.icon+" lead";
+  const sync=(id,attr,cur)=>{ const w=$("#"+id); if(!w) return;
+    w.querySelectorAll(".lib-menu button").forEach(b=>{
+      const on=(b.dataset[attr]||"")===cur; b.classList.toggle("active",on); b.setAttribute("aria-checked",on); }); };
+  sync("libSortWrap","sort",libState.sort); sync("libFilterWrap","filter",libState.filter); sync("libGenreWrap","genre",libState.genre);
+}
+function renderLibGrid(){
+  const grid=$("#libGrid"); if(!grid||!libState) return;
+  const f=libState.filter, g=libState.genre;
+  let items=libState.items.filter(it=>{
+    if(g && !(it.Genre||[]).some(x=>x.tag===g)) return false;
+    if(f==="all") return true;
+    const isShow=it.type==="show", wc=it.viewedLeafCount||0, total=it.leafCount||0;
+    if(f==="inprogress") return isShow ? (wc>0&&wc<total) : (it.viewOffset>0);
+    if(f==="watched")    return isShow ? (total>0&&wc>=total) : (it.viewCount>0&&!it.viewOffset);
+    if(f==="unwatched")  return isShow ? (wc===0) : (!it.viewCount&&!it.viewOffset);
+    return true;
+  });
+  const val={
+    added:  it=>it.addedAt||0,
+    title:  it=>(it.titleSort||it.title||"").toLowerCase(),
+    year:   it=>it.year||parseInt((it.originallyAvailableAt||"").slice(0,4))||0,
+    rating: it=>it.rating||it.audienceRating||0,
+    watched:it=>it.lastViewedAt||0,
+  }[libState.sort]||(it=>it.addedAt||0);
+  items.sort((a,b)=> libState.sort==="title"
+    ? String(val(a)).localeCompare(String(val(b)))
+    : (val(b)-val(a)));
+  grid.innerHTML="";
+  if(!items.length){ grid.innerHTML="<div class='empty' style='grid-column:1/-1'><i class='ph ph-funnel' aria-hidden='true'></i>No titles match these filters.</div>"; }
+  else items.forEach(it=>grid.appendChild(card(it)));
+  const cnt=$("#libCount"); if(cnt) cnt.textContent=`${items.length} ${items.length===1?"title":"titles"}`;
 }
 
 /* ============================================================ PLAYLISTS */
@@ -1833,6 +1981,9 @@ $("#menuToggle").onclick=()=>{ $("#sidebar").classList.add("open"); $("#scrimNav
 $("#scrimNav").onclick=closeSidebar;
 function closeSidebar(){ $("#sidebar").classList.remove("open"); $("#scrimNav").classList.remove("show"); }
 $("#searchBox").addEventListener("click",()=>$("#search").focus());
+// Dismiss any open library dropdown when clicking elsewhere or pressing Escape.
+document.addEventListener("click",closeLibMenus);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeLibMenus(); });
 
 /* ============================================================ INIT */
 (async function init(){
