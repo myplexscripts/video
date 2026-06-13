@@ -180,7 +180,7 @@
   .hero-inner{position:relative;padding:0 var(--edge) 50px;max-width:700px}
   .hero-kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:1px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
-  .hero h2{font-size:clamp(34px,5vw,64px);font-weight:900;letter-spacing:-.04em;line-height:.98}
+  .hero h2{font-size:clamp(40px,7.5vw,92px);font-weight:900;letter-spacing:-.04em;line-height:.97}
   .hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:18px 0 14px;font-weight:500}
   .hero-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
@@ -205,6 +205,12 @@
   .rail-head h3{font-size:21px;font-weight:800;letter-spacing:-.02em}
   .featured .rail-head h3{font-size:27px}
   .rail-head .count{font-size:12px;color:var(--faint);font-weight:500;padding-bottom:3px}
+  .see-all{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;
+    font-weight:600;color:var(--dim);background:none;border:none;cursor:pointer;
+    padding-bottom:3px;font-family:var(--font);transition:color .15s var(--ease)}
+  .see-all:hover{color:var(--text)}
+  .see-all i{font-size:14px;transition:transform .15s var(--ease)}
+  .see-all:hover i{transform:translateX(2px)}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
     -webkit-overflow-scrolling:touch}
   .carousel::-webkit-scrollbar{height:0}
@@ -658,7 +664,7 @@
   }
   @media(max-width:560px){
     .p-vol{display:none}.p-status{display:none}
-    .hero h2{font-size:32px}
+    .hero h2{font-size:40px}
     .hero-inner{padding-bottom:36px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:210px}
@@ -1073,8 +1079,12 @@ async function showHome(){
       return /continue|ondeck|on.?deck/.test(id) || t==="continue watching" || t==="on deck";
     };
     const videoHubs=(hubs.Hub||[]).filter(h=>!isDeckHub(h))
-      .map(h=>({title:h.title, items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),
-        lib:(h.Metadata&&h.Metadata[0]&&h.Metadata[0].librarySectionTitle)||""}))
+      .map(h=>{
+        const first=h.Metadata&&h.Metadata[0];
+        return {title:h.title, items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),
+          lib:(first&&first.librarySectionTitle)||"",
+          sectionId:first&&first.librarySectionID, itemType:first&&first.type};
+      })
       .filter(h=>h.items.length);
 
     c.innerHTML="";
@@ -1083,7 +1093,8 @@ async function showHome(){
     if(cw.length) c.appendChild(railSection("Continue Watching", cw, true, true));
     videoHubs.forEach((h,i)=>{
       const wide = h.items.every(x=>x.type==="episode");
-      c.appendChild(railSection(h.title,h.items,wide,false,h.lib));
+      const seeAllHref=(h.sectionId&&(h.itemType==="movie"||h.itemType==="show"))?`/library/${h.sectionId}/all`:null;
+      c.appendChild(railSection(h.title,h.items,wide,false,h.lib,seeAllHref));
     });
     if(!cw.length && !videoHubs.length)
       c.innerHTML="<div class='empty'><i class='ph ph-film-strip' aria-hidden='true'></i>Nothing here yet. Add some media.</div>";
@@ -1105,6 +1116,8 @@ async function heroEl(it){
   const meta=isEp
     ? `S${it.parentIndex||0} · E${it.index||0} · ${esc(it.title||"")}`
     : [year, fmtDur(it.duration), it.contentRating].filter(Boolean).join(" · ");
+  const ratingBadges=ratingBadgesHTML(it);
+  const ratingFallback=ratingBadges?"":(it.rating?`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)" aria-hidden="true"></i> ${(+it.rating).toFixed(1)}</span>`:"");
   wrap.innerHTML=`
     <div class="hero-bg" style="background-image:url('${imgBlur(art)}')"></div>
     <div class="hero-scrim"></div>
@@ -1112,7 +1125,7 @@ async function heroEl(it){
       <div class="hero-kicker"><i class="ph-fill ${it.viewOffset?'ph-play-circle':'ph-sparkle'}" aria-hidden="true"></i>${it.viewOffset?'Continue Watching':'Featured'}</div>
       <h2>${esc(title)}</h2>
       <div class="hero-meta">
-        ${it.rating?`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)" aria-hidden="true"></i> ${(+it.rating).toFixed(1)}</span>`:""}
+        ${ratingBadges}${ratingFallback}
         <span>${esc(meta)}</span>
       </div>
       <p>${esc(it.summary||"")}</p>
@@ -1137,7 +1150,7 @@ async function heroEl(it){
 /* ---- RAIL SECTION ----
    Each rail gets its own subtle UltraBlur color wash, derived from its
    first item's art, plus an optional small "library" kicker label. */
-function railSection(title,items,wide,featured,libLabel){
+function railSection(title,items,wide,featured,libLabel,seeAllHref){
   const sec=el("div","rail-section"+(featured?" featured":""));
   const firstArt=items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb||items[0].parentThumb);
   if(firstArt){
@@ -1146,7 +1159,8 @@ function railSection(title,items,wide,featured,libLabel){
     sec.appendChild(amb);
   }
   const head=el("div","rail-head");
-  head.innerHTML=`<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>`;
+  head.innerHTML=`<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAllHref?`<button class="see-all">See All <i class="ph ph-arrow-right" aria-hidden="true"></i></button>`:""}`;
+  if(seeAllHref) head.querySelector(".see-all").onclick=()=>navigate(seeAllHref);
   const row=el("div","carousel");
   items.forEach(it=>row.appendChild(card(it,wide)));
   sec.appendChild(head); sec.appendChild(row);
@@ -1499,7 +1513,10 @@ function episodeHero(m,actionsHTML){
 /* ---- RATINGS ROW ----
    Parses Plex's Rating[] (image-keyed by source) into IMDb / Rotten Tomatoes /
    TMDB badges, plus a Trailer badge if one is available among the extras. */
-function ratingsRowHTML(m,extras){
+/* ---- RATING BADGES ----
+   Per-source colored badges (IMDb/RT-critic/RT-audience/TMDB), shared by
+   the detail-page ratings row and the home hero's meta line. */
+function ratingBadgesHTML(m){
   const out=[];
   (m.Rating||[]).forEach(r=>{
     const src=r.image||"", val=r.value; if(val==null) return;
@@ -1514,9 +1531,14 @@ function ratingsRowHTML(m,extras){
       out.push(`<span class="rating-badge" aria-label="TMDB rating ${(+val).toFixed(1)} out of 10"><span class="src tmdb"><i class="ph-fill ph-film-slate" aria-hidden="true"></i></span><b>${(+val).toFixed(1)}</b></span>`);
     }
   });
+  return out.join("");
+}
+function ratingsRowHTML(m,extras){
+  const out=[ratingBadgesHTML(m)];
   const trailer=(extras||[]).find(e=>/trailer/i.test(e.subtype||""));
   if(trailer) out.push(`<button class="rating-badge trailer" id="ratingsTrailerBtn"><i class="ph-fill ph-play-circle" aria-hidden="true"></i>Trailer</button>`);
-  return out.length?`<div class="ratings-row">${out.join("")}</div>`:"";
+  const body=out.filter(Boolean).join("");
+  return body?`<div class="ratings-row">${body}</div>`:"";
 }
 /* ---- STAT ROW ----
    Added / first-watched / last-watched / episode-progress, mirroring the
