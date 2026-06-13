@@ -464,7 +464,7 @@
 
   .p-controls{display:flex;align-items:center;gap:6px}
   .p-controls .spacer{flex:1}
-  .p-controls .div{width:1px;height:22px;background:rgba(255,255,255,.12);flex:0 0 auto;margin:0 2px}
+  .p-controls .p-divider{width:1px;height:22px;background:rgba(255,255,255,.12);flex:0 0 auto;margin:0 2px}
   .p-time{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums;margin:0 10px;white-space:nowrap;
     font-weight:500}
   .p-time .slash{color:var(--faint);margin:0 4px}
@@ -588,7 +588,7 @@
     .p-top{padding:14px 12px}
     .p-bottom{padding:8px 12px max(16px,env(safe-area-inset-bottom))}
     .p-controls{gap:2px}
-    .p-controls .div{display:none}
+    .p-controls .p-divider{display:none}
     .p-time{font-size:12px;margin:0 4px}
     #pipBtn{display:none}
     .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
@@ -683,7 +683,7 @@
       <button class="pbtn play-main" id="playBtn" aria-label="Play"><i class="ph-fill ph-play" aria-hidden="true"></i></button>
       <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i><span class="skip-n" aria-hidden="true">10</span></button>
       <button class="pbtn bare hidden" id="nextEpBtn" aria-label="Next episode" title="Next episode"><i class="ph-fill ph-skip-forward" aria-hidden="true"></i></button>
-      <div class="div" aria-hidden="true"></div>
+      <div class="p-divider" aria-hidden="true"></div>
       <div class="p-time"><span id="curTime">0:00</span><span class="slash">/</span><span id="durTime">0:00</span></div>
       <div class="p-vol"><button class="pbtn bare" id="muteBtn" aria-label="Mute"><i class="ph ph-speaker-high" aria-hidden="true"></i></button>
         <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume"></div>
