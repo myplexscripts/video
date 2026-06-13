@@ -99,11 +99,11 @@
      Used on detail-style pages (movie/show/season/collection/playlist) and the
      player. Grid/list pages leave it hidden to keep things calm and legible. */
   #ultraBlur{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-  .ub-layer{position:absolute;inset:-15%;background-size:cover;background-position:center;
-    opacity:0;transition:opacity 1.1s var(--ease);filter:blur(90px) saturate(1.25)}
-  .ub-layer.show{opacity:.5}
+  .ub-layer{position:absolute;inset:-20%;background-size:cover;background-position:center;
+    opacity:0;transition:opacity 1.2s var(--ease);filter:blur(110px) saturate(1.9) brightness(1.05)}
+  .ub-layer.show{opacity:.65}
   .ub-scrim{position:absolute;inset:0;
-    background:linear-gradient(180deg,rgba(10,10,12,.35) 0%,rgba(10,10,12,.7) 55%,var(--bg) 100%)}
+    background:linear-gradient(180deg,rgba(10,10,12,.12) 0%,rgba(10,10,12,.5) 55%,var(--bg) 100%)}
 
   /* ---- APP SHELL ---- */
   #app{display:none;height:100%;position:relative;z-index:1}
@@ -130,23 +130,34 @@
   .sidebar-foot{margin-top:auto;padding:10px;border-top:1px solid var(--line)}
 
   .main{overflow-y:auto;position:relative;scroll-behavior:smooth}
-  .topbar{position:sticky;top:0;z-index:8;backdrop-filter:blur(20px);
-    background:rgba(10,10,12,.6);border-bottom:1px solid transparent;padding:14px 32px;
-    display:flex;align-items:center;gap:14px;transition:background-color .2s,border-color .2s}
-  .topbar.scrolled{border-color:var(--line);background:rgba(10,10,12,.88)}
-  .topbar h1{font-size:20px;font-weight:700;letter-spacing:-.02em}
-  .menu-toggle{display:none;background:var(--surface);border:none;width:44px;height:44px;
-    border-radius:var(--radius-xs);align-items:center;justify-content:center;font-size:18px;
-    transition:background-color .15s}
-  .menu-toggle:hover{background:var(--surface2)}
-  .searchbox{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--surface);
-    border:1px solid var(--line);border-radius:100px;padding:9px 16px;width:240px;
-    transition:border-color .15s,background-color .15s}
-  .searchbox:focus-within{border-color:var(--line2);background:var(--surface2)}
-  .searchbox i{color:var(--faint);font-size:16px}
+  .content{padding:0 0 max(80px,env(safe-area-inset-bottom));position:relative}
+  #content > .rail-section:first-child,#content > .rail-head:first-child,
+  #content > .grid-view:first-child,#content > .empty:first-child,
+  #content > .loading:first-child,#content > .err:first-child{margin-top:32px}
+
+  /* ---- FLOATING GLASS BAR ----
+     No header bar: a single floating "Liquid Glass" search pill hovers over
+     the page (and, on mobile, a matching nav toggle). Both stay fixed in
+     place while content and color scroll beneath them. */
+  .menu-toggle{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));
+    left:max(16px,env(safe-area-inset-left));z-index:15;background:var(--surface2);
+    backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);
+    border:1px solid var(--line2);width:44px;height:44px;border-radius:50%;
+    align-items:center;justify-content:center;font-size:18px;color:var(--text);
+    box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.08);
+    transition:background-color .15s,box-shadow .15s}
+  .menu-toggle:hover{background:var(--surface3)}
+  .searchbox{position:fixed;top:max(16px,env(safe-area-inset-top));
+    right:max(24px,env(safe-area-inset-right));z-index:15;display:flex;align-items:center;gap:8px;
+    background:var(--surface2);backdrop-filter:blur(28px) saturate(1.6);-webkit-backdrop-filter:blur(28px) saturate(1.6);
+    border:1px solid var(--line2);border-radius:100px;height:44px;padding:0 18px;width:240px;
+    box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.08);
+    transition:border-color .15s,background-color .15s,box-shadow .15s,width .2s,padding .2s}
+  .searchbox:focus-within{background:var(--surface3);box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.1)}
+  .searchbox i{color:var(--faint);font-size:16px;flex:0 0 auto}
   .searchbox input{background:none;border:none;color:var(--text);font-size:13px;width:100%;outline:none;
     font-family:var(--font)}
-  .content{padding:0 0 80px;position:relative}
+  .searchbox input::placeholder{color:var(--faint)}
 
   /* ---- HERO ---- */
   .hero{position:relative;height:min(64vh,600px);min-height:420px;display:flex;align-items:flex-end;
@@ -190,11 +201,15 @@
   .carousel .card.wide{width:290px}
   .card:focus-visible .art{outline:2px solid var(--accent);outline-offset:2px}
   .art{position:relative;border-radius:14px;overflow:hidden;background:var(--bg2);
-    box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease)}
+    box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease);aspect-ratio:2/3}
+  .card.wide .art{aspect-ratio:16/9}
+  .card.square .art{aspect-ratio:1/1}
   .card:hover .art,.card:focus-visible .art{box-shadow:var(--shadow)}
-  .art img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block}
-  .art img.wide{aspect-ratio:16/9}
-  .card.square .art img{aspect-ratio:1/1}
+  .art img{width:100%;height:100%;object-fit:cover;display:block}
+  .art .art-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+    font-size:40px;color:var(--faint)}
+  .art.broken img{display:none}
+  .art.broken .art-fallback{display:flex}
   .art .play-hover{position:absolute;inset:0;background:rgba(0,0,0,.25);
     display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s var(--ease)}
   .card:hover .art .play-hover,.card:focus-visible .art .play-hover{opacity:1}
@@ -233,7 +248,13 @@
   .detail-row{position:relative;display:flex;gap:32px;padding:44px;align-items:flex-end;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
     box-shadow:var(--shadow-lg);aspect-ratio:2/3;object-fit:cover;background:var(--bg2)}
+  .detail-poster.wide{width:340px;aspect-ratio:16/9}
   .detail-info{flex:1;min-width:0;padding-bottom:6px}
+  .ep-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:1px;
+    text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:16px;
+    background:none;border:none;cursor:pointer;transition:opacity .15s var(--ease)}
+  .ep-kicker:hover{opacity:.7}
+  .ep-kicker .sep{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.5}
   .detail-info h2{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98}
   .detail-info .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:16px 0;font-weight:500}
@@ -312,10 +333,14 @@
 
   /* ---- COLLECTION / PLAYLIST HERO ---- */
   .coll-hero{position:relative;padding:44px;display:flex;gap:32px;align-items:flex-end;flex-wrap:wrap}
-  .coll-art{width:220px;aspect-ratio:2/3;flex:0 0 auto;border-radius:var(--radius-lg);overflow:hidden;
-    box-shadow:var(--shadow-lg);background:var(--bg2)}
+  .coll-art{position:relative;width:220px;aspect-ratio:2/3;flex:0 0 auto;border-radius:var(--radius-lg);
+    overflow:hidden;box-shadow:var(--shadow-lg);background:var(--bg2)}
   .coll-art.square{aspect-ratio:1/1}
   .coll-art img{width:100%;height:100%;object-fit:cover;display:block}
+  .coll-art .art-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+    font-size:56px;color:var(--faint)}
+  .coll-art.broken img{display:none}
+  .coll-art.broken .art-fallback{display:flex}
   .coll-info{flex:1;min-width:240px;padding-bottom:6px}
   .coll-kicker{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);
     font-weight:700;margin-bottom:10px}
@@ -465,6 +490,7 @@
     .hero-inner{padding-left:28px;padding-right:28px}
     .detail-row{padding:28px 24px}
     .detail-poster{width:140px}
+    .detail-poster.wide{width:240px}
     .section,.season-rail,.ep-list,.stat-row{padding-left:24px;padding-right:24px}
     .rail-head,.carousel,.grid-view{padding-left:24px;padding-right:24px}
     .coll-hero{padding:28px 24px}
@@ -483,10 +509,29 @@
     .featured .carousel .card{width:170px}
     .detail-info h2{font-size:28px}
     .detail-poster{width:110px}
+    .detail-row{flex-wrap:wrap}
+    .detail-poster.wide{width:100%}
     .ep{flex-direction:column}
     .ep-thumb{width:100%}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
+
+    /* Collapse the floating search to a glass icon button; it expands to a
+       pill once focused so it doesn't dominate small screens. */
+    .searchbox{width:44px;padding:0;justify-content:center;cursor:pointer}
+    .searchbox input{width:0;opacity:0;transition:width .2s var(--ease),opacity .2s var(--ease)}
+    .searchbox:focus-within{width:min(72vw,260px);padding:0 16px;justify-content:flex-start}
+    .searchbox:focus-within input{width:100%;opacity:1;margin-left:8px}
+
+    /* Player chrome: tighten controls so nothing overflows narrow screens. */
+    .pbtn{width:38px;height:38px;font-size:16px;border-radius:10px}
+    .p-top{padding:14px 12px}
+    .p-bottom{padding:8px 12px max(16px,env(safe-area-inset-bottom))}
+    .p-controls{gap:2px}
+    .p-time{font-size:12px;margin:0 6px}
+    #pipBtn{display:none}
+    .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
+    .p-menu.chapters{right:12px;min-width:0;max-width:calc(100vw - 24px)}
   }
 </style>
 </head>
@@ -529,15 +574,13 @@
       </div>
     </aside>
     <main class="main" id="main">
-      <div class="topbar" id="topbar">
-        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><i class="ph ph-list" aria-hidden="true"></i></button>
-        <h1 id="viewTitle">Home</h1>
-        <div class="searchbox" role="search">
-          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
-          <label class="sr-only" for="search">Search</label>
-          <input id="search" placeholder="Search" autocomplete="off">
-        </div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><i class="ph ph-list" aria-hidden="true"></i></button>
+      <div class="searchbox" id="searchBox" role="search">
+        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+        <label class="sr-only" for="search">Search</label>
+        <input id="search" placeholder="Search" autocomplete="off">
       </div>
+      <h1 id="viewTitle" class="sr-only">Home</h1>
       <div class="content" id="content" tabindex="-1"><div class="loading">Loading…</div></div>
     </main>
   </div>
@@ -706,12 +749,30 @@ async function api(path){
 }
 function img(thumb,w,h){
   if(!thumb) return "";
+  // Playlist composite art lives under /playlists/... and isn't a valid
+  // photo-transcoder resource — serve it directly instead.
+  if(thumb.startsWith("/playlists/")) return imgDirect(thumb);
   return `${server.uri}/photo/:/transcode?width=${w}&height=${h}&minSize=1&upscale=1`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
+function imgDirect(path){
+  if(!path) return "";
+  const sep=path.includes("?")?"&":"?";
+  return `${server.uri}${path}${sep}X-Plex-Token=${server.token}`;
+}
 function imgBlur(thumb){
   if(!thumb) return "";
+  if(thumb.startsWith("/playlists/")) return imgDirect(thumb);
   return `${server.uri}/photo/:/transcode?width=300&height=169&minSize=1&upscale=1&blur=100`
+    +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
+}
+function imgAmbient(thumb){
+  if(!thumb) return "";
+  if(thumb.startsWith("/playlists/")) return imgDirect(thumb);
+  // A small, lightly-blurred source preserves distinct color regions from
+  // the artwork; the heavy CSS blur on #ultraBlur turns them into soft,
+  // saturated color blobs rather than a single muddy wash.
+  return `${server.uri}/photo/:/transcode?width=240&height=240&minSize=1&upscale=1&blur=30`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
 
@@ -723,7 +784,7 @@ function setUltraBlur(art){
   if(!art){ clearUltraBlur(); return; }
   const a=$("#ubA"), b=$("#ubB");
   const next = ubActive==="A" ? b : a, prev = ubActive==="A" ? a : b;
-  next.style.backgroundImage=`url('${imgBlur(art)}')`;
+  next.style.backgroundImage=`url('${imgAmbient(art)}')`;
   requestAnimationFrame(()=>{ next.classList.add("show"); prev.classList.remove("show"); });
   ubActive = ubActive==="A" ? "B" : "A";
 }
@@ -853,10 +914,14 @@ function card(it,wide,square){
     : [it.year, it.type==="show"?`${it.childCount||it.leafCount||""} Seasons`:""].filter(Boolean).join(" · ");
   const dim = square ? 320 : (useWide?480:340);
   const dim2 = square ? 320 : (useWide?270:510);
+  const src=img(thumb,dim,dim2);
+  const fallbackIcon = it.type==="playlist"?"ph-playlist" : it._collection?"ph-stack"
+    : it.type==="show"?"ph-television" : "ph-film-slate";
   b.innerHTML=`
-    <div class="art">
-      <img class="${useWide&&!square?"wide":""}" loading="lazy" alt="${esc(title)}"
-        src="${img(thumb,dim,dim2)}">
+    <div class="art${src?"":" broken"}">
+      ${src?`<img class="${useWide&&!square?"wide":""}" loading="lazy" alt="${esc(title)}"
+        src="${src}" onerror="this.closest('.art').classList.add('broken')">`:""}
+      <i class="ph-fill ${fallbackIcon} art-fallback" aria-hidden="true"></i>
       <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
       ${pct?`<div class="watch-prog"><i style="width:${pct}%"></i></div>`:""}
     </div>
@@ -919,7 +984,7 @@ async function openItem(it){
   if(it.type==="movie") return openMovie(it);
   if(it.type==="show") return openShow(it);
   if(it.type==="season") return openShow({ratingKey:it.parentRatingKey,type:"show",title:it.parentTitle},it.ratingKey);
-  if(it.type==="episode") return playItem(it,it.viewOffset||0);
+  if(it.type==="episode") return openEpisode(it);
   playItem(it,it.viewOffset||0);
 }
 async function openCollection(it){
@@ -958,8 +1023,13 @@ function collHero(m,kicker,items,square){
   if(totalDur) bits.push(fmtDur(totalDur));
   if(m.addedAt) bits.push(`Added ${fmtDate(m.addedAt)}`);
   if(m.smart) bits.push("Smart");
+  const src=img(m.thumb,440,square?440:660);
+  const fallbackIcon=square?"ph-playlist":"ph-stack";
   return `<div class="coll-hero">
-    <div class="coll-art${square?" square":""}"><img src="${img(m.thumb,440,square?440:660)}" alt=""></div>
+    <div class="coll-art${square?" square":""}${src?"":" broken"}">
+      ${src?`<img src="${src}" alt="" onerror="this.closest('.coll-art').classList.add('broken')">`:""}
+      <i class="ph-fill ${fallbackIcon} art-fallback" aria-hidden="true"></i>
+    </div>
     <div class="coll-info">
       <div class="coll-kicker">${esc(kicker)}</div>
       <h2>${esc(m.title)}</h2>
@@ -982,6 +1052,31 @@ function detailHero(m,isMovie,actionsHTML,extras){
           <div class="sub">${metaBits(m,isMovie)}</div>
           <div class="chips">${genres}</div>
           ${ratingsRowHTML(m,extras)}
+          <div class="summary">${esc(m.summary||"")}</div>
+          <div class="detail-actions">${actionsHTML}</div>
+        </div>
+      </div>
+    </div></div>`;
+}
+/* ---- EPISODE DETAIL HERO ----
+   Like detailHero, but for a single episode: 16:9 thumbnail, a "back to show"
+   kicker, air date / runtime / rating, and a synopsis. */
+function episodeHero(m,actionsHTML){
+  const art=m.art||m.grandparentArt||m.thumb;
+  const bits=[fmtAirDate(m.originallyAvailableAt),fmtDur(m.duration)];
+  if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
+  if(m.rating) bits.push(`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)" aria-hidden="true"></i> ${(+m.rating).toFixed(1)}</span>`);
+  return `<div class="detail-wrap">
+    <div class="detail-hero">
+      <div class="detail-bg" style="background-image:url('${imgBlur(art)}')"></div>
+      <div class="detail-scrim"></div>
+      <div class="detail-row">
+        <img class="detail-poster wide" src="${img(m.thumb,680,382)}" alt="">
+        <div class="detail-info">
+          <button class="ep-kicker" id="epBackBtn"><i class="ph ph-arrow-left" aria-hidden="true"></i> ${esc(m.grandparentTitle||"")}<span class="sep"></span>Season ${m.parentIndex||0}</button>
+          <h2>${m.index?`${m.index}. `:""}${esc(m.title||"")}</h2>
+          <div class="sub">${bits.filter(Boolean).join('<span class="sep"></span>')}</div>
+          ${ratingsRowHTML(m,[])}
           <div class="summary">${esc(m.summary||"")}</div>
           <div class="detail-actions">${actionsHTML}</div>
         </div>
@@ -1170,11 +1265,34 @@ async function loadEpisodes(season){
             <div class="edur">${fmtDur(epm.duration)}</div></div>
           <div class="ed">${esc(epm.summary||"")}</div>
         </div>`;
-      row.onclick=()=>playItem(epm,epm.viewOffset||0);
+      row.onclick=()=>openEpisode(epm);
       list.appendChild(row);
     });
     if(!eps.length) list.innerHTML="<div class='empty'>No episodes.</div>";
   }catch(e){ list.innerHTML=errHTML(e.message); }
+}
+/* ---- EPISODE DETAIL PAGE ---- */
+async function openEpisode(it){
+  setTitle(it.title||"Episode"); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  try{
+    const mc=await api(`/library/metadata/${it.ratingKey}`);
+    const m=(mc.Metadata||[])[0]||it;
+    const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
+      <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Start over</button>`
+      :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
+    const siblingsMc=m.parentRatingKey?await api(`/library/metadata/${m.parentRatingKey}/children`).catch(()=>({})):{};
+    const siblings=(siblingsMc.Metadata||[]).filter(s=>s.type==="episode");
+    c.innerHTML=episodeHero(m,resume)+statRowHTML(m,true)+crewCastHTML(m)
+      +(siblings.length?`<div class="rail-section"><div class="rail-head"><h3>More from Season ${m.parentIndex||""}</h3><span class="count">${siblings.length}</span></div>
+        <div class="carousel" id="epSiblingRail"></div></div>`:"");
+    if(siblings.length){ const row=$("#epSiblingRail"); siblings.forEach(s=>row.appendChild(card(s,true))); }
+    wireBackdrop(c,m.art||m.grandparentArt||m.thumb);
+    const back=$("#epBackBtn");
+    if(back) back.onclick=()=>openShow({ratingKey:m.grandparentRatingKey,type:"show",title:m.grandparentTitle},m.parentRatingKey);
+    if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
+    else $("#playBtnD").onclick=()=>playItem(m,0);
+    injectFirstWatched(m.ratingKey,false);
+  }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 
 /* ============================================================ SEARCH */
@@ -1698,12 +1816,14 @@ function reportTimeline(state){ if(!currentItem)return;
 }
 
 /* ============================================================ UTIL */
-function setTitle(t){ $("#viewTitle").textContent=t; }
+function setTitle(t){ $("#viewTitle").textContent=t; document.title=t?`${t} · ${PRODUCT}`:PRODUCT; }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 function fmtDur(ms){ if(!ms)return""; const m=Math.round(ms/60000);
   return m<60?m+"m":Math.floor(m/60)+"h "+(m%60)+"m"; }
 function fmtDate(ts){ if(!ts) return ""; return new Date(ts*1000).toLocaleDateString(undefined,
   {year:"numeric",month:"short",day:"numeric"}); }
+function fmtAirDate(s){ if(!s) return ""; const d=new Date(s); if(isNaN(d)) return "";
+  return d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}); }
 function fmtClock(s){ if(!s||isNaN(s))return"0:00"; s=Math.floor(s);
   const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
   return h>0?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`; }
@@ -1712,7 +1832,7 @@ function errHTML(m){ return `<div class="err" role="alert"><i class="ph ph-warni
 $("#menuToggle").onclick=()=>{ $("#sidebar").classList.add("open"); $("#scrimNav").classList.add("show"); };
 $("#scrimNav").onclick=closeSidebar;
 function closeSidebar(){ $("#sidebar").classList.remove("open"); $("#scrimNav").classList.remove("show"); }
-$("#main").addEventListener("scroll",()=>{ $("#topbar").classList.toggle("scrolled",$("#main").scrollTop>10); });
+$("#searchBox").addEventListener("click",()=>$("#search").focus());
 
 /* ============================================================ INIT */
 (async function init(){
