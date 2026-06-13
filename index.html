@@ -7,52 +7,74 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Hume</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  @font-face{font-family:'Circular';font-weight:400;font-style:normal;font-display:swap;
+    src:url('assets/fonts/Circular/Circular-Book.ttf') format('truetype')}
+  @font-face{font-family:'Circular';font-weight:500;font-style:normal;font-display:swap;
+    src:url('assets/fonts/Circular/Circular-Medium.ttf') format('truetype')}
+  @font-face{font-family:'Circular';font-weight:700;font-style:normal;font-display:swap;
+    src:url('assets/fonts/Circular/Circular-Bold.ttf') format('truetype')}
+  @font-face{font-family:'Circular';font-weight:900;font-style:normal;font-display:swap;
+    src:url('assets/fonts/Circular/Circular-Black.ttf') format('truetype')}
   :root{
-    --bg:#09090b; --bg2:#111114; --surface:rgba(255,255,255,.06); --surface2:rgba(255,255,255,.09);
-    --surface3:rgba(255,255,255,.13); --glass:rgba(18,18,22,.78);
-    --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
-    --text:#f5f5f7; --dim:#a1a1aa; --faint:#63636e;
-    --accent:#e8b825; --accent2:#d4a620;
-    --radius:16px; --radius-sm:10px; --radius-xs:8px;
-    --shadow-sm:0 2px 8px rgba(0,0,0,.3); --shadow:0 8px 32px rgba(0,0,0,.5);
-    --shadow-lg:0 16px 64px rgba(0,0,0,.6);
-    --font:'Inter',system-ui,-apple-system,sans-serif;
+    --bg:#0a0a0c; --bg2:#131316; --surface:rgba(255,255,255,.06); --surface2:rgba(255,255,255,.09);
+    --surface3:rgba(255,255,255,.14); --glass:rgba(20,20,24,.8);
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.13);
+    --text:#f5f5f7; --dim:#aeaeb6; --faint:#8e8e96;
+    --accent:#e8b825; --accent2:#d4a620; --accent-wash:rgba(232,184,37,.14);
+    --radius:16px; --radius-sm:10px; --radius-xs:8px; --radius-lg:22px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.3); --shadow:0 4px 24px rgba(0,0,0,.4);
+    --shadow-lg:0 12px 48px rgba(0,0,0,.55);
+    --font:'Circular','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     --ease:cubic-bezier(.22,1,.36,1);
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
   body{background:var(--bg);color:var(--text);font-family:var(--font);
     -webkit-font-smoothing:antialiased;overflow:hidden}
-  button{font-family:inherit;cursor:pointer;color:inherit}
+  button,input{font-family:inherit;color:inherit}
+  button{cursor:pointer}
   img{display:block}
   .hidden{display:none !important}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .skip-link{position:fixed;top:-100px;left:12px;z-index:300;background:var(--accent);color:#141005;
+    padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;
+    transition:top .15s var(--ease)}
+  .skip-link:focus-visible{top:12px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
   ::-webkit-scrollbar{width:8px;height:6px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
   ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+      transition-duration:.01ms !important;scroll-behavior:auto !important}
+  }
 
   /* ---- BTN ---- */
   .btn{background:var(--accent);color:#141005;border:none;padding:12px 24px;border-radius:100px;
     font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;
-    transition:all .2s var(--ease);letter-spacing:-.01em}
-  .btn:hover{background:var(--accent2);transform:scale(1.03)}
-  .btn:active{transform:scale(.98)}
+    transition:filter .15s var(--ease),background-color .15s var(--ease);letter-spacing:-.01em}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{filter:brightness(.94)}
   .btn.glass{background:var(--surface2);backdrop-filter:blur(20px);color:var(--text);
     border:1px solid var(--line2)}
   .btn.glass:hover{background:var(--surface3)}
   .btn i{font-size:17px}
   .btn.lg{padding:14px 30px;font-size:15px}
+  .btn.sm{padding:8px 16px;font-size:13px}
 
   /* ---- LOGIN ---- */
   #login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;gap:28px;text-align:center;padding:24px;
-    background:radial-gradient(ellipse 900px 450px at 50% 30%, rgba(232,184,37,.08),transparent),var(--bg)}
+    justify-content:center;gap:28px;text-align:center;padding:24px;z-index:1;
+    background:radial-gradient(ellipse 900px 450px at 50% 30%, var(--accent-wash),transparent),var(--bg)}
   .logo-lockup{display:flex;align-items:center;gap:14px}
   .logo-lockup i{font-size:48px;color:var(--accent)}
   .logo-lockup h1{font-size:44px;font-weight:800;letter-spacing:-.03em}
@@ -60,8 +82,8 @@
 
   /* ---- SERVERS ---- */
   #servers{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;
-    justify-content:center;gap:14px;padding:24px}
-  #servers h2{margin-bottom:6px;font-size:24px;font-weight:700;letter-spacing:-.02em}
+    justify-content:center;gap:14px;padding:24px;z-index:1}
+  #servers h1{margin-bottom:6px;font-size:24px;font-weight:700;letter-spacing:-.02em}
   .server-card{background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--line2);
     border-radius:var(--radius);padding:18px 22px;min-width:340px;display:flex;
     justify-content:space-between;align-items:center;gap:18px}
@@ -69,13 +91,24 @@
   .server-card .meta{font-size:12px;color:var(--dim);margin-top:4px;display:flex;align-items:center;gap:8px}
   .badge{font-size:10px;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:6px;
     background:rgba(110,231,160,.12);color:#6ee7a0;font-weight:600}
-  .badge.remote{background:rgba(232,184,37,.12);color:var(--accent)}
+  .badge.remote{background:var(--accent-wash);color:var(--accent)}
   .badge.relay{background:rgba(255,100,100,.1);color:#ff9090}
 
+  /* ---- ULTRABLUR UNDERLAY ----
+     Single fixed, blurred color wash derived from the current page's artwork.
+     Used on detail-style pages (movie/show/season/collection/playlist) and the
+     player. Grid/list pages leave it hidden to keep things calm and legible. */
+  #ultraBlur{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .ub-layer{position:absolute;inset:-15%;background-size:cover;background-position:center;
+    opacity:0;transition:opacity 1.1s var(--ease);filter:blur(90px) saturate(1.25)}
+  .ub-layer.show{opacity:.5}
+  .ub-scrim{position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(10,10,12,.35) 0%,rgba(10,10,12,.7) 55%,var(--bg) 100%)}
+
   /* ---- APP SHELL ---- */
-  #app{display:none;height:100%}
+  #app{display:none;height:100%;position:relative;z-index:1}
   .shell{display:grid;grid-template-columns:240px 1fr;height:100%}
-  .sidebar{background:rgba(14,14,18,.85);backdrop-filter:blur(40px);border-right:1px solid var(--line);
+  .sidebar{background:rgba(15,15,19,.7);backdrop-filter:blur(40px);border-right:1px solid var(--line);
     display:flex;flex-direction:column;overflow-y:auto;z-index:20}
   .brand{display:flex;align-items:center;gap:10px;padding:22px 20px 20px}
   .brand i{font-size:24px;color:var(--accent)}
@@ -83,59 +116,62 @@
   .brand .ver{font-size:10px;color:var(--faint);margin-left:4px}
   .nav{display:flex;flex-direction:column;padding:4px 10px;gap:2px}
   .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--faint);
-    padding:18px 12px 6px;font-weight:600}
+    padding:18px 12px 6px;font-weight:700}
   .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-xs);
     color:var(--dim);background:none;border:none;text-align:left;font-size:14px;font-weight:500;
-    width:100%;transition:all .15s var(--ease)}
+    width:100%;transition:background-color .15s var(--ease),color .15s var(--ease);
+    position:relative;min-height:40px}
   .nav-item i{font-size:18px;width:20px;text-align:center}
   .nav-item:hover{background:var(--surface);color:var(--text)}
   .nav-item.active{background:var(--surface2);color:var(--text)}
   .nav-item.active i{color:var(--accent)}
+  .nav-item.active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);
+    width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent)}
   .sidebar-foot{margin-top:auto;padding:10px;border-top:1px solid var(--line)}
 
   .main{overflow-y:auto;position:relative;scroll-behavior:smooth}
   .topbar{position:sticky;top:0;z-index:8;backdrop-filter:blur(20px);
-    background:rgba(9,9,11,.6);border-bottom:1px solid transparent;padding:14px 32px;
-    display:flex;align-items:center;gap:14px;transition:.2s}
-  .topbar.scrolled{border-color:var(--line);background:rgba(9,9,11,.88)}
-  .topbar h2{font-size:20px;font-weight:700;letter-spacing:-.02em}
-  .menu-toggle{display:none;background:var(--surface);border:none;width:38px;height:38px;
-    border-radius:var(--radius-xs);align-items:center;justify-content:center;font-size:18px}
+    background:rgba(10,10,12,.6);border-bottom:1px solid transparent;padding:14px 32px;
+    display:flex;align-items:center;gap:14px;transition:background-color .2s,border-color .2s}
+  .topbar.scrolled{border-color:var(--line);background:rgba(10,10,12,.88)}
+  .topbar h1{font-size:20px;font-weight:700;letter-spacing:-.02em}
+  .menu-toggle{display:none;background:var(--surface);border:none;width:44px;height:44px;
+    border-radius:var(--radius-xs);align-items:center;justify-content:center;font-size:18px;
+    transition:background-color .15s}
+  .menu-toggle:hover{background:var(--surface2)}
   .searchbox{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--surface);
-    border:1px solid var(--line);border-radius:100px;padding:9px 16px;width:240px;transition:.2s}
+    border:1px solid var(--line);border-radius:100px;padding:9px 16px;width:240px;
+    transition:border-color .15s,background-color .15s}
   .searchbox:focus-within{border-color:var(--line2);background:var(--surface2)}
   .searchbox i{color:var(--faint);font-size:16px}
   .searchbox input{background:none;border:none;color:var(--text);font-size:13px;width:100%;outline:none;
     font-family:var(--font)}
-  .content{padding:0 0 80px}
+  .content{padding:0 0 80px;position:relative}
 
   /* ---- HERO ---- */
-  .hero{position:relative;height:min(68vh,620px);min-height:420px;display:flex;align-items:flex-end;
+  .hero{position:relative;height:min(64vh,600px);min-height:420px;display:flex;align-items:flex-end;
     overflow:hidden}
   .hero-bg{position:absolute;inset:-40px;background-size:cover;background-position:center 20%;
     filter:blur(0px);transition:filter .6s,opacity .6s;opacity:.7}
   .hero-bg.sharp{filter:none;opacity:.65}
   .hero-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,var(--bg) 0%,rgba(9,9,11,.5) 35%,rgba(9,9,11,.1) 80%),
-    linear-gradient(to right,rgba(9,9,11,.9) 0%,rgba(9,9,11,.3) 40%,transparent 70%)}
+    background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.55) 35%,rgba(10,10,12,.15) 80%),
+    linear-gradient(to right,rgba(10,10,12,.85) 0%,rgba(10,10,12,.25) 40%,transparent 70%)}
   .hero-inner{position:relative;padding:0 44px 50px;max-width:700px}
   .hero-kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:1px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
-  .hero h1{font-size:clamp(34px,5vw,64px);font-weight:900;letter-spacing:-.04em;line-height:.98}
-  .hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#d0d0d8;font-size:13px;
+  .hero h2{font-size:clamp(34px,5vw,64px);font-weight:900;letter-spacing:-.04em;line-height:.98}
+  .hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:18px 0 14px;font-weight:500}
   .hero-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
   .pill{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);backdrop-filter:blur(12px);
     border:1px solid var(--line2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600}
-  .hero p{color:#bbbbc4;line-height:1.6;font-size:14px;max-width:560px;margin-bottom:24px;
+  .hero p{color:var(--dim);line-height:1.6;font-size:14px;max-width:560px;margin-bottom:24px;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
 
   /* ---- SECTION / RAIL ---- */
-  .rail-section{position:relative;padding:40px 0 10px;overflow:hidden}
-  .rail-ambient{position:absolute;top:-60px;left:10%;right:10%;height:300px;
-    background-size:cover;background-position:center;opacity:.12;filter:blur(80px);
-    pointer-events:none;transform:scale(1.3)}
+  .rail-section{position:relative;padding:40px 0 10px}
   .rail-head{display:flex;align-items:baseline;gap:12px;margin:0 36px 16px;position:relative}
   .rail-head h3{font-size:20px;font-weight:700;letter-spacing:-.02em}
   .rail-head .count{font-size:12px;color:var(--faint);font-weight:500}
@@ -145,25 +181,26 @@
   .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px;
     padding:4px 36px 16px}
 
-  /* ---- CARD ---- */
+  /* ---- CARD ----
+     Hover feedback is a single, gentle elevation cue (shadow) plus a soft
+     play affordance — no movement, scaling, or stacked effects. */
   .card{scroll-snap-align:start;cursor:pointer;border:none;background:none;text-align:left;
-    transition:transform .25s var(--ease);flex:0 0 auto;color:inherit;outline:none}
+    flex:0 0 auto;color:inherit;outline:none;border-radius:var(--radius-sm)}
   .carousel .card{width:180px}
   .carousel .card.wide{width:290px}
-  .card:hover{transform:translateY(-6px)}
   .card:focus-visible .art{outline:2px solid var(--accent);outline-offset:2px}
   .art{position:relative;border-radius:14px;overflow:hidden;background:var(--bg2);
-    box-shadow:var(--shadow-sm);transition:box-shadow .25s var(--ease)}
-  .card:hover .art{box-shadow:var(--shadow)}
-  .art img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;transition:transform .35s var(--ease)}
+    box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease)}
+  .card:hover .art,.card:focus-visible .art{box-shadow:var(--shadow)}
+  .art img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block}
   .art img.wide{aspect-ratio:16/9}
-  .card:hover .art img{transform:scale(1.04)}
-  .art .play-hover{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(2px);
-    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
-  .card:hover .art .play-hover{opacity:1}
-  .play-hover i{font-size:42px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
+  .card.square .art img{aspect-ratio:1/1}
+  .art .play-hover{position:absolute;inset:0;background:rgba(0,0,0,.25);
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s var(--ease)}
+  .card:hover .art .play-hover,.card:focus-visible .art .play-hover{opacity:1}
+  .play-hover i{font-size:40px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
   .art .watch-prog{position:absolute;left:6px;right:6px;bottom:6px;height:4px;background:rgba(0,0,0,.5);
-    border-radius:3px;overflow:hidden;backdrop-filter:blur(4px)}
+    border-radius:3px;overflow:hidden}
   .art .watch-prog > i{display:block;height:100%;background:var(--accent);border-radius:3px}
   .card .ct{font-size:13.5px;margin-top:10px;line-height:1.3;font-weight:600;letter-spacing:-.01em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -183,28 +220,42 @@
     display:flex;gap:10px;align-items:flex-start;backdrop-filter:blur(12px)}
   .err i{font-size:18px;margin-top:1px}
 
-  /* ---- DETAIL ---- */
-  .detail-wrap{position:relative;overflow:hidden}
-  .detail-ambient{position:absolute;inset:-80px;background-size:cover;background-position:center 20%;
-    opacity:.18;filter:blur(80px);pointer-events:none;transform:scale(1.2)}
-  .detail-hero{position:relative;min-height:500px;display:flex;align-items:flex-end;overflow:hidden}
-  .detail-bg{position:absolute;inset:-20px;background-size:cover;background-position:center 20%;opacity:.5;
+  /* ---- DETAIL ----
+     The global UltraBlur underlay supplies the ambient color wash; the hero
+     image itself stays crisp above a single legibility scrim. */
+  .detail-wrap{position:relative}
+  .detail-hero{position:relative;min-height:520px;display:flex;align-items:flex-end;overflow:hidden}
+  .detail-bg{position:absolute;inset:-20px;background-size:cover;background-position:center 20%;opacity:.55;
     transition:opacity .5s}
   .detail-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,var(--bg) 2%,rgba(9,9,11,.65) 40%,rgba(9,9,11,.3) 100%),
-    linear-gradient(to right,rgba(9,9,11,.85),transparent 55%)}
+    background:linear-gradient(to top,var(--bg) 2%,rgba(10,10,12,.65) 40%,rgba(10,10,12,.25) 100%),
+    linear-gradient(to right,rgba(10,10,12,.85),transparent 55%)}
   .detail-row{position:relative;display:flex;gap:32px;padding:44px;align-items:flex-end;width:100%}
-  .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius);
+  .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
     box-shadow:var(--shadow-lg);aspect-ratio:2/3;object-fit:cover;background:var(--bg2)}
   .detail-info{flex:1;min-width:0;padding-bottom:6px}
-  .detail-info h1{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98}
-  .detail-info .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#d0d0d8;font-size:13px;
+  .detail-info h2{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98}
+  .detail-info .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:16px 0;font-weight:500}
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
   .chip{font-size:12px;background:var(--surface);backdrop-filter:blur(12px);border:1px solid var(--line);
-    padding:6px 14px;border-radius:100px;color:#d0d0d8;font-weight:500}
-  .summary{color:#c8c8d1;line-height:1.65;font-size:14px;max-width:680px;margin-bottom:24px}
-  .detail-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+    padding:6px 14px;border-radius:100px;color:var(--dim);font-weight:500}
+  .summary{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin-bottom:22px}
+  .detail-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+  /* ---- RATINGS ---- */
+  .ratings-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
+  .rating-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);
+    backdrop-filter:blur(12px);border:1px solid var(--line2);border-radius:8px;padding:5px 12px;
+    font-size:12.5px;font-weight:600;color:var(--dim)}
+  .rating-badge i{font-size:15px;color:var(--accent)}
+  .rating-badge b{color:var(--text);font-weight:700}
+
+  /* ---- META STAT ROW (added / watched history) ---- */
+  .stat-row{display:flex;gap:36px;flex-wrap:wrap;padding:26px 44px;border-top:1px solid var(--line)}
+  .stat{display:flex;flex-direction:column;gap:4px}
+  .stat .sl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:700}
+  .stat .sv{font-size:14px;font-weight:600;color:var(--text)}
 
   .section{padding:32px 44px 0;position:relative}
   .section h3{font-size:18px;font-weight:700;margin-bottom:16px;letter-spacing:-.02em}
@@ -217,22 +268,38 @@
   .crew{display:flex;gap:28px;flex-wrap:wrap;color:var(--dim);font-size:13px;margin-top:4px}
   .crew b{color:var(--text);font-weight:600}
 
-  .season-tabs{display:flex;gap:8px;flex-wrap:wrap;padding:0 44px;margin:32px 0 20px}
-  .season-tab{background:var(--surface);border:1px solid var(--line);color:var(--dim);padding:9px 18px;
-    border-radius:100px;font-size:13px;font-weight:600;transition:all .15s var(--ease)}
-  .season-tab:hover{color:var(--text);border-color:var(--line2);background:var(--surface2)}
-  .season-tab.active{background:var(--accent);color:#141005;border-color:var(--accent)}
-  .ep-list{display:flex;flex-direction:column;gap:10px;padding:0 44px 16px}
-  .ep{display:flex;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;
-    padding:14px;cursor:pointer;transition:all .15s var(--ease);align-items:stretch;
-    backdrop-filter:blur(12px)}
-  .ep:hover{background:var(--surface2);border-color:var(--line2);transform:translateX(4px)}
+  /* ---- EXTRAS (trailers, deleted scenes, featurettes...) ---- */
+  .extra-badge{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+    color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+    padding:4px 8px;border-radius:6px}
+  .extra-dur{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+    color:#fff;font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px}
+
+  /* ---- SEASON SWITCHER (artwork, not pill tabs) ---- */
+  .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px 36px 16px;-webkit-overflow-scrolling:touch}
+  .season-rail::-webkit-scrollbar{height:0}
+  .season-card{width:150px}
+  .season-card .art{aspect-ratio:2/3;outline:2px solid transparent;outline-offset:2px;
+    transition:outline-color .15s var(--ease),box-shadow .2s var(--ease)}
+  .season-card.active .art{outline-color:var(--accent);box-shadow:var(--shadow)}
+  .season-card.active .ct{color:var(--accent)}
+
+  /* ---- EPISODE LIST ----
+     Borderless rows separated by hairlines, with a quiet hover background —
+     closer to a music app's track list than a card grid. */
+  .ep-list{display:flex;flex-direction:column;padding:0 44px 16px}
+  .ep{display:flex;gap:18px;background:none;border:none;border-radius:var(--radius-sm);
+    padding:12px;margin:0 -12px;cursor:pointer;transition:background-color .15s var(--ease);
+    align-items:stretch;border-bottom:1px solid var(--line);text-align:left;width:calc(100% + 24px);
+    color:inherit;font:inherit}
+  .ep-list .ep:last-child{border-bottom:none}
+  .ep:hover,.ep:focus-visible{background:var(--surface)}
   .ep-thumb{position:relative;width:180px;flex:0 0 auto;border-radius:var(--radius-xs);overflow:hidden;
     aspect-ratio:16/9;background:var(--bg2)}
   .ep-thumb img{width:100%;height:100%;object-fit:cover}
   .ep-thumb .ep-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    background:rgba(0,0,0,.35);color:#fff;font-size:32px;opacity:0;transition:opacity .15s}
-  .ep:hover .ep-thumb .ep-play{opacity:1}
+    background:rgba(0,0,0,.3);color:#fff;font-size:32px;opacity:0;transition:opacity .15s}
+  .ep:hover .ep-thumb .ep-play,.ep:focus-visible .ep-thumb .ep-play{opacity:1}
   .ep-thumb .ep-prog{position:absolute;left:4px;right:4px;bottom:4px;height:4px;background:rgba(0,0,0,.5);
     border-radius:3px;overflow:hidden}
   .ep-thumb .ep-prog>i{display:block;height:100%;background:var(--accent)}
@@ -240,8 +307,24 @@
   .ep-body .eh{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
   .ep-body .et{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
   .ep-body .edur{font-size:12px;color:var(--dim);white-space:nowrap;font-weight:500}
-  .ep-body .ed{font-size:13px;color:#a8a8b2;margin-top:8px;line-height:1.55;
+  .ep-body .ed{font-size:13px;color:var(--dim);margin-top:8px;line-height:1.55;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* ---- COLLECTION / PLAYLIST HERO ---- */
+  .coll-hero{position:relative;padding:44px;display:flex;gap:32px;align-items:flex-end;flex-wrap:wrap}
+  .coll-art{width:220px;aspect-ratio:2/3;flex:0 0 auto;border-radius:var(--radius-lg);overflow:hidden;
+    box-shadow:var(--shadow-lg);background:var(--bg2)}
+  .coll-art.square{aspect-ratio:1/1}
+  .coll-art img{width:100%;height:100%;object-fit:cover;display:block}
+  .coll-info{flex:1;min-width:240px;padding-bottom:6px}
+  .coll-kicker{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);
+    font-weight:700;margin-bottom:10px}
+  .coll-info h2{font-size:clamp(26px,3.4vw,42px);font-weight:900;letter-spacing:-.03em;line-height:1.04;
+    margin-bottom:14px}
+  .coll-desc{color:var(--dim);line-height:1.6;font-size:14px;max-width:640px;margin-bottom:16px}
+  .coll-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--dim);font-size:13px;
+    font-weight:500}
+  .coll-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
 
   /* ---- PLAYER ---- */
   #player{position:fixed;inset:0;z-index:100;background:#000;display:none;flex-direction:column}
@@ -261,83 +344,100 @@
 
   .p-top,.p-bottom{position:absolute;left:0;right:0;z-index:4;transition:opacity .25s,transform .25s}
   .p-top{top:0;padding:18px 24px;display:flex;align-items:center;gap:12px;
-    background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent)}
+    background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent)}
   .p-bottom{bottom:0;padding:8px 24px 20px;
-    background:linear-gradient(to top,rgba(0,0,0,.8),transparent)}
+    background:linear-gradient(to top,rgba(0,0,0,.75),transparent)}
   #player.idle .p-top{opacity:0;transform:translateY(-8px);pointer-events:none}
   #player.idle .p-bottom{opacity:0;transform:translateY(8px);pointer-events:none}
-  .p-top .pt{font-size:15px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
-    white-space:nowrap}
+  .p-top .pt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .p-top .pt .pt-main{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .p-top .pt .pt-sub{font-size:11.5px;color:var(--dim);font-weight:500;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
   .p-top-right{display:flex;align-items:center;gap:8px;position:relative}
 
   .pbtn{background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);
-    color:#fff;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;
-    justify-content:center;font-size:19px;transition:all .15s var(--ease)}
+    color:#fff;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;font-size:19px;flex:0 0 auto;
+    transition:background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease)}
   .pbtn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.2)}
   .pbtn.bare{background:none;border:none;backdrop-filter:none;border-radius:10px}
   .pbtn.bare:hover{background:rgba(255,255,255,.12)}
+  .pbtn.active{background:rgba(232,184,37,.2);border-color:rgba(232,184,37,.4);color:var(--accent)}
 
   .p-seek{padding:6px 2px 10px}
   .p-seek-track{position:relative;height:5px;background:rgba(255,255,255,.18);border-radius:3px;
     cursor:pointer;transition:height .12s}
-  .p-seek-track:hover{height:7px}
+  .p-seek-track:hover,.p-seek-track:focus-visible{height:7px}
+  .p-seek-track:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
   .p-buffered{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.28);border-radius:3px}
   .p-played{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:3px;width:0}
-  .p-knob{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;
+  .p-chapter-marks{position:absolute;inset:0;pointer-events:none}
+  .p-chapter-mark{position:absolute;top:0;bottom:0;width:2px;background:rgba(10,10,12,.55)}
+  .p-knob{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;
     transform:translate(-50%,-50%) scale(0);transition:transform .15s var(--ease);
     box-shadow:0 1px 6px rgba(0,0,0,.4);left:0}
-  .p-seek-track:hover .p-knob{transform:translate(-50%,-50%) scale(1)}
+  .p-seek-track:hover .p-knob,.p-seek-track:focus-visible .p-knob{transform:translate(-50%,-50%) scale(1)}
   .p-hover-time{position:absolute;bottom:20px;transform:translateX(-50%);background:rgba(0,0,0,.9);
     padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;pointer-events:none;display:none}
 
   .p-controls{display:flex;align-items:center;gap:4px}
   .p-controls .spacer{flex:1}
-  .p-time{font-size:13px;color:#dcdce2;font-variant-numeric:tabular-nums;margin:0 10px;white-space:nowrap;
+  .p-time{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums;margin:0 10px;white-space:nowrap;
     font-weight:500}
   .p-time .slash{color:var(--faint);margin:0 4px}
   .p-vol{display:flex;align-items:center;gap:2px}
-  .p-vol input[type=range]{width:0;opacity:0;transition:all .2s var(--ease);accent-color:var(--accent);height:4px}
-  .p-vol:hover input[type=range]{width:80px;opacity:1;margin-left:4px}
-  .p-status{font-size:11px;color:#c8c8d2;background:rgba(255,255,255,.08);backdrop-filter:blur(8px);
+  .p-vol input[type=range]{width:0;opacity:0;transition:width .2s var(--ease),opacity .2s var(--ease);
+    accent-color:var(--accent);height:4px}
+  .p-vol:hover input[type=range],.p-vol:focus-within input[type=range]{width:80px;opacity:1;margin-left:4px}
+  .p-status{font-size:11px;color:var(--dim);background:rgba(255,255,255,.08);backdrop-filter:blur(8px);
     border:1px solid rgba(255,255,255,.08);padding:5px 12px;border-radius:100px;margin-right:6px;
     white-space:nowrap;display:flex;align-items:center;gap:6px;font-weight:600}
-  .p-status .dot{width:6px;height:6px;border-radius:50%;background:#6ee7a0}
+  .p-status .dot{width:6px;height:6px;border-radius:50%;background:#6ee7a0;flex:0 0 auto}
   .p-status.transcode .dot{background:var(--accent)}
 
-  .p-menu{position:absolute;top:50px;right:0;background:var(--glass);backdrop-filter:blur(40px);
-    border:1px solid var(--line2);border-radius:var(--radius);overflow:hidden;min-width:250px;display:none;
-    box-shadow:var(--shadow-lg)}
+  .p-menu{position:absolute;top:52px;right:0;background:var(--glass);backdrop-filter:blur(40px);
+    border:1px solid var(--line2);border-radius:var(--radius);overflow-y:auto;min-width:260px;display:none;
+    box-shadow:var(--shadow-lg);max-height:min(70vh,520px)}
   .p-menu.open{display:block}
+  .p-menu.chapters{top:auto;bottom:64px;right:16px;min-width:320px}
   .p-menu .mh{padding:12px 18px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;
     color:var(--faint);font-weight:700}
   .p-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;
-    border:none;color:var(--text);padding:11px 18px;font-size:13px;font-weight:500;transition:.1s}
+    border:none;color:var(--text);padding:11px 18px;font-size:13px;font-weight:500;
+    transition:background-color .1s;min-height:44px}
   .p-menu button:hover{background:var(--surface2)}
-  .p-menu button i{font-size:16px;color:var(--accent);opacity:0;width:18px}
-  .p-menu button.active i{opacity:1}
-  .p-menu button .ml{flex:1}
+  .p-menu button:focus-visible{outline-offset:-2px}
+  .p-menu button i.ck{font-size:16px;color:var(--accent);opacity:0;width:18px;flex:0 0 auto}
+  .p-menu button.active i.ck{opacity:1}
+  .p-menu button .ml{flex:1;min-width:0}
   .p-menu button .msub{font-size:11px;color:var(--faint);font-weight:500}
 
+  /* chapter list items inside the chapters menu */
+  .chapter-item img{width:64px;height:36px;border-radius:6px;object-fit:cover;background:var(--bg2);flex:0 0 auto}
+  .chapter-item .ci{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+  .chapter-item .ci-t{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chapter-item .ci-time{font-size:11px;color:var(--faint);font-weight:500;font-variant-numeric:tabular-nums}
+
   .mini-bar{display:none}
-  #player.min{inset:auto 20px 20px auto;width:380px;height:214px;border-radius:var(--radius);overflow:hidden;
+  #player.min{inset:auto 20px 20px auto;width:380px;height:214px;border-radius:var(--radius-lg);overflow:hidden;
     box-shadow:var(--shadow-lg);border:1px solid var(--line2);background:#000}
   #player.min .p-top,#player.min .p-bottom,#player.min .p-spinner span{display:none}
   #player.min video{pointer-events:none}
   #player.min .mini-bar{display:flex;align-items:center;gap:8px;position:absolute;top:0;left:0;right:0;
     z-index:5;padding:8px 10px;background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);opacity:0;
-    transition:.15s}
-  #player.min:hover .mini-bar{opacity:1}
+    transition:opacity .15s}
+  #player.min:hover .mini-bar,#player.min:focus-within .mini-bar{opacity:1}
   #player.min .mini-bar .mt{font-size:12px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
     font-weight:500}
-  #player.min .pbtn{width:30px;height:30px;font-size:14px;border-radius:8px}
+  #player.min .pbtn{width:32px;height:32px;font-size:14px;border-radius:8px}
   #player.min .mini-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
     width:48px;height:48px;font-size:22px;opacity:0}
-  #player.min:hover .mini-play{opacity:1}
+  #player.min:hover .mini-play,#player.min:focus-within .mini-play{opacity:1}
 
   #toast{position:absolute;bottom:110px;left:50%;transform:translate(-50%,10px);z-index:7;
     background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--line2);
     padding:10px 20px;border-radius:100px;font-size:13px;font-weight:500;opacity:0;
-    transition:.25s var(--ease);pointer-events:none;white-space:nowrap}
+    transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;white-space:nowrap}
   #toast.show{opacity:1;transform:translate(-50%,0)}
 
   .next-up{position:absolute;right:28px;bottom:110px;z-index:6;background:var(--glass);
@@ -365,8 +465,10 @@
     .hero-inner{padding-left:28px;padding-right:28px}
     .detail-row{padding:28px 24px}
     .detail-poster{width:140px}
-    .section,.season-tabs,.ep-list{padding-left:24px;padding-right:24px}
+    .section,.season-rail,.ep-list,.stat-row{padding-left:24px;padding-right:24px}
     .rail-head,.carousel,.grid-view{padding-left:24px;padding-right:24px}
+    .coll-hero{padding:28px 24px}
+    .coll-art{width:160px}
     .carousel .card{width:150px}.carousel .card.wide{width:240px}
     .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:300px}
     .ep-thumb{width:130px}
@@ -374,30 +476,45 @@
   }
   @media(max-width:560px){
     .p-vol{display:none}.p-status{display:none}
-    .hero h1{font-size:32px}
+    .hero h2{font-size:32px}
     .hero-inner{padding-bottom:36px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:210px}
     .featured .carousel .card{width:170px}
-    .detail-info h1{font-size:28px}
+    .detail-info h2{font-size:28px}
+    .detail-poster{width:110px}
+    .ep{flex-direction:column}
+    .ep-thumb{width:100%}
+    .coll-art{width:120px}
+    .coll-hero{gap:20px}
   }
 </style>
 </head>
 <body>
 
+<a href="#content" class="skip-link">Skip to content</a>
+
+<!-- Ambient UltraBlur underlay: a single fixed, blurred color wash derived
+     from the current page's artwork. Hidden on flat grid/list pages. -->
+<div id="ultraBlur" aria-hidden="true">
+  <div class="ub-layer" id="ubA"></div>
+  <div class="ub-layer" id="ubB"></div>
+  <div class="ub-scrim"></div>
+</div>
+
 <!-- LOGIN -->
 <div id="login">
-  <div class="logo-lockup"><i class="ph-fill ph-popcorn"></i><h1>Hume</h1></div>
+  <div class="logo-lockup"><i class="ph-fill ph-popcorn" aria-hidden="true"></i><h1>Hume</h1></div>
   <p>Sign in with your Plex account to stream your video library. Your password never touches this app.</p>
-  <button class="btn lg" id="signInBtn"><i class="ph ph-sign-in"></i> Sign in with Plex</button>
-  <div id="loginErr" class="err hidden" style="margin:0;max-width:420px"></div>
+  <button class="btn lg" id="signInBtn"><i class="ph ph-sign-in" aria-hidden="true"></i> Sign in with Plex</button>
+  <div id="loginErr" class="err hidden" style="margin:0;max-width:420px" role="alert"></div>
 </div>
 
 <!-- SERVERS -->
 <div id="servers">
-  <h2>Choose a server</h2>
+  <h1>Choose a server</h1>
   <div id="serverList"></div>
-  <button class="btn glass" id="logoutFromServers" style="margin-top:12px"><i class="ph ph-sign-out"></i> Sign out</button>
+  <button class="btn glass" id="logoutFromServers" style="margin-top:12px"><i class="ph ph-sign-out" aria-hidden="true"></i> Sign out</button>
 </div>
 
 <!-- APP -->
@@ -405,72 +522,77 @@
   <div class="scrim-nav" id="scrimNav"></div>
   <div class="shell">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><i class="ph-fill ph-popcorn"></i><b>Hume</b><span class="ver">v0.4</span></div>
-      <div class="nav" id="nav"></div>
+      <div class="brand"><i class="ph-fill ph-popcorn" aria-hidden="true"></i><b>Hume</b><span class="ver">v0.4</span></div>
+      <nav class="nav" id="nav" aria-label="Main"></nav>
       <div class="sidebar-foot">
-        <button class="nav-item" id="logoutBtn"><i class="ph ph-sign-out"></i> Sign out</button>
+        <button class="nav-item" id="logoutBtn"><i class="ph ph-sign-out" aria-hidden="true"></i> Sign out</button>
       </div>
     </aside>
     <main class="main" id="main">
       <div class="topbar" id="topbar">
-        <button class="menu-toggle" id="menuToggle"><i class="ph ph-list"></i></button>
-        <h2 id="viewTitle">Home</h2>
-        <div class="searchbox">
-          <i class="ph ph-magnifying-glass"></i>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><i class="ph ph-list" aria-hidden="true"></i></button>
+        <h1 id="viewTitle">Home</h1>
+        <div class="searchbox" role="search">
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <label class="sr-only" for="search">Search</label>
           <input id="search" placeholder="Search" autocomplete="off">
         </div>
       </div>
-      <div class="content" id="content"><div class="loading">Loading…</div></div>
+      <div class="content" id="content" tabindex="-1"><div class="loading">Loading…</div></div>
     </main>
   </div>
 </div>
 
 <!-- PLAYER -->
-<div id="player">
+<div id="player" role="dialog" aria-modal="true" aria-label="Video player">
   <div class="p-backdrop" id="pBackdrop"></div>
   <video id="video" playsinline></video>
   <div class="next-up" id="nextUp">
     <img id="nuImg" alt=""><div class="nu-body"><div class="nu-k">Up next</div>
     <div class="nu-t" id="nuTitle"></div>
     <div class="nu-actions">
-      <button class="btn" id="nuPlay" style="padding:8px 16px;font-size:13px"><i class="ph-fill ph-play"></i> Play now</button>
+      <button class="btn" id="nuPlay" style="padding:8px 16px;font-size:13px"><i class="ph-fill ph-play" aria-hidden="true"></i> Play now</button>
       <button class="btn glass" id="nuCancel" style="padding:8px 16px;font-size:13px">Cancel</button>
     </div></div>
   </div>
-  <div id="toast"></div>
-  <div class="p-spinner hidden" id="pSpinner"><div class="ring"></div><span id="pSpinnerText">Loading</span></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div class="p-spinner hidden" id="pSpinner" role="status" aria-live="polite"><div class="ring"></div><span id="pSpinnerText">Loading</span></div>
   <div class="p-top" id="pTop">
-    <button class="pbtn" id="closePlayer" title="Close"><i class="ph ph-x"></i></button>
-    <button class="pbtn" id="minPlayer" title="Minimize"><i class="ph ph-corners-in"></i></button>
+    <button class="pbtn" id="closePlayer" title="Close" aria-label="Close player"><i class="ph ph-x" aria-hidden="true"></i></button>
+    <button class="pbtn" id="minPlayer" title="Minimize" aria-label="Minimize player"><i class="ph ph-corners-in" aria-hidden="true"></i></button>
     <div class="pt" id="pTitle"></div>
     <div class="p-top-right">
-      <button class="pbtn" id="settingsBtn" title="Settings"><i class="ph ph-gear-six"></i></button>
-      <div class="p-menu" id="pMenu"></div>
+      <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false"><i class="ph ph-gear-six" aria-hidden="true"></i></button>
+      <div class="p-menu" id="pMenu" role="menu" aria-label="Playback settings"></div>
     </div>
   </div>
   <div class="p-bottom" id="pBottom">
-    <div class="p-seek"><div class="p-seek-track" id="seekTrack">
+    <div class="p-seek"><div class="p-seek-track" id="seekTrack" role="slider" tabindex="0"
+        aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00 of 0:00">
       <div class="p-buffered" id="buffered"></div><div class="p-played" id="played"></div>
+      <div class="p-chapter-marks" id="chapterMarks"></div>
       <div class="p-knob" id="knob"></div><div class="p-hover-time" id="hoverTime"></div>
     </div></div>
     <div class="p-controls">
-      <button class="pbtn bare" id="playBtn"><i class="ph-fill ph-play"></i></button>
-      <button class="pbtn bare" id="back10"><i class="ph ph-arrow-counter-clockwise"></i></button>
-      <button class="pbtn bare" id="fwd10"><i class="ph ph-arrow-clockwise"></i></button>
+      <button class="pbtn bare" id="playBtn" aria-label="Play"><i class="ph-fill ph-play" aria-hidden="true"></i></button>
+      <button class="pbtn bare" id="back10" aria-label="Back 10 seconds"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i></button>
+      <button class="pbtn bare" id="fwd10" aria-label="Forward 10 seconds"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i></button>
       <div class="p-time"><span id="curTime">0:00</span><span class="slash">/</span><span id="durTime">0:00</span></div>
-      <div class="p-vol"><button class="pbtn bare" id="muteBtn"><i class="ph ph-speaker-high"></i></button>
-        <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1"></div>
+      <div class="p-vol"><button class="pbtn bare" id="muteBtn" aria-label="Mute"><i class="ph ph-speaker-high" aria-hidden="true"></i></button>
+        <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume"></div>
       <div class="spacer"></div>
-      <div class="p-status hidden" id="pStatus"><span class="dot"></span><span id="pStatusText"></span></div>
-      <button class="pbtn bare" id="pipBtn"><i class="ph ph-picture-in-picture"></i></button>
-      <button class="pbtn bare" id="fullBtn"><i class="ph ph-corners-out"></i></button>
+      <div class="p-status hidden" id="pStatus" role="status"><span class="dot" aria-hidden="true"></span><span id="pStatusText"></span></div>
+      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters" title="Chapters" aria-haspopup="menu" aria-expanded="false" hidden><i class="ph ph-list-bullets" aria-hidden="true"></i></button>
+      <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><i class="ph ph-picture-in-picture" aria-hidden="true"></i></button>
+      <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
     </div>
+    <div class="p-menu chapters" id="chaptersMenu" role="menu" aria-label="Chapters"></div>
   </div>
-  <button class="pbtn mini-play" id="miniPlay"><i class="ph-fill ph-play"></i></button>
+  <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><i class="ph-fill ph-play" aria-hidden="true"></i></button>
   <div class="mini-bar" id="miniBar">
     <span class="mt" id="miniTitle"></span>
-    <button class="pbtn" id="expandPlayer"><i class="ph ph-corners-out"></i></button>
-    <button class="pbtn" id="closeMini"><i class="ph ph-x"></i></button>
+    <button class="pbtn" id="expandPlayer" aria-label="Expand player"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
+    <button class="pbtn" id="closeMini" aria-label="Close player"><i class="ph ph-x" aria-hidden="true"></i></button>
   </div>
 </div>
 
@@ -562,13 +684,13 @@ async function showServerPicker(servers){
   const wrap=$("#serverList"); wrap.innerHTML="<div class='loading'>Testing connections…</div>";
   const results=[];
   for(const s of servers){ const c=await pickConnection(s); if(c) results.push(c); }
-  if(!results.length){ wrap.innerHTML="<div class='err'><i class='ph ph-warning'></i><div>No reachable servers.</div></div>"; return; }
+  if(!results.length){ wrap.innerHTML="<div class='err' role='alert'><i class='ph ph-warning' aria-hidden='true'></i><div>No reachable servers.</div></div>"; return; }
   wrap.innerHTML="";
   results.forEach(c=>{
     const card=el("div","server-card");
     const tag=c.local?"<span class='badge'>Local</span>":(c.relay?"<span class='badge relay'>Relay</span>":"<span class='badge remote'>Remote</span>");
     card.innerHTML=`<div><div class="sn">${esc(c.name)}</div><div class="meta">${tag} ${new URL(c.uri).host}</div></div>`;
-    const b=el("button","btn"); b.innerHTML='<i class="ph ph-plug"></i> Connect';
+    const b=el("button","btn"); b.innerHTML='<i class="ph ph-plug" aria-hidden="true"></i> Connect';
     b.onclick=()=>selectServer(c); card.appendChild(b); wrap.appendChild(card);
   });
 }
@@ -593,6 +715,20 @@ function imgBlur(thumb){
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
 
+/* ---- ULTRABLUR ----
+   One fixed, cross-fading ambient wash behind detail-style pages and the
+   player. Grid/list pages clear it to keep things calm and legible. */
+let ubActive=null;
+function setUltraBlur(art){
+  if(!art){ clearUltraBlur(); return; }
+  const a=$("#ubA"), b=$("#ubB");
+  const next = ubActive==="A" ? b : a, prev = ubActive==="A" ? a : b;
+  next.style.backgroundImage=`url('${imgBlur(art)}')`;
+  requestAnimationFrame(()=>{ next.classList.add("show"); prev.classList.remove("show"); });
+  ubActive = ubActive==="A" ? "B" : "A";
+}
+function clearUltraBlur(){ $("#ubA").classList.remove("show"); $("#ubB").classList.remove("show"); ubActive=null; }
+
 /* ============================================================ BOOT */
 async function afterLogin(){
   if(server && await probe(server.uri,server.token)){ $("#login").style.display="none"; bootApp(); return; }
@@ -612,7 +748,7 @@ function buildNav(){
   const nav=$("#nav"); nav.innerHTML="";
   const item=(icon,label,fn,active)=>{
     const b=el("button","nav-item"+(active?" active":""));
-    b.innerHTML=`<i class="ph ${icon}"></i> ${esc(label)}`;
+    b.innerHTML=`<i class="ph ${icon}" aria-hidden="true"></i> ${esc(label)}`;
     b.onclick=()=>{ document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
       b.classList.add("active"); fn(); closeSidebar(); };
     nav.appendChild(b); return b;
@@ -626,7 +762,7 @@ function buildNav(){
 
 /* ============================================================ HOME */
 async function showHome(){
-  setTitle("Home"); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  setTitle("Home"); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
     let cw=[];
     try{ cw=collectItems(await api("/hubs/continueWatching")); }catch(_){}
@@ -648,7 +784,7 @@ async function showHome(){
       c.appendChild(railSection(h.title,h.items,wide,false));
     });
     if(!cw.length && !videoHubs.length)
-      c.innerHTML="<div class='empty'><i class='ph ph-film-strip'></i>Nothing here yet. Add some media.</div>";
+      c.innerHTML="<div class='empty'><i class='ph ph-film-strip' aria-hidden='true'></i>Nothing here yet. Add some media.</div>";
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 function collectItems(mc){
@@ -671,16 +807,16 @@ async function heroEl(it){
     <div class="hero-bg" style="background-image:url('${imgBlur(art)}')"></div>
     <div class="hero-scrim"></div>
     <div class="hero-inner">
-      <div class="hero-kicker"><i class="ph-fill ${it.viewOffset?'ph-play-circle':'ph-sparkle'}"></i>${it.viewOffset?'Continue Watching':'Featured'}</div>
-      <h1>${esc(title)}</h1>
+      <div class="hero-kicker"><i class="ph-fill ${it.viewOffset?'ph-play-circle':'ph-sparkle'}" aria-hidden="true"></i>${it.viewOffset?'Continue Watching':'Featured'}</div>
+      <h2>${esc(title)}</h2>
       <div class="hero-meta">
-        ${it.rating?`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)"></i> ${(+it.rating).toFixed(1)}</span>`:""}
+        ${it.rating?`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)" aria-hidden="true"></i> ${(+it.rating).toFixed(1)}</span>`:""}
         <span>${esc(meta)}</span>
       </div>
       <p>${esc(it.summary||"")}</p>
       <div class="hero-actions">
-        <button class="btn lg" id="heroPlay"><i class="ph-fill ph-play"></i> ${it.viewOffset?"Resume":"Play"}</button>
-        <button class="btn glass lg" id="heroInfo"><i class="ph ph-info"></i> Details</button>
+        <button class="btn lg" id="heroPlay"><i class="ph-fill ph-play" aria-hidden="true"></i> ${it.viewOffset?"Resume":"Play"}</button>
+        <button class="btn glass lg" id="heroInfo"><i class="ph ph-info" aria-hidden="true"></i> Details</button>
       </div>
     </div>`;
   setTimeout(()=>{
@@ -693,16 +829,9 @@ async function heroEl(it){
   return wrap;
 }
 
-/* ---- RAIL SECTION (with UltraBlur ambient) ---- */
+/* ---- RAIL SECTION ---- */
 function railSection(title,items,wide,featured){
   const sec=el("div","rail-section"+(featured?" featured":""));
-  // ambient UltraBlur wash from first item's art
-  const firstArt = items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb||items[0].parentThumb);
-  if(firstArt){
-    const amb=el("div","rail-ambient");
-    amb.style.backgroundImage=`url('${imgBlur(firstArt)}')`;
-    sec.appendChild(amb);
-  }
   const head=el("div","rail-head");
   head.innerHTML=`<h3>${esc(title)}</h3><span class="count">${items.length}</span>`;
   const row=el("div","carousel");
@@ -710,20 +839,25 @@ function railSection(title,items,wide,featured){
   sec.appendChild(head); sec.appendChild(row);
   return sec;
 }
-function card(it,wide){
-  const b=el("button","card"+(wide?" wide":""));
+function card(it,wide,square){
+  const b=el("button","card"+(wide?" wide":"")+(square?" square":""));
   const ep=it.type==="episode";
   const useWide = wide || ep;
-  const thumb = useWide ? (it.thumb||it.grandparentThumb||it.parentThumb) : (it.thumb||it.parentThumb);
+  const thumb = square ? (it.composite||it.thumb||it.parentThumb)
+    : useWide ? (it.thumb||it.grandparentThumb||it.parentThumb) : (it.thumb||it.parentThumb);
   const pct = it.viewOffset&&it.duration ? (it.viewOffset/it.duration*100) : 0;
   const title = ep ? (it.title||it.grandparentTitle||"") : (it.title||"");
   const sub = ep ? `${it.grandparentTitle||""} · S${it.parentIndex||0}E${it.index||0}`
+    : it._collection ? "Collection"
+    : it.type==="playlist" ? `${it.leafCount||0} items`
     : [it.year, it.type==="show"?`${it.childCount||it.leafCount||""} Seasons`:""].filter(Boolean).join(" · ");
+  const dim = square ? 320 : (useWide?480:340);
+  const dim2 = square ? 320 : (useWide?270:510);
   b.innerHTML=`
     <div class="art">
-      <img class="${useWide?"wide":""}" loading="lazy" alt="${esc(title)}"
-        src="${img(thumb,useWide?480:340,useWide?270:510)}">
-      <div class="play-hover"><i class="ph-fill ph-play-circle"></i></div>
+      <img class="${useWide&&!square?"wide":""}" loading="lazy" alt="${esc(title)}"
+        src="${img(thumb,dim,dim2)}">
+      <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
       ${pct?`<div class="watch-prog"><i style="width:${pct}%"></i></div>`:""}
     </div>
     <div class="ct">${esc(title)}</div>
@@ -734,7 +868,7 @@ function card(it,wide){
 
 /* ============================================================ LIBRARY */
 async function showLibrary(section){
-  setTitle(section.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
     const [all,colls]=await Promise.all([
       api(`/library/sections/${section.key}/all`),
@@ -754,21 +888,13 @@ async function showLibrary(section){
 
 /* ============================================================ PLAYLISTS */
 async function showPlaylists(){
-  setTitle("Playlists"); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  setTitle("Playlists"); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
     const mc=await api("/playlists");
     const pls=(mc.Metadata||[]).filter(p=>p.playlistType==="video");
-    if(!pls.length){ c.innerHTML="<div class='empty'><i class='ph ph-playlist'></i>No video playlists.</div>"; return; }
+    if(!pls.length){ c.innerHTML="<div class='empty'><i class='ph ph-playlist' aria-hidden='true'></i>No video playlists.</div>"; return; }
     const grid=el("div","grid-view"); grid.style.marginTop="24px";
-    grid.style.gridTemplateColumns="repeat(auto-fill,minmax(260px,1fr))";
-    pls.forEach(p=>{
-      const b=el("button","card wide"); b.style.width="auto";
-      b.innerHTML=`<div class="art"><img class="wide" loading="lazy"
-        src="${img(p.composite||p.thumb,480,270)}">
-        <div class="play-hover"><i class="ph-fill ph-play-circle"></i></div></div>
-        <div class="ct">${esc(p.title)}</div><div class="cs">${p.leafCount||0} items</div>`;
-      b.onclick=()=>openPlaylist(p); grid.appendChild(b);
-    });
+    pls.forEach(p=>grid.appendChild(card({...p,thumb:p.composite||p.thumb},false,true)));
     c.innerHTML=""; c.appendChild(grid);
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
@@ -777,13 +903,19 @@ async function openPlaylist(p){
   try{
     const mc=await api(`/playlists/${p.ratingKey}/items`);
     const items=(mc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-    c.innerHTML=""; c.appendChild(railSection(p.title,items,false,false));
+    const cover=p.composite||p.thumb;
+    setUltraBlur(cover||(items[0]&&(items[0].art||items[0].thumb)));
+    c.innerHTML=collHero({...p,thumb:cover},"Playlist",items,true)
+      +(items.length?`<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
+        <div class="grid-view"></div></div>`:"<div class='empty'><i class='ph ph-playlist' aria-hidden='true'></i>This playlist is empty.</div>");
+    if(items.length){ const grid=c.querySelector(".grid-view"); items.forEach(it=>grid.appendChild(card(it))); }
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 
 /* ============================================================ DETAIL */
 async function openItem(it){
   if(it._collection) return openCollection(it);
+  if(it.type==="playlist") return openPlaylist(it);
   if(it.type==="movie") return openMovie(it);
   if(it.type==="show") return openShow(it);
   if(it.type==="season") return openShow({ratingKey:it.parentRatingKey,type:"show",title:it.parentTitle},it.ratingKey);
@@ -793,9 +925,17 @@ async function openItem(it){
 async function openCollection(it){
   setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    const mc=await api(`/library/collections/${it.ratingKey}/children`);
-    const items=(mc.Metadata||[]);
-    c.innerHTML=""; c.appendChild(railSection(it.title,items,false,false));
+    const [meta,childrenMc]=await Promise.all([
+      api(`/library/metadata/${it.ratingKey}`).catch(()=>({})),
+      api(`/library/collections/${it.ratingKey}/children`)
+    ]);
+    const m=(meta.Metadata||[])[0]||it;
+    const items=childrenMc.Metadata||[];
+    setUltraBlur(m.art||m.thumb||(items[0]&&(items[0].art||items[0].thumb)));
+    c.innerHTML=collHero(m,"Collection",items,false)
+      +(items.length?`<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
+        <div class="grid-view"></div></div>`:"<div class='empty'><i class='ph ph-stack' aria-hidden='true'></i>This collection is empty.</div>");
+    if(items.length){ const grid=c.querySelector(".grid-view"); items.forEach(it2=>grid.appendChild(card(it2))); }
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 function metaBits(m,isMovie){
@@ -805,27 +945,119 @@ function metaBits(m,isMovie){
   if(isMovie&&m.duration) bits.push(fmtDur(m.duration));
   if(!isMovie) bits.push(`${m.childCount||m.seasonCount||""} Seasons`.trim());
   if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
-  if(m.rating) bits.push(`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)"></i> ${(+m.rating).toFixed(1)}</span>`);
+  if(m.rating) bits.push(`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)" aria-hidden="true"></i> ${(+m.rating).toFixed(1)}</span>`);
   return bits.join('<span class="sep"></span>');
 }
-function detailHero(m,isMovie,actionsHTML){
+/* ---- COLLECTION / PLAYLIST HERO ----
+   A dedicated editorial header for collections and playlists: cover art,
+   description, item count, total duration, and creation date — instead of
+   dropping them into a generic grid. */
+function collHero(m,kicker,items,square){
+  const bits=[`${items.length} item${items.length===1?"":"s"}`];
+  const totalDur=items.reduce((a,b)=>a+(b.duration||0),0);
+  if(totalDur) bits.push(fmtDur(totalDur));
+  if(m.addedAt) bits.push(`Added ${fmtDate(m.addedAt)}`);
+  if(m.smart) bits.push("Smart");
+  return `<div class="coll-hero">
+    <div class="coll-art${square?" square":""}"><img src="${img(m.thumb,440,square?440:660)}" alt=""></div>
+    <div class="coll-info">
+      <div class="coll-kicker">${esc(kicker)}</div>
+      <h2>${esc(m.title)}</h2>
+      ${m.summary?`<div class="coll-desc">${esc(m.summary)}</div>`:""}
+      <div class="coll-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>
+    </div>
+  </div>`;
+}
+function detailHero(m,isMovie,actionsHTML,extras){
   const art=m.art||m.thumb;
   const genres=(m.Genre||[]).slice(0,5).map(g=>`<span class="chip">${esc(g.tag)}</span>`).join("");
-  return `<div class="detail-wrap"><div class="detail-ambient" style="background-image:url('${imgBlur(art)}')"></div>
+  return `<div class="detail-wrap">
     <div class="detail-hero">
       <div class="detail-bg" style="background-image:url('${imgBlur(art)}')"></div>
       <div class="detail-scrim"></div>
       <div class="detail-row">
-        <img class="detail-poster" src="${img(m.thumb,440,660)}">
+        <img class="detail-poster" src="${img(m.thumb,440,660)}" alt="">
         <div class="detail-info">
-          <h1>${esc(m.title)}</h1>
+          <h2>${esc(m.title)}</h2>
           <div class="sub">${metaBits(m,isMovie)}</div>
           <div class="chips">${genres}</div>
+          ${ratingsRowHTML(m,extras)}
           <div class="summary">${esc(m.summary||"")}</div>
           <div class="detail-actions">${actionsHTML}</div>
         </div>
       </div>
     </div></div>`;
+}
+/* ---- RATINGS ROW ----
+   Parses Plex's Rating[] (image-keyed by source) into IMDb / Rotten Tomatoes /
+   TMDB badges, plus a Trailer badge if one is available among the extras. */
+function ratingsRowHTML(m,extras){
+  const out=[];
+  (m.Rating||[]).forEach(r=>{
+    const src=r.image||"", val=r.value; if(val==null) return;
+    if(src.includes("imdb"))
+      out.push(`<span class="rating-badge"><i class="ph-fill ph-star" aria-hidden="true"></i>IMDb <b>${(+val).toFixed(1)}</b></span>`);
+    else if(src.includes("rottentomatoes")){
+      const audience=src.includes("upright")||src.includes("spilled");
+      out.push(`<span class="rating-badge"><i class="ph-fill ph-seal-percent" aria-hidden="true"></i>RT${audience?" Audience":""} <b>${Math.round(val*10)}%</b></span>`);
+    }else if(src.includes("themoviedb"))
+      out.push(`<span class="rating-badge"><i class="ph-fill ph-film-slate" aria-hidden="true"></i>TMDB <b>${(+val).toFixed(1)}</b></span>`);
+  });
+  const trailer=(extras||[]).find(e=>/trailer/i.test(e.subtype||""));
+  if(trailer) out.push(`<button class="rating-badge" id="ratingsTrailerBtn"><i class="ph-fill ph-play-circle" aria-hidden="true"></i>Trailer</button>`);
+  return out.length?`<div class="ratings-row">${out.join("")}</div>`:"";
+}
+/* ---- STAT ROW ----
+   Added / first-watched / last-watched / episode-progress, mirroring the
+   bottom metadata strip on a streaming service's title page. */
+function statRowHTML(m,isMovie){
+  const stats=[];
+  if(m.addedAt) stats.push(`<div class="stat"><span class="sl">Added to library</span><span class="sv">${esc(fmtDate(m.addedAt))}</span></div>`);
+  if(m.lastViewedAt) stats.push(`<div class="stat" data-stat="last-watched"><span class="sl">Last watched</span><span class="sv">${esc(fmtDate(m.lastViewedAt))}</span></div>`);
+  if(!isMovie&&m.leafCount) stats.push(`<div class="stat"><span class="sl">Episodes watched</span><span class="sv">${m.viewedLeafCount||0} of ${m.leafCount}</span></div>`);
+  else if(isMovie&&m.viewCount) stats.push(`<div class="stat"><span class="sl">Times watched</span><span class="sv">${m.viewCount}</span></div>`);
+  return stats.length?`<div class="stat-row" id="statRow">${stats.join("")}</div>`:"";
+}
+async function injectFirstWatched(ratingKey,isShow){
+  const row=$("#statRow"); if(!row) return;
+  try{
+    const param=isShow?`grandparentRatingKey=${ratingKey}`:`metadataItemID=${ratingKey}`;
+    const mc=await api(`/status/sessions/history/all?${param}&sort=viewedAt%3Aasc&X-Plex-Container-Size=1`);
+    const first=(mc.Metadata||[])[0]; if(!first||!first.viewedAt) return;
+    const stat=el("div","stat");
+    stat.innerHTML=`<span class="sl">First watched</span><span class="sv">${esc(fmtDate(first.viewedAt))}</span>`;
+    row.insertBefore(stat,row.querySelector('[data-stat="last-watched"]')||null);
+  }catch(_){}
+}
+/* ---- EXTRAS RAIL (trailers, behind-the-scenes, deleted scenes...) ---- */
+async function fetchExtras(ratingKey){
+  try{ const mc=await api(`/library/metadata/${ratingKey}/extras`); return mc.Metadata||[]; }catch(_){ return []; }
+}
+const EXTRA_LABELS={trailer:"Trailer",behindthescenes:"Behind the Scenes",deleted:"Deleted Scene",
+  featurette:"Featurette",interview:"Interview",scene:"Scene",short:"Short",other:"Extra"};
+function extrasRailHTML(extras){
+  if(!extras||!extras.length) return "";
+  const cards=extras.map(e=>{
+    const label=EXTRA_LABELS[(e.subtype||"").toLowerCase()]||"Extra";
+    return `<button class="card wide extra-card" data-rk="${esc(String(e.ratingKey))}">
+      <div class="art"><img class="wide" loading="lazy" src="${img(e.thumb,480,270)}" alt="">
+        <div class="extra-badge">${esc(label)}</div>
+        ${e.duration?`<div class="extra-dur">${fmtClock(e.duration/1000)}</div>`:""}
+        <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
+      </div>
+      <div class="ct">${esc(e.title)}</div>
+    </button>`;
+  }).join("");
+  return `<div class="rail-section"><div class="rail-head"><h3>Extras</h3><span class="count">${extras.length}</span></div>
+    <div class="carousel">${cards}</div></div>`;
+}
+function wireExtras(c,extras,trailerBtnId){
+  c.querySelectorAll(".extra-card").forEach(b=>{
+    const e=extras.find(x=>String(x.ratingKey)===b.dataset.rk);
+    if(e) b.onclick=()=>playItem(e,0);
+  });
+  const tb=trailerBtnId&&c.querySelector(`#${trailerBtnId}`);
+  if(tb){ const t=extras.find(e=>/trailer/i.test(e.subtype||"")); if(t) tb.onclick=()=>playItem(t,0); }
 }
 function crewCastHTML(m){
   let out="";
@@ -841,53 +1073,74 @@ function crewCastHTML(m){
   if(cast.length){
     out+=`<div class="section"><h3>Cast</h3><div class="cast-row">`+
       cast.map(r=>`<div class="cast">
-        <img src="${r.thumb?img(r.thumb,168,168):""}" onerror="this.style.visibility='hidden'">
+        <img loading="lazy" alt="" src="${r.thumb?img(r.thumb,168,168):""}" onerror="this.style.visibility='hidden'">
         <div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></div>`).join("")+
       `</div></div>`;
   }
   return out;
 }
 function wireBackdrop(c,art){
+  setUltraBlur(art);
   const bg=c.querySelector(".detail-bg"); if(!bg) return;
-  const im=new Image(); im.onload=()=>{bg.style.backgroundImage=`url('${im.src}')`;bg.style.opacity=".55";};
+  const im=new Image(); im.onload=()=>{bg.style.backgroundImage=`url('${im.src}')`;};
   im.src=img(art,1600,900);
 }
 async function openMovie(it){
   setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    const mc=await api(`/library/metadata/${it.ratingKey}`);
+    const [mc,extras]=await Promise.all([api(`/library/metadata/${it.ratingKey}`),fetchExtras(it.ratingKey)]);
     const m=(mc.Metadata||[])[0]||it;
-    const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
-      <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise"></i> Start over</button>`
-      :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play"></i> Play</button>`;
-    c.innerHTML=detailHero(m,true,resume)+crewCastHTML(m);
+    const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
+      <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Start over</button>`
+      :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
+    c.innerHTML=detailHero(m,true,resume,extras)+statRowHTML(m,true)+crewCastHTML(m)+extrasRailHTML(extras);
     wireBackdrop(c,m.art||m.thumb);
+    wireExtras(c,extras,"ratingsTrailerBtn");
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
     else $("#playBtnD").onclick=()=>playItem(m,0);
+    injectFirstWatched(m.ratingKey,false);
   }catch(e){ c.innerHTML=errHTML(e.message); }
+}
+/* ---- SEASON SWITCHER (artwork cards, not pill tabs) ---- */
+function seasonCard(s,active){
+  const b=el("button","card season-card"+(active?" active":""));
+  if(active) b.setAttribute("aria-current","true");
+  b.innerHTML=`<div class="art"><img loading="lazy" alt="" src="${img(s.thumb,300,450)}"></div>
+    <div class="ct">${esc(s.title||`Season ${s.index}`)}</div>
+    <div class="cs">${s.leafCount?`${s.leafCount} episodes`:""}</div>`;
+  return b;
 }
 async function openShow(it,jumpSeasonKey){
   setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    const meta=await api(`/library/metadata/${it.ratingKey}`);
+    const [meta,seasonsMc,extras]=await Promise.all([
+      api(`/library/metadata/${it.ratingKey}`),
+      api(`/library/metadata/${it.ratingKey}/children`),
+      fetchExtras(it.ratingKey)
+    ]);
     const show=(meta.Metadata||[])[0]||it;
-    const seasonsMc=await api(`/library/metadata/${it.ratingKey}/children`);
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
-    const actions=`<button class="btn lg" id="playShow"><i class="ph-fill ph-play"></i> Play</button>`;
-    c.innerHTML=detailHero(show,false,actions)
-      +`<div class="season-tabs" id="seasonTabs"></div><div class="ep-list" id="epList"></div>`;
+    const actions=`<button class="btn lg" id="playShow"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
+    c.innerHTML=detailHero(show,false,actions,extras)+statRowHTML(show,false)
+      +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
+        <div class="season-rail" id="seasonRail"></div></div>`:"")
+      +crewCastHTML(show)
+      +extrasRailHTML(extras)
+      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list" id="epList"></div>`;
     wireBackdrop(c,show.art||show.thumb);
-    const tabs=$("#seasonTabs");
+    wireExtras(c,extras,"ratingsTrailerBtn");
+    injectFirstWatched(show.ratingKey,true);
+
+    const rail=$("#seasonRail");
     let activeSeason=seasons[0];
     if(jumpSeasonKey){ const f=seasons.find(s=>String(s.ratingKey)===String(jumpSeasonKey)); if(f) activeSeason=f; }
-    seasons.forEach(s=>{
-      const b=el("button","season-tab"+(s===activeSeason?" active":""));
-      b.textContent=s.title||`Season ${s.index}`;
-      b.onclick=()=>{ document.querySelectorAll(".season-tab").forEach(t=>t.classList.remove("active"));
-        b.classList.add("active"); activeSeason=s; loadEpisodes(s,show); };
-      tabs.appendChild(b);
+    if(rail) seasons.forEach(s=>{
+      const b=seasonCard(s,s===activeSeason);
+      b.onclick=()=>{ rail.querySelectorAll(".season-card").forEach(t=>{t.classList.remove("active");t.removeAttribute("aria-current");});
+        b.classList.add("active"); b.setAttribute("aria-current","true"); activeSeason=s; loadEpisodes(s); };
+      rail.appendChild(b);
     });
-    if(activeSeason) loadEpisodes(activeSeason,show);
+    if(activeSeason) loadEpisodes(activeSeason);
     else $("#epList").innerHTML="<div class='empty'>No seasons found.</div>";
     $("#playShow").onclick=async()=>{
       const mc2=await api(`/library/metadata/${activeSeason.ratingKey}/children`);
@@ -897,21 +1150,23 @@ async function openShow(it,jumpSeasonKey){
 }
 async function loadEpisodes(season){
   const list=$("#epList"); list.innerHTML="<div class='loading'>Loading episodes…</div>";
+  const heading=$("#epListHeading");
+  if(heading) heading.textContent=season.title||`Season ${season.index}`;
   try{
     const mc=await api(`/library/metadata/${season.ratingKey}/children`);
     const eps=mc.Metadata||[]; list.innerHTML="";
     eps.forEach(epm=>{
       const pct=epm.viewOffset&&epm.duration?(epm.viewOffset/epm.duration*100):0;
       const watched=epm.viewCount>0&&!pct;
-      const row=el("div","ep");
+      const row=el("button","ep");
       row.innerHTML=`
         <div class="ep-thumb">
-          <img loading="lazy" src="${img(epm.thumb,360,202)}">
-          <div class="ep-play"><i class="ph-fill ph-play-circle"></i></div>
+          <img loading="lazy" alt="" src="${img(epm.thumb,360,202)}">
+          <div class="ep-play"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
           ${pct?`<div class="ep-prog"><i style="width:${pct}%"></i></div>`:""}
         </div>
         <div class="ep-body">
-          <div class="eh"><div class="et">${epm.index?epm.index+". ":""}${esc(epm.title)} ${watched?'<i class="ph ph-check-circle" style="color:var(--accent);font-size:13px;vertical-align:-1px"></i>':""}</div>
+          <div class="eh"><div class="et">${epm.index?epm.index+". ":""}${esc(epm.title)} ${watched?'<i class="ph ph-check-circle" style="color:var(--accent);font-size:13px;vertical-align:-1px" aria-label="Watched"></i>':""}</div>
             <div class="edur">${fmtDur(epm.duration)}</div></div>
           <div class="ed">${esc(epm.summary||"")}</div>
         </div>`;
@@ -929,14 +1184,14 @@ $("#search").addEventListener("input",e=>{
   searchTimer=setTimeout(()=>{ if(q.length>=2) runSearch(q); else if(!q) showHome(); },350);
 });
 async function runSearch(q){
-  setTitle(`Results for "${q}"`); const c=$("#content"); c.innerHTML="<div class='loading'>Searching…</div>";
+  setTitle(`Results for "${q}"`); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Searching…</div>";
   try{
     const mc=await api(`/hubs/search?query=${encodeURIComponent(q)}&limit=40`);
     const hubs=(mc.Hub||[]).map(h=>({title:h.title,
       items:(h.Metadata||[]).filter(x=>["movie","show","episode","season"].includes(x.type))}))
       .filter(h=>h.items.length);
     c.innerHTML="";
-    if(!hubs.length){ c.innerHTML="<div class='empty'><i class='ph ph-magnifying-glass'></i>No results.</div>"; return; }
+    if(!hubs.length){ c.innerHTML="<div class='empty'><i class='ph ph-magnifying-glass' aria-hidden='true'></i>No results.</div>"; return; }
     hubs.forEach(h=>c.appendChild(railSection(h.title,h.items,h.items.every(i=>i.type==="episode"),false)));
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
@@ -947,7 +1202,7 @@ async function runSearch(q){
    Plex serves single-variant HLS (no multi-bitrate ladder), so adaptation
    is stall-detection -> step transcode bitrate down -> resume in place. */
 const video=$("#video");
-let hls=null, currentItem=null, sessionId=null, triedFallback=false;
+let hls=null, currentItem=null, sessionId=null, triedFallback=false, playerOpener=null;
 let qIndex=0;                         // selected quality (0 = Auto)
 let autoStep=0;                       // rung on AUTO_LADDER
 let stalls=[], lastSeekAt=0;
@@ -973,6 +1228,7 @@ const AUTO_LADDER=[
 ];
 
 async function playItem(it,offsetMs){
+  playerOpener=document.activeElement;
   $("#player").classList.add("show");
   playerLoading(true,"Loading", it);
   let full=it;
@@ -983,12 +1239,20 @@ async function playItem(it,offsetMs){
   currentItem=full; triedFallback=false; autoStep=0; stalls=[];
   audioChanged=false; subOn=isSubSelected();
   nextEp=null; nextEpFetched=false; hideNextUp();
-  $("#pTitle").textContent = full.type==="episode"
-    ? `${full.grandparentTitle} · S${full.parentIndex}E${full.index} · ${full.title}` : full.title;
-  $("#miniTitle").textContent=$("#pTitle").textContent;
+  if(full.type==="episode"){
+    $("#pTitle").innerHTML=`<span class="pt-main">${esc(full.grandparentTitle||"")}</span>`
+      +`<span class="pt-sub">Season ${full.parentIndex} · Episode ${full.index} · ${esc(full.title||"")}</span>`;
+    $("#miniTitle").textContent=`${full.grandparentTitle} · S${full.parentIndex}E${full.index} · ${full.title}`;
+  }else{
+    $("#pTitle").innerHTML=`<span class="pt-main">${esc(full.title||"")}</span>`;
+    $("#miniTitle").textContent=full.title||"";
+  }
   buildPlayerMenu();
+  renderChapterMarks();
+  buildChaptersMenu();
   startStream(offsetMs||0);
   bindActivity();
+  setTimeout(()=>$("#playBtn").focus(),50);
 }
 function partOf(it){ const m=(it.Media||[])[0]; return m&&(m.Part||[])[0]; }
 function mediaOf(it){ return (it.Media||[])[0]; }
@@ -1110,47 +1374,49 @@ video.addEventListener("seeking",()=>{ lastSeekAt=performance.now(); });
 video.addEventListener("playing",()=>playerLoading(false));
 video.addEventListener("canplay",()=>playerLoading(false));
 
-/* ---- settings menu: Quality / Audio / Subtitles ---- */
+/* ---- settings menu: Quality / Audio / Subtitles ----
+   role=menuitemradio + aria-checked mirrors the visual checkmark (i.ck) for
+   screen readers; arrow-key navigation is handled by the shared menu
+   keydown handler below. */
 function buildPlayerMenu(){
   const m=$("#pMenu"); m.innerHTML="";
   const add=(html)=>{ m.insertAdjacentHTML("beforeend",html); };
+  const radio=(active,html,onclick)=>{
+    const b=el("button",active?"active":""); b.setAttribute("role","menuitemradio");
+    b.setAttribute("aria-checked",String(active));
+    b.innerHTML=`<i class="ph ph-check ck" aria-hidden="true"></i>${html}`;
+    b.onclick=onclick; m.appendChild(b);
+  };
   add('<div class="mh">Quality</div>');
   QUALITIES.forEach((q,i)=>{
-    const b=el("button",i===qIndex?"active":"");
-    b.innerHTML=`<i class="ph ph-check"></i><span class="ml">${q.label}</span><span class="msub">${q.sub}</span>`;
-    b.onclick=()=>{ qIndex=i; autoStep=0; stalls=[]; $("#pMenu").classList.remove("open");
-      buildPlayerMenu(); startStream((video.currentTime||0)*1000); };
-    m.appendChild(b);
+    radio(i===qIndex, `<span class="ml">${q.label}</span><span class="msub">${q.sub}</span>`, ()=>{
+      qIndex=i; autoStep=0; stalls=[]; closeSettingsMenu();
+      buildPlayerMenu(); startStream((video.currentTime||0)*1000);
+    });
   });
   const streams=streamsOf();
   const auds=streams.filter(s=>s.streamType===2);
   if(auds.length>1){
     add('<div class="mh">Audio</div>');
     auds.forEach(s=>{
-      const b=el("button",s.selected?"active":"");
-      b.innerHTML=`<i class="ph ph-check"></i><span class="ml">${esc(s.displayTitle||s.language||("Track "+s.index))}</span>`;
-      b.onclick=()=>selectStream("audio",s);
-      m.appendChild(b);
+      radio(!!s.selected, `<span class="ml">${esc(s.displayTitle||s.language||("Track "+s.index))}</span>`,
+        ()=>selectStream("audio",s));
     });
   }
   const subs=streams.filter(s=>s.streamType===3);
   if(subs.length){
     add('<div class="mh">Subtitles</div>');
-    const off=el("button",!subs.some(s=>s.selected)?"active":"");
-    off.innerHTML='<i class="ph ph-check"></i><span class="ml">Off</span>';
-    off.onclick=()=>selectStream("sub",null);
-    m.appendChild(off);
+    radio(!subs.some(s=>s.selected), `<span class="ml">Off</span>`, ()=>selectStream("sub",null));
     subs.forEach(s=>{
-      const b=el("button",s.selected?"active":"");
-      b.innerHTML=`<i class="ph ph-check"></i><span class="ml">${esc(s.displayTitle||s.language||("Subtitle "+s.index))}</span>`;
-      b.onclick=()=>selectStream("sub",s);
-      m.appendChild(b);
+      radio(!!s.selected, `<span class="ml">${esc(s.displayTitle||s.language||("Subtitle "+s.index))}</span>`,
+        ()=>selectStream("sub",s));
     });
   }
 }
+function closeSettingsMenu(){ $("#pMenu").classList.remove("open"); $("#settingsBtn").setAttribute("aria-expanded","false"); }
 async function selectStream(kind,s){
   const part=partOf(currentItem); if(!part||!part.id) return;
-  $("#pMenu").classList.remove("open");
+  closeSettingsMenu();
   const t=video.currentTime*1000||0;
   try{
     const q = kind==="audio"
@@ -1168,8 +1434,70 @@ async function selectStream(kind,s){
     startStream(t);   // restart in place; server muxes/burns the chosen tracks
   }catch(_){ toast("Couldn't switch track"); }
 }
-$("#settingsBtn").onclick=e=>{ e.stopPropagation(); $("#pMenu").classList.toggle("open"); };
-document.addEventListener("click",e=>{ if(!$("#pMenu").contains(e.target)&&e.target!==$("#settingsBtn")) $("#pMenu").classList.remove("open"); });
+$("#settingsBtn").onclick=e=>{ e.stopPropagation(); $("#chaptersMenu").classList.remove("open"); $("#chaptersBtn").setAttribute("aria-expanded","false");
+  const open=$("#pMenu").classList.toggle("open"); $("#settingsBtn").setAttribute("aria-expanded",String(open));
+  if(open) $("#pMenu").querySelector("button")?.focus(); };
+document.addEventListener("click",e=>{
+  if(!$("#pMenu").contains(e.target)&&e.target!==$("#settingsBtn")){ $("#pMenu").classList.remove("open"); $("#settingsBtn").setAttribute("aria-expanded","false"); }
+});
+
+/* ---- chapters ---- */
+function renderChapterMarks(){
+  const wrap=$("#chapterMarks"); wrap.innerHTML="";
+  const chapters=(currentItem&&currentItem.Chapter)||[];
+  const dur=currentItem&&currentItem.duration;
+  if(!chapters.length||!dur) return;
+  chapters.forEach(ch=>{
+    if(!ch.startTimeOffset) return;
+    const mark=el("div","p-chapter-mark");
+    mark.style.left=(ch.startTimeOffset/dur*100)+"%";
+    wrap.appendChild(mark);
+  });
+}
+function buildChaptersMenu(){
+  const menu=$("#chaptersMenu"); menu.innerHTML="";
+  const chapters=(currentItem&&currentItem.Chapter)||[];
+  const btn=$("#chaptersBtn");
+  btn.hidden=!chapters.length;
+  if(!chapters.length){ menu.classList.remove("open"); return; }
+  menu.insertAdjacentHTML("beforeend",'<div class="mh">Chapters</div>');
+  chapters.forEach(ch=>{
+    const b=el("button","chapter-item"); b.setAttribute("role","menuitem");
+    b.innerHTML=`${ch.thumb?`<img loading="lazy" alt="" src="${img(ch.thumb,128,72)}">`:""}
+      <span class="ci"><span class="ci-t">${esc(ch.tag||"Chapter")}</span>
+      <span class="ci-time">${fmtClock(ch.startTimeOffset/1000)}</span></span>`;
+    b.onclick=()=>{ if(video.duration) video.currentTime=ch.startTimeOffset/1000;
+      menu.classList.remove("open"); video.play().catch(()=>{}); };
+    menu.appendChild(b);
+  });
+}
+$("#chaptersBtn").onclick=e=>{ e.stopPropagation(); $("#pMenu").classList.remove("open");
+  $("#settingsBtn").setAttribute("aria-expanded","false");
+  const open=$("#chaptersMenu").classList.toggle("open");
+  $("#chaptersBtn").setAttribute("aria-expanded",String(open));
+  if(open) $("#chaptersMenu").querySelector("button")?.focus(); };
+document.addEventListener("click",e=>{
+  if(!$("#chaptersMenu").contains(e.target)&&e.target!==$("#chaptersBtn")){
+    $("#chaptersMenu").classList.remove("open"); $("#chaptersBtn").setAttribute("aria-expanded","false");
+  }
+});
+
+/* ---- accessible menu keyboard navigation (arrows / escape / tab) ---- */
+function menuKeyHandler(menu,toggleBtn){
+  menu.addEventListener("keydown",e=>{
+    const items=[...menu.querySelectorAll("button")];
+    const i=items.indexOf(document.activeElement);
+    if(e.key==="ArrowDown"){ e.preventDefault(); (items[i+1]||items[0])?.focus(); }
+    else if(e.key==="ArrowUp"){ e.preventDefault(); (items[i-1]||items[items.length-1])?.focus(); }
+    else if(e.key==="Home"){ e.preventDefault(); items[0]?.focus(); }
+    else if(e.key==="End"){ e.preventDefault(); items[items.length-1]?.focus(); }
+    else if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); menu.classList.remove("open");
+      if(toggleBtn) { toggleBtn.setAttribute("aria-expanded","false"); toggleBtn.focus(); } }
+    else if(e.key==="Tab"){ menu.classList.remove("open"); if(toggleBtn) toggleBtn.setAttribute("aria-expanded","false"); }
+  });
+}
+menuKeyHandler($("#pMenu"),$("#settingsBtn"));
+menuKeyHandler($("#chaptersMenu"),$("#chaptersBtn"));
 
 /* ---- transport controls ---- */
 $("#playBtn").onclick=togglePlay;
@@ -1178,8 +1506,12 @@ video.addEventListener("click",()=>{ if($("#player").classList.contains("min"))r
 video.addEventListener("dblclick",toggleFull);
 video.addEventListener("play",()=>setPlayIcon(true));
 video.addEventListener("pause",()=>setPlayIcon(false));
-function setPlayIcon(playing){ $("#playBtn").innerHTML=`<i class="ph-fill ph-${playing?"pause":"play"}"></i>`;
-  $("#miniPlay").innerHTML=`<i class="ph-fill ph-${playing?"pause":"play"}"></i>`; }
+function setPlayIcon(playing){
+  const icon=`<i class="ph-fill ph-${playing?"pause":"play"}" aria-hidden="true"></i>`;
+  const label=playing?"Pause":"Play";
+  $("#playBtn").innerHTML=icon; $("#playBtn").setAttribute("aria-label",label);
+  $("#miniPlay").innerHTML=icon; $("#miniPlay").setAttribute("aria-label",label);
+}
 
 $("#back10").onclick=()=>video.currentTime=Math.max(0,video.currentTime-10);
 $("#fwd10").onclick=()=>video.currentTime=Math.min(video.duration||1e9,video.currentTime+10);
@@ -1189,6 +1521,8 @@ video.addEventListener("timeupdate",()=>{
   const pct=d?t/d*100:0;
   $("#played").style.width=pct+"%"; $("#knob").style.left=pct+"%";
   $("#curTime").textContent=fmtClock(t); $("#durTime").textContent=fmtClock(d);
+  $("#seekTrack").setAttribute("aria-valuenow",String(Math.round(pct)));
+  $("#seekTrack").setAttribute("aria-valuetext",`${fmtClock(t)} of ${fmtClock(d)}`);
   if(video.buffered.length){ try{ const end=video.buffered.end(video.buffered.length-1);
     $("#buffered").style.width=(d?end/d*100:0)+"%"; }catch(_){} }
   maybePrefetchNext(d,t);
@@ -1208,6 +1542,14 @@ track.addEventListener("pointermove",e=>{
 });
 track.addEventListener("pointerup",()=>{ scrubbing=false; });
 track.addEventListener("pointerleave",()=>{ $("#hoverTime").style.display="none"; });
+/* Left/Right (±5s) and Up/Down (volume) are handled by the global keydown
+   handler below even while the slider is focused; Home/End jump to the
+   start/end here since those aren't otherwise mapped. */
+track.addEventListener("keydown",e=>{
+  if(!video.duration) return;
+  if(e.key==="Home"){ e.preventDefault(); video.currentTime=0; }
+  else if(e.key==="End"){ e.preventDefault(); video.currentTime=video.duration; }
+});
 
 /* volume */
 const vol=$("#volSlider");
@@ -1215,7 +1557,9 @@ vol.oninput=e=>{ video.volume=+e.target.value; video.muted=video.volume===0; upd
 $("#muteBtn").onclick=()=>{ video.muted=!video.muted; updateVolIcon(); };
 function updateVolIcon(){ const v=video.muted?0:video.volume;
   const ic=v===0?"ph-speaker-x":v<0.5?"ph-speaker-low":"ph-speaker-high";
-  $("#muteBtn").innerHTML=`<i class="ph ${ic}"></i>`; vol.value=video.muted?0:video.volume; }
+  $("#muteBtn").innerHTML=`<i class="ph ${ic}" aria-hidden="true"></i>`;
+  $("#muteBtn").setAttribute("aria-label",v===0?"Unmute":"Mute");
+  vol.value=video.muted?0:video.volume; }
 
 /* fullscreen */
 $("#fullBtn").onclick=toggleFull;
@@ -1223,7 +1567,8 @@ function toggleFull(){ if(document.fullscreenElement) document.exitFullscreen();
   else $("#player").requestFullscreen?.().catch(()=>{}); }
 document.addEventListener("fullscreenchange",()=>{
   const f=!!document.fullscreenElement;
-  $("#fullBtn").innerHTML=`<i class="ph ph-corners-${f?"in":"out"}"></i>`; });
+  $("#fullBtn").innerHTML=`<i class="ph ph-corners-${f?"in":"out"}" aria-hidden="true"></i>`;
+  $("#fullBtn").setAttribute("aria-label",f?"Exit fullscreen":"Fullscreen"); });
 
 /* PiP */
 $("#pipBtn").onclick=async()=>{ try{
@@ -1244,6 +1589,9 @@ function closePlayer(){
   video.pause(); video.removeAttribute("src"); video.load();
   $("#player").classList.remove("show","min","idle","loading");
   currentItem=null;
+  closeSettingsMenu(); $("#chaptersMenu").classList.remove("open"); $("#chaptersBtn").setAttribute("aria-expanded","false");
+  if(playerOpener&&document.contains(playerOpener)) playerOpener.focus();
+  playerOpener=null;
 }
 
 /* idle / chrome auto-hide */
@@ -1321,12 +1669,12 @@ function showNextUp(){
   $("#nextUp").classList.add("show");
   let n=10;
   const btn=$("#nuPlay");
-  btn.innerHTML=`<i class="ph-fill ph-play"></i> Play now · ${n}`;
+  btn.innerHTML=`<i class="ph-fill ph-play" aria-hidden="true"></i> Play now · ${n}`;
   clearInterval(nuTimer);
   nuTimer=setInterval(()=>{
     n--;
     if(n<=0){ hideNextUp(); playItem(nextEp,0); return; }
-    btn.innerHTML=`<i class="ph-fill ph-play"></i> Play now · ${n}`;
+    btn.innerHTML=`<i class="ph-fill ph-play" aria-hidden="true"></i> Play now · ${n}`;
   },1000);
 }
 function hideNextUp(){ $("#nextUp").classList.remove("show"); clearInterval(nuTimer); nuTimer=null; }
@@ -1354,10 +1702,12 @@ function setTitle(t){ $("#viewTitle").textContent=t; }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 function fmtDur(ms){ if(!ms)return""; const m=Math.round(ms/60000);
   return m<60?m+"m":Math.floor(m/60)+"h "+(m%60)+"m"; }
+function fmtDate(ts){ if(!ts) return ""; return new Date(ts*1000).toLocaleDateString(undefined,
+  {year:"numeric",month:"short",day:"numeric"}); }
 function fmtClock(s){ if(!s||isNaN(s))return"0:00"; s=Math.floor(s);
   const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
   return h>0?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`; }
-function errHTML(m){ return `<div class="err"><i class="ph ph-warning-circle"></i><div>${esc(m)}</div></div>`; }
+function errHTML(m){ return `<div class="err" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i><div>${esc(m)}</div></div>`; }
 
 $("#menuToggle").onclick=()=>{ $("#sidebar").classList.add("open"); $("#scrimNav").classList.add("show"); };
 $("#scrimNav").onclick=closeSidebar;
