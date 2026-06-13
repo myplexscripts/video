@@ -141,7 +141,8 @@
   .content{padding:0 0 max(80px,env(safe-area-inset-bottom));position:relative}
   #content > .rail-section:first-child,#content > .rail-head:first-child,
   #content > .grid-view:first-child,#content > .empty:first-child,
-  #content > .loading:first-child,#content > .err:first-child{margin-top:var(--pill-clear)}
+  #content > .loading:first-child,#content > .err:first-child,
+  #content > .lib-tabs:first-child{margin-top:var(--pill-clear)}
 
   /* ---- FLOATING GLASS BAR ----
      No header bar: a single floating "Liquid Glass" search pill hovers over
@@ -189,16 +190,37 @@
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
 
-  /* ---- SECTION / RAIL ---- */
-  .rail-section{position:relative;padding:40px 0 10px}
-  .rail-head{display:flex;align-items:baseline;gap:12px;margin:0 var(--edge) 16px;position:relative}
-  .rail-head h3{font-size:20px;font-weight:700;letter-spacing:-.02em}
-  .rail-head .count{font-size:12px;color:var(--faint);font-weight:500}
+  /* ---- SECTION / RAIL ----
+     Each rail can carry its own ambient color wash (.rail-ambient), a
+     blurred, saturated smear of its first item's art sitting behind the
+     header — a per-row echo of the page-level UltraBlur underlay. */
+  .rail-section{position:relative;padding:40px 0 10px;overflow:hidden}
+  .rail-ambient{position:absolute;top:-90px;left:6%;right:6%;height:260px;
+    background-size:cover;background-position:center;opacity:.28;
+    filter:blur(70px) saturate(1.8);pointer-events:none;transform:scale(1.25)}
+  .rail-head{display:flex;align-items:flex-end;gap:12px;margin:0 var(--edge) 16px;position:relative}
+  .rail-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .rail-lib{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:700}
+  .rail-head h3{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .featured .rail-head h3{font-size:27px}
+  .rail-head .count{font-size:12px;color:var(--faint);font-weight:500;padding-bottom:3px}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
     -webkit-overflow-scrolling:touch}
   .carousel::-webkit-scrollbar{height:0}
   .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px;
     padding:4px var(--edge) 16px}
+
+  /* ---- LIBRARY TABS ----
+     Plex-style "Recommended" / "Library" switcher shown at the top of
+     every library page. */
+  .lib-tabs{display:flex;gap:8px;margin:0 var(--edge) 24px}
+  .lib-tab{background:var(--surface2);backdrop-filter:blur(20px) saturate(1.5);
+    -webkit-backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--line2);
+    border-radius:100px;height:38px;padding:0 20px;color:var(--dim);font-size:13px;
+    font-weight:600;font-family:var(--font);cursor:pointer;
+    transition:background-color .15s,color .15s,border-color .15s}
+  .lib-tab:hover{background:var(--surface3);color:var(--text)}
+  .lib-tab.active{background:var(--accent);color:#141005;border-color:var(--accent)}
 
   /* ---- LIBRARY TOOLBAR ----
      A "Liquid Glass" control strip for the library grid: live, client-side
@@ -875,38 +897,106 @@ async function bootApp(){
   try{
     const mc=await api("/library/sections");
     sections=(mc.Directory||[]).filter(s=>s.type==="movie"||s.type==="show");
-    buildNav(); showHome();
+    buildNav(); route();
   }catch(e){ $("#content").innerHTML=errHTML(e.message); }
 }
 function buildNav(){
   const nav=$("#nav"); nav.innerHTML="";
-  const item=(icon,label,fn,active)=>{
-    const b=el("button","nav-item"+(active?" active":""));
+  const item=(icon,label,fn,opts={})=>{
+    const b=el("button","nav-item");
+    if(opts.id) b.id=opts.id;
+    if(opts.lib!=null) b.dataset.lib=opts.lib;
     b.innerHTML=`<i class="ph ${icon}" aria-hidden="true"></i> ${esc(label)}`;
-    b.onclick=()=>{ document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-      b.classList.add("active"); fn(); closeSidebar(); };
+    b.onclick=()=>{ fn(); closeSidebar(); };
     nav.appendChild(b); return b;
   };
-  item("ph-house","Home",showHome,true);
+  item("ph-house","Home",()=>navigate("/"),{id:"navHome"});
   const lab=el("div","nav-label"); lab.textContent="Libraries"; nav.appendChild(lab);
-  sections.forEach(s=> item(s.type==="show"?"ph-television":"ph-film-slate", s.title, ()=>showLibrary(s)) );
+  sections.forEach(s=> item(s.type==="show"?"ph-television":"ph-film-slate", s.title, ()=>navigate(`/library/${s.key}`), {lib:s.key}) );
   const lab2=el("div","nav-label"); lab2.textContent="More"; nav.appendChild(lab2);
-  item("ph-playlist","Playlists",showPlaylists);
+  item("ph-playlist","Playlists",()=>navigate("/playlists"),{id:"navPlaylists"});
 }
+
+/* ============================================================ ROUTER
+   Hash-based router (works on static hosting with no server rewrites).
+   navigate() updates the URL; the hashchange handler re-renders via
+   route(). The video player stays a plain overlay, outside the router. */
+function pathForItem(it){
+  if(it._collection) return `/collection/${it.ratingKey}`;
+  if(it.type==="playlist") return `/playlist/${it.ratingKey}`;
+  if(it.type==="movie") return `/movie/${it.ratingKey}`;
+  if(it.type==="show") return `/show/${it.ratingKey}`;
+  if(it.type==="season") return `/show/${it.parentRatingKey}/season/${it.ratingKey}`;
+  if(it.type==="episode") return `/episode/${it.ratingKey}`;
+  return null;
+}
+function navigate(path){
+  if(location.hash.slice(1)===path){ route(); return; }
+  location.hash=path;
+}
+function highlightNav(seg,key){
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  let sel=null;
+  if(!seg||seg==="home") sel=$("#navHome");
+  else if(seg==="library") sel=document.querySelector(`.nav-item[data-lib="${key}"]`);
+  else if(seg==="playlists") sel=$("#navPlaylists");
+  if(sel) sel.classList.add("active");
+}
+async function metaItem(ratingKey){
+  const mc=await api(`/library/metadata/${ratingKey}`);
+  return (mc.Metadata||[])[0]||{ratingKey,type:"movie"};
+}
+async function playlistMeta(ratingKey){
+  try{ const mc=await api(`/playlists/${ratingKey}`); return (mc.Metadata||[])[0]||{ratingKey,title:"Playlist"}; }
+  catch(_){ return {ratingKey,title:"Playlist"}; }
+}
+async function route(){
+  closeSidebar(); closeLibMenus();
+  const raw=location.hash.replace(/^#\/?/,"");
+  const [pathPart,queryPart]=raw.split("?");
+  const parts=pathPart.split("/").filter(Boolean).map(p=>{ try{return decodeURIComponent(p);}catch(_){return p;} });
+  const params=new URLSearchParams(queryPart||"");
+  const seg=parts[0];
+  highlightNav(seg,parts[1]);
+  try{
+    switch(seg){
+      case undefined: case "": case "home": return showHome();
+      case "library": {
+        const section=sections.find(s=>String(s.key)===parts[1]);
+        if(!section) return showHome();
+        return parts[2]==="all" ? showLibrary(section) : showLibraryRecommended(section);
+      }
+      case "movie": return openMovie(await metaItem(parts[1]));
+      case "show": return openShow(await metaItem(parts[1]), parts[2]==="season"?parts[3]:undefined);
+      case "episode": return openEpisode(await metaItem(parts[1]));
+      case "collection": return openCollection({...(await metaItem(parts[1])),_collection:true});
+      case "playlist": return openPlaylist(await playlistMeta(parts[1]));
+      case "playlists": return showPlaylists();
+      case "search": {
+        const q=params.get("q")||"";
+        if($("#search")) $("#search").value=q;
+        return q ? runSearch(q) : showHome();
+      }
+      default: return showHome();
+    }
+  }catch(e){ $("#content").innerHTML=errHTML(e.message); }
+}
+window.addEventListener("hashchange", route);
 
 /* ============================================================ HOME */
 async function showHome(){
   setTitle("Home"); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
     let cw=[];
-    try{ cw=collectItems(await api("/hubs/continueWatching")); }catch(_){}
-    const hubs=await api("/hubs");
+    try{ cw=collectItems(await api("/hubs/continueWatching?count=24")); }catch(_){}
+    const hubs=await api("/hubs?count=24");
     const isDeckHub=h=>{
       const id=(h.hubIdentifier||"").toLowerCase(), t=(h.title||"").toLowerCase();
       return /continue|ondeck|on.?deck/.test(id) || t==="continue watching" || t==="on deck";
     };
     const videoHubs=(hubs.Hub||[]).filter(h=>!isDeckHub(h))
-      .map(h=>({title:h.title, items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type))}))
+      .map(h=>({title:h.title, items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),
+        lib:(h.Metadata&&h.Metadata[0]&&h.Metadata[0].librarySectionTitle)||""}))
       .filter(h=>h.items.length);
 
     c.innerHTML="";
@@ -915,7 +1005,7 @@ async function showHome(){
     if(cw.length) c.appendChild(railSection("Continue Watching", cw, true, true));
     videoHubs.forEach((h,i)=>{
       const wide = h.items.every(x=>x.type==="episode");
-      c.appendChild(railSection(h.title,h.items,wide,false));
+      c.appendChild(railSection(h.title,h.items,wide,false,h.lib));
     });
     if(!cw.length && !videoHubs.length)
       c.innerHTML="<div class='empty'><i class='ph ph-film-strip' aria-hidden='true'></i>Nothing here yet. Add some media.</div>";
@@ -958,16 +1048,27 @@ async function heroEl(it){
     const im=new Image(); im.onload=()=>{bg.style.backgroundImage=`url('${im.src}')`;bg.classList.add("sharp");};
     im.src=img(art,1600,900);
     wrap.querySelector("#heroPlay").onclick=()=>playItem(it,it.viewOffset||0);
-    wrap.querySelector("#heroInfo").onclick=()=>openItem(isEp?{ratingKey:it.grandparentRatingKey,type:"show",title:it.grandparentTitle}:it);
+    wrap.querySelector("#heroInfo").onclick=()=>{
+      const target=isEp?{ratingKey:it.grandparentRatingKey,type:"show"}:it;
+      const r=pathForItem(target); if(r) navigate(r); else openItem(target);
+    };
   },0);
   return wrap;
 }
 
-/* ---- RAIL SECTION ---- */
-function railSection(title,items,wide,featured){
+/* ---- RAIL SECTION ----
+   Each rail gets its own subtle UltraBlur color wash, derived from its
+   first item's art, plus an optional small "library" kicker label. */
+function railSection(title,items,wide,featured,libLabel){
   const sec=el("div","rail-section"+(featured?" featured":""));
+  const firstArt=items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb||items[0].parentThumb);
+  if(firstArt){
+    const amb=el("div","rail-ambient");
+    amb.style.backgroundImage=`url('${imgAmbient(firstArt)}')`;
+    sec.appendChild(amb);
+  }
   const head=el("div","rail-head");
-  head.innerHTML=`<h3>${esc(title)}</h3><span class="count">${items.length}</span>`;
+  head.innerHTML=`<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>`;
   const row=el("div","carousel");
   items.forEach(it=>row.appendChild(card(it,wide)));
   sec.appendChild(head); sec.appendChild(row);
@@ -1001,7 +1102,7 @@ function card(it,wide,square){
     </div>
     <div class="ct">${esc(title)}</div>
     <div class="cs">${esc(sub)}</div>`;
-  b.onclick=()=>openItem(it);
+  b.onclick=()=>{ const r=pathForItem(it); if(r) navigate(r); else openItem(it); };
   return b;
 }
 
@@ -1020,6 +1121,40 @@ const LIB_FILTERS=[
   {key:"watched",   label:"Watched"},
 ];
 let libState=null;
+/* ---- LIBRARY TABS (Recommended / Library, like Plex) ---- */
+function libTabsHTML(section,active){
+  return `<div class="lib-tabs">
+    <button class="lib-tab${active==="recommended"?" active":""}" data-href="/library/${section.key}">Recommended</button>
+    <button class="lib-tab${active==="all"?" active":""}" data-href="/library/${section.key}/all">Library</button>
+  </div>`;
+}
+function wireLibTabs(c){ c.querySelectorAll(".lib-tab[data-href]").forEach(b=>{ b.onclick=()=>navigate(b.dataset.href); }); }
+/* ---- LIBRARY RECOMMENDED ----
+   Curated per-library hubs (Recently Added, Recently Released, etc.),
+   the default landing page for a library — mirrors Plex's own UI. */
+async function showLibraryRecommended(section){
+  setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  try{
+    const hubs=await api(`/hubs/sections/${section.key}?count=24`);
+    const videoHubs=(hubs.Hub||[])
+      .map(h=>({title:h.title, items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type))}))
+      .filter(h=>h.items.length);
+    c.innerHTML=libTabsHTML(section,"recommended");
+    if(!videoHubs.length){
+      const empty=el("div","empty");
+      empty.innerHTML=`<i class="ph ph-sparkle" aria-hidden="true"></i>No recommendations yet.
+        <div style="margin-top:14px"><button class="btn glass sm" id="libGoAll">Browse all ${esc(section.type==="show"?"shows":"movies")}</button></div>`;
+      c.appendChild(empty);
+      $("#libGoAll").onclick=()=>navigate(`/library/${section.key}/all`);
+    }else{
+      videoHubs.forEach(h=>{
+        const wide=h.items.every(x=>x.type==="episode");
+        c.appendChild(railSection(h.title,h.items,wide,false));
+      });
+    }
+    wireLibTabs(c);
+  }catch(e){ c.innerHTML=errHTML(e.message); }
+}
 async function showLibrary(section){
   setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
@@ -1027,7 +1162,7 @@ async function showLibrary(section){
       api(`/library/sections/${section.key}/all`),
       api(`/library/sections/${section.key}/collections`).catch(()=>({}))
     ]);
-    c.innerHTML="";
+    c.innerHTML=libTabsHTML(section,"all");
     const collItems=(colls.Metadata||colls.Directory||[]);
     if(collItems.length) c.appendChild(railSection("Collections", collItems.map(x=>({...x,_collection:true})), false, false));
     const items=all.Metadata||[];
@@ -1036,10 +1171,9 @@ async function showLibrary(section){
     const genres=[...genreSet].sort((a,b)=>a.localeCompare(b));
     libState={section,items,genres,sort:"added",filter:"all",genre:""};
     const wrap=el("div","lib-wrap");
-    // Clear the fixed floating search/menu pills when the toolbar is topmost.
-    wrap.style.marginTop=collItems.length?"32px":"var(--pill-clear)";
     wrap.innerHTML=libToolbarHTML(section)+`<div class="grid-view" id="libGrid"></div>`;
     c.appendChild(wrap);
+    wireLibTabs(c);
     wireLibToolbar();
     renderLibGrid();
   }catch(e){ c.innerHTML=errHTML(e.message); }
@@ -1427,7 +1561,8 @@ async function openShow(it,jumpSeasonKey){
     if(rail) seasons.forEach(s=>{
       const b=seasonCard(s,s===activeSeason);
       b.onclick=()=>{ rail.querySelectorAll(".season-card").forEach(t=>{t.classList.remove("active");t.removeAttribute("aria-current");});
-        b.classList.add("active"); b.setAttribute("aria-current","true"); activeSeason=s; loadEpisodes(s); };
+        b.classList.add("active"); b.setAttribute("aria-current","true"); activeSeason=s; loadEpisodes(s);
+        history.replaceState(null,"",location.pathname+location.search+`#/show/${show.ratingKey}/season/${s.ratingKey}`); };
       rail.appendChild(b);
     });
     if(activeSeason) loadEpisodes(activeSeason);
@@ -1460,7 +1595,7 @@ async function loadEpisodes(season){
             <div class="edur">${fmtDur(epm.duration)}</div></div>
           <div class="ed">${esc(epm.summary||"")}</div>
         </div>`;
-      row.onclick=()=>openEpisode(epm);
+      row.onclick=()=>navigate(`/episode/${epm.ratingKey}`);
       list.appendChild(row);
     });
     if(!eps.length) list.innerHTML="<div class='empty'>No episodes.</div>";
@@ -1483,7 +1618,7 @@ async function openEpisode(it){
     if(siblings.length){ const row=$("#epSiblingRail"); siblings.forEach(s=>row.appendChild(card(s,true))); }
     wireBackdrop(c,m.art||m.grandparentArt||m.thumb);
     const back=$("#epBackBtn");
-    if(back) back.onclick=()=>openShow({ratingKey:m.grandparentRatingKey,type:"show",title:m.grandparentTitle},m.parentRatingKey);
+    if(back) back.onclick=()=>navigate(`/show/${m.grandparentRatingKey}/season/${m.parentRatingKey}`);
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
     else $("#playBtnD").onclick=()=>playItem(m,0);
     injectFirstWatched(m.ratingKey,false);
@@ -1494,7 +1629,14 @@ async function openEpisode(it){
 let searchTimer=null;
 $("#search").addEventListener("input",e=>{
   clearTimeout(searchTimer); const q=e.target.value.trim();
-  searchTimer=setTimeout(()=>{ if(q.length>=2) runSearch(q); else if(!q) showHome(); },350);
+  searchTimer=setTimeout(()=>{
+    const cur=location.hash.replace(/^#\/?/,"").split("?")[0];
+    if(q.length>=2){
+      const path=`/search?q=${encodeURIComponent(q)}`;
+      if(cur==="search"){ history.replaceState(null,"",location.pathname+location.search+"#"+path); runSearch(q); }
+      else location.hash=path;
+    }else if(!q && cur==="search") navigate("/");
+  },350);
 });
 async function runSearch(q){
   setTitle(`Results for "${q}"`); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Searching…</div>";
