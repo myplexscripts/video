@@ -414,6 +414,7 @@
     padding:4px 8px;border-radius:6px}
   .extra-dur{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
     color:#fff;font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px}
+  .extra-card .ct{font-size:14.5px;font-weight:700}
 
   /* ---- SEASON SWITCHER (artwork, not pill tabs) ---- */
   .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch}
@@ -424,31 +425,56 @@
   .season-card.active .art{outline-color:var(--accent);box-shadow:var(--shadow)}
   .season-card.active .ct{color:var(--accent)}
 
-  /* ---- EPISODE LIST ----
-     Borderless rows separated by hairlines, with a quiet hover background —
-     closer to a music app's track list than a card grid. */
-  .ep-list{display:flex;flex-direction:column;padding:0 var(--edge) 16px}
-  .ep{display:flex;gap:18px;background:none;border:none;border-radius:var(--radius-sm);
-    padding:12px;margin:0 -12px;cursor:pointer;transition:background-color .15s var(--ease);
-    align-items:stretch;border-bottom:1px solid var(--line);text-align:left;width:calc(100% + 24px);
-    color:inherit;font:inherit}
-  .ep-list .ep:last-child{border-bottom:none}
-  .ep:hover,.ep:focus-visible{background:var(--surface)}
-  .ep-thumb{position:relative;width:180px;flex:0 0 auto;border-radius:var(--radius-xs);overflow:hidden;
-    aspect-ratio:16/9;background:var(--bg2)}
-  .ep-thumb img{width:100%;height:100%;object-fit:cover}
-  .ep-thumb .ep-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    background:rgba(0,0,0,.3);color:#fff;font-size:32px;opacity:0;transition:opacity .15s}
-  .ep:hover .ep-thumb .ep-play,.ep:focus-visible .ep-thumb .ep-play{opacity:1}
-  .ep-thumb .ep-prog{position:absolute;left:4px;right:4px;bottom:4px;height:4px;background:rgba(0,0,0,.5);
+  /* ---- EPISODE CARD RAIL ----
+     A horizontal carousel of episode cards — 16:9 art with an "EPISODE N"
+     (or "COMING …" for unaired episodes) kicker, bold title, clamped
+     synopsis, and a footer with duration plus a "..." overflow for marking
+     watched/unwatched — closer to a streaming app's season rail than a
+     dense list. */
+  .ep-card{position:relative;flex:0 0 auto;width:320px;display:flex;flex-direction:column;
+    scroll-snap-align:start}
+  .ep-card .ep-thumb{position:relative;display:block;width:100%;aspect-ratio:16/9;
+    border-radius:var(--radius-sm);overflow:hidden;background:var(--bg2);border:none;
+    padding:0;cursor:pointer}
+  .ep-card .ep-thumb img{width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform .3s var(--ease)}
+  .ep-card .ep-thumb:hover img,.ep-card .ep-thumb:focus-visible img{transform:scale(1.045)}
+  .ep-card .ep-thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .ep-tag{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+    color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+    padding:5px 10px;border-radius:6px}
+  .ep-tag.upcoming{background:var(--accent-wash);color:var(--accent)}
+  .ep-card .ep-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.25);color:#fff;font-size:40px;opacity:0;transition:opacity .15s}
+  .ep-card .ep-thumb:hover .ep-play,.ep-card .ep-thumb:focus-visible .ep-play{opacity:1}
+  .ep-card .ep-prog{position:absolute;left:6px;right:6px;bottom:6px;height:4px;background:rgba(0,0,0,.5);
     border-radius:3px;overflow:hidden}
-  .ep-thumb .ep-prog>i{display:block;height:100%;background:var(--accent)}
-  .ep-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
-  .ep-body .eh{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
-  .ep-body .et{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
-  .ep-body .edur{font-size:12px;color:var(--dim);white-space:nowrap;font-weight:500}
-  .ep-body .ed{font-size:13px;color:var(--dim);margin-top:8px;line-height:1.55;
+  .ep-card .ep-prog>i{display:block;height:100%;background:var(--accent)}
+  .ep-card-body{padding-top:12px;display:flex;flex-direction:column;flex:1;min-width:0}
+  .ep-card-body .et{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+  .ep-card-body .et i{margin-left:6px;font-size:13px;vertical-align:-1px}
+  .ep-card-body .ed{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.55;flex:1;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ep-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;min-height:32px}
+  .ep-card-foot .edur{font-size:12px;color:var(--dim);font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  .ep-card-foot .edur i{font-size:16px;color:var(--accent)}
+
+  /* "..." overflow menu — mark an episode watched / unwatched via Plex */
+  .ep-menu-wrap{position:relative;margin-left:auto}
+  .ep-more{background:none;border:none;color:var(--dim);cursor:pointer;
+    width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;
+    border-radius:8px;font-size:18px;transition:background-color .15s,color .15s}
+  .ep-more:hover{background:var(--surface);color:var(--text)}
+  .ep-menu{position:absolute;bottom:38px;right:0;z-index:5;min-width:190px;
+    background:var(--glass);backdrop-filter:blur(40px) saturate(1.5);-webkit-backdrop-filter:blur(40px) saturate(1.5);
+    border:1px solid var(--line2);border-radius:var(--radius);box-shadow:var(--shadow-lg);
+    padding:6px;display:none}
+  .ep-menu-wrap.open .ep-menu{display:block}
+  .ep-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;
+    border:none;color:var(--text);padding:10px 12px;font-size:13px;font-weight:500;border-radius:9px;
+    cursor:pointer;transition:background-color .1s;font-family:var(--font)}
+  .ep-menu button:hover{background:var(--surface2)}
+  .ep-menu i{font-size:16px;color:var(--dim);flex:0 0 auto}
 
   /* ---- COLLECTION / PLAYLIST HERO ---- */
   .coll-hero{position:relative;padding:44px var(--edge);display:flex;gap:32px;align-items:flex-end;flex-wrap:wrap}
@@ -627,7 +653,7 @@
     .coll-art{width:160px}
     .carousel .card{width:150px}.carousel .card.wide{width:240px}
     .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:300px}
-    .ep-thumb{width:130px}
+    .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
   }
   @media(max-width:560px){
@@ -643,8 +669,7 @@
     .detail-poster{width:110px}
     .detail-row{flex-wrap:wrap}
     .detail-poster.wide{width:100%}
-    .ep{flex-direction:column}
-    .ep-thumb{width:100%}
+    .ep-card{width:220px}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
     .lib-toolbar .lib-title{font-size:18px}
@@ -1677,7 +1702,7 @@ async function openShow(it,jumpSeasonKey){
         <div class="season-rail" id="seasonRail"></div></div>`:"")
       +crewHTML(show)
       +extrasRailHTML(extras)
-      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list" id="epList"></div>`;
+      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`;
     wireBackdrop(c,show.art||show.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     injectFirstWatched(show.ratingKey,true);
@@ -1701,6 +1726,19 @@ async function openShow(it,jumpSeasonKey){
     };
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
+/* ---- EPISODE WATCHED ICON ---- */
+function epWatchedIcon(watched){
+  return watched?' <i class="ph ph-check-circle" style="color:var(--accent)" aria-label="Watched"></i>':"";
+}
+function closeEpMenus(){ document.querySelectorAll(".ep-menu-wrap.open").forEach(w=>{
+  w.classList.remove("open"); const b=w.querySelector(".ep-more"); if(b) b.setAttribute("aria-expanded","false"); }); }
+/* ---- MARK WATCHED / UNWATCHED ----
+   Plex's legacy progress-report endpoints; same raw-fetch pattern as
+   rateItem() for /:/rate. */
+async function setWatched(ratingKey,watched){
+  await fetch(`${server.uri}/:/${watched?"scrobble":"unscrobble"}?key=${ratingKey}&identifier=com.plexapp.plugins.library&X-Plex-Token=${server.token}`,
+    {headers:plexHeaders(server.token)});
+}
 async function loadEpisodes(season){
   const list=$("#epList"); list.innerHTML="<div class='loading'>Loading episodes…</div>";
   const heading=$("#epListHeading");
@@ -1708,23 +1746,54 @@ async function loadEpisodes(season){
   try{
     const mc=await api(`/library/metadata/${season.ratingKey}/children`);
     const eps=mc.Metadata||[]; list.innerHTML="";
+    const now=Date.now();
     eps.forEach(epm=>{
       const pct=epm.viewOffset&&epm.duration?(epm.viewOffset/epm.duration*100):0;
       const watched=epm.viewCount>0&&!pct;
-      const row=el("button","ep");
-      row.innerHTML=`
-        <div class="ep-thumb">
-          <img loading="lazy" alt="" src="${img(epm.thumb,360,202)}">
-          <div class="ep-play"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
+      const upcoming=!epm.duration&&epm.originallyAvailableAt&&new Date(epm.originallyAvailableAt).getTime()>now;
+      const tag=upcoming?`Coming ${fmtComing(epm.originallyAvailableAt)}`:(epm.index?`Episode ${epm.index}`:"Episode");
+      const card=el("div","ep-card");
+      card.innerHTML=`
+        <button class="ep-thumb" aria-label="Play ${esc(epm.title||"Episode")}"${upcoming?" disabled":""}>
+          <img loading="lazy" alt="" src="${img(epm.thumb,440,248)}">
+          <div class="ep-tag${upcoming?" upcoming":""}">${esc(tag)}</div>
+          ${!upcoming?`<div class="ep-play"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>`:""}
           ${pct?`<div class="ep-prog"><i style="width:${pct}%"></i></div>`:""}
-        </div>
-        <div class="ep-body">
-          <div class="eh"><div class="et">${epm.index?epm.index+". ":""}${esc(epm.title)} ${watched?'<i class="ph ph-check-circle" style="color:var(--accent);font-size:13px;vertical-align:-1px" aria-label="Watched"></i>':""}</div>
-            <div class="edur">${fmtDur(epm.duration)}</div></div>
+        </button>
+        <div class="ep-card-body">
+          <div class="et">${esc(epm.title)}${epWatchedIcon(watched)}</div>
           <div class="ed">${esc(epm.summary||"")}</div>
+          <div class="ep-card-foot">
+            <span class="edur">${epm.duration?`<i class="ph-fill ph-play-circle" aria-hidden="true"></i> ${fmtDur(epm.duration)}`:(upcoming?esc(tag):"")}</span>
+            ${!upcoming?`<div class="ep-menu-wrap">
+              <button class="ep-more" aria-haspopup="true" aria-expanded="false" aria-label="More options for ${esc(epm.title||"episode")}"><i class="ph ph-dots-three" aria-hidden="true"></i></button>
+              <div class="ep-menu" role="menu">
+                <button role="menuitem" data-action="watched"><i class="ph ph-check-circle" aria-hidden="true"></i><span>Mark as Watched</span></button>
+                <button role="menuitem" data-action="unwatched"><i class="ph ph-circle" aria-hidden="true"></i><span>Mark as Unwatched</span></button>
+              </div>
+            </div>`:""}
+          </div>
         </div>`;
-      row.onclick=()=>navigate(`/episode/${epm.ratingKey}`);
-      list.appendChild(row);
+      if(!upcoming) card.querySelector(".ep-thumb").onclick=()=>navigate(`/episode/${epm.ratingKey}`);
+      const moreBtn=card.querySelector(".ep-more");
+      if(moreBtn){
+        const wrap=card.querySelector(".ep-menu-wrap");
+        moreBtn.onclick=e=>{ e.stopPropagation();
+          const willOpen=!wrap.classList.contains("open"); closeEpMenus();
+          if(willOpen){ wrap.classList.add("open"); moreBtn.setAttribute("aria-expanded","true"); } };
+        const markAs=async(val)=>{
+          wrap.classList.remove("open");
+          try{
+            await setWatched(epm.ratingKey,val);
+            epm.viewCount=val?1:0; epm.viewOffset=0;
+            card.querySelector(".et").innerHTML=`${esc(epm.title)}${epWatchedIcon(val)}`;
+            const prog=card.querySelector(".ep-prog"); if(prog) prog.remove();
+          }catch(_){}
+        };
+        wrap.querySelector('[data-action="watched"]').onclick=()=>markAs(true);
+        wrap.querySelector('[data-action="unwatched"]').onclick=()=>markAs(false);
+      }
+      list.appendChild(card);
     });
     if(!eps.length) list.innerHTML="<div class='empty'>No episodes.</div>";
   }catch(e){ list.innerHTML=errHTML(e.message); }
@@ -2372,6 +2441,9 @@ function fmtDate(ts){ if(!ts) return ""; return new Date(ts*1000).toLocaleDateSt
   {year:"numeric",month:"short",day:"numeric"}); }
 function fmtAirDate(s){ if(!s) return ""; const d=new Date(s); if(isNaN(d)) return "";
   return d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}); }
+function fmtComing(s){ const d=new Date(s); if(isNaN(d)) return "";
+  const days=(d-Date.now())/86400000;
+  return days<7?d.toLocaleDateString(undefined,{weekday:"short"}):d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
 function fmtClock(s){ if(!s||isNaN(s))return"0:00"; s=Math.floor(s);
   const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
   return h>0?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`; }
@@ -2382,8 +2454,8 @@ $("#scrimNav").onclick=closeSidebar;
 function closeSidebar(){ $("#sidebar").classList.remove("open"); $("#scrimNav").classList.remove("show"); }
 $("#searchBox").addEventListener("click",()=>$("#search").focus());
 // Dismiss any open library dropdown when clicking elsewhere or pressing Escape.
-document.addEventListener("click",closeLibMenus);
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeLibMenus(); });
+document.addEventListener("click",()=>{ closeLibMenus(); closeEpMenus(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLibMenus(); closeEpMenus(); } });
 
 /* ============================================================ INIT */
 (async function init(){
