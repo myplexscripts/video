@@ -33,6 +33,10 @@
     --shadow-lg:0 12px 48px rgba(0,0,0,.55);
     --font:'Circular','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     --ease:cubic-bezier(.22,1,.36,1);
+    /* Floating menu-toggle/search pills sit at top:max(16px,safe-area) and are
+       44px tall — flat pages need at least that much clearance so their first
+       row of content doesn't render underneath the pills. */
+    --pill-clear:max(76px,calc(env(safe-area-inset-top) + 60px));
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -133,7 +137,7 @@
   .content{padding:0 0 max(80px,env(safe-area-inset-bottom));position:relative}
   #content > .rail-section:first-child,#content > .rail-head:first-child,
   #content > .grid-view:first-child,#content > .empty:first-child,
-  #content > .loading:first-child,#content > .err:first-child{margin-top:32px}
+  #content > .loading:first-child,#content > .err:first-child{margin-top:var(--pill-clear)}
 
   /* ---- FLOATING GLASS BAR ----
      No header bar: a single floating "Liquid Glass" search pill hovers over
@@ -250,6 +254,16 @@
   .art .watch-prog{position:absolute;left:6px;right:6px;bottom:6px;height:4px;background:rgba(0,0,0,.5);
     border-radius:3px;overflow:hidden}
   .art .watch-prog > i{display:block;height:100%;background:var(--accent);border-radius:3px}
+
+  /* Spotify-style mosaic cover for playlists/collections with no art of
+     their own — built from the first few items' thumbnails. */
+  .art .art-mosaic,.coll-art .art-mosaic{position:absolute;inset:0;display:grid;
+    grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(--bg2)}
+  .art-mosaic img{width:100%;height:100%;object-fit:cover;display:block}
+  .art-mosaic.n1{grid-template-columns:1fr;grid-template-rows:1fr}
+  .art-mosaic.n2{grid-template-rows:1fr}
+  .art-mosaic.n3 img:first-child{grid-row:1/3}
+
   .card .ct{font-size:13.5px;margin-top:10px;line-height:1.3;font-weight:600;letter-spacing:-.01em;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .card .cs{font-size:12px;color:var(--dim);margin-top:3px;font-weight:500;
@@ -812,6 +826,15 @@ function imgAmbient(thumb){
   return `${server.uri}/photo/:/transcode?width=240&height=240&minSize=1&upscale=1&blur=30`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
+// Spotify-style 2x2 mosaic built from the first few items' thumbs — used as
+// cover art for playlists/collections that have no composite/thumb of their own.
+function mosaicHTML(items){
+  const pics=(items||[]).map(it=>it.thumb||it.parentThumb||it.grandparentThumb).filter(Boolean).slice(0,4);
+  if(!pics.length) return "";
+  return `<div class="art-mosaic n${pics.length}">`
+    +pics.map(t=>`<img src="${img(t,160,160)}" alt="" loading="lazy">`).join("")
+    +`</div>`;
+}
 
 /* ---- ULTRABLUR ----
    One fixed, cross-fading ambient wash behind detail-style pages and the
@@ -952,12 +975,13 @@ function card(it,wide,square){
   const dim = square ? 320 : (useWide?480:340);
   const dim2 = square ? 320 : (useWide?270:510);
   const src=img(thumb,dim,dim2);
+  const mosaic=src?"":mosaicHTML(it._mosaicItems);
   const fallbackIcon = it.type==="playlist"?"ph-playlist" : it._collection?"ph-stack"
     : it.type==="show"?"ph-television" : "ph-film-slate";
   b.innerHTML=`
-    <div class="art${src?"":" broken"}">
+    <div class="art${src||mosaic?"":" broken"}">
       ${src?`<img class="${useWide&&!square?"wide":""}" loading="lazy" alt="${esc(title)}"
-        src="${src}" onerror="this.closest('.art').classList.add('broken')">`:""}
+        src="${src}" onerror="this.closest('.art').classList.add('broken')">`:mosaic}
       <i class="ph-fill ${fallbackIcon} art-fallback" aria-hidden="true"></i>
       <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
       ${pct?`<div class="watch-prog"><i style="width:${pct}%"></i></div>`:""}
@@ -1000,7 +1024,7 @@ async function showLibrary(section){
     libState={section,items,genres,sort:"added",filter:"all",genre:""};
     const wrap=el("div","lib-wrap");
     // Clear the fixed floating search/menu pills when the toolbar is topmost.
-    wrap.style.marginTop=collItems.length?"32px":"76px";
+    wrap.style.marginTop=collItems.length?"32px":"var(--pill-clear)";
     wrap.innerHTML=libToolbarHTML(section)+`<div class="grid-view" id="libGrid"></div>`;
     c.appendChild(wrap);
     wireLibToolbar();
@@ -1106,7 +1130,16 @@ async function showPlaylists(){
     const mc=await api("/playlists");
     const pls=(mc.Metadata||[]).filter(p=>p.playlistType==="video");
     if(!pls.length){ c.innerHTML="<div class='empty'><i class='ph ph-playlist' aria-hidden='true'></i>No video playlists.</div>"; return; }
-    const grid=el("div","grid-view"); grid.style.marginTop="24px";
+    // Most playlists have no composite/thumb of their own — grab their first
+    // few items so card() can build a mosaic cover instead of a bare icon.
+    await Promise.all(pls.map(async p=>{
+      if(p.composite||p.thumb) return;
+      try{
+        const ic=await api(`/playlists/${p.ratingKey}/items?X-Plex-Container-Size=4`);
+        p._mosaicItems=(ic.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
+      }catch(_){}
+    }));
+    const grid=el("div","grid-view");
     pls.forEach(p=>grid.appendChild(card({...p,thumb:p.composite||p.thumb},false,true)));
     c.innerHTML=""; c.appendChild(grid);
   }catch(e){ c.innerHTML=errHTML(e.message); }
@@ -1172,10 +1205,11 @@ function collHero(m,kicker,items,square){
   if(m.addedAt) bits.push(`Added ${fmtDate(m.addedAt)}`);
   if(m.smart) bits.push("Smart");
   const src=img(m.thumb,440,square?440:660);
+  const mosaic=src?"":mosaicHTML(items);
   const fallbackIcon=square?"ph-playlist":"ph-stack";
   return `<div class="coll-hero">
-    <div class="coll-art${square?" square":""}${src?"":" broken"}">
-      ${src?`<img src="${src}" alt="" onerror="this.closest('.coll-art').classList.add('broken')">`:""}
+    <div class="coll-art${square?" square":""}${src||mosaic?"":" broken"}">
+      ${src?`<img src="${src}" alt="" onerror="this.closest('.coll-art').classList.add('broken')">`:mosaic}
       <i class="ph-fill ${fallbackIcon} art-fallback" aria-hidden="true"></i>
     </div>
     <div class="coll-info">
@@ -1474,6 +1508,7 @@ let autoStep=0;                       // rung on AUTO_LADDER
 let stalls=[], lastSeekAt=0;
 let audioChanged=false, subOn=false;  // track overrides force the server-mux path
 let nextEp=null, nextEpFetched=false, nuTimer=null;
+let nextEpWarmed=false, warmedNext=null; // warmedNext: {ratingKey,sessionId,res,br} | null
 
 const QUALITIES=[
   {label:"Auto",        sub:"Adapts to keep playback smooth", mode:"auto"},
@@ -1504,7 +1539,7 @@ async function playItem(it,offsetMs){
   }
   currentItem=full; triedFallback=false; autoStep=0; stalls=[];
   audioChanged=false; subOn=isSubSelected();
-  nextEp=null; nextEpFetched=false; hideNextUp();
+  nextEp=null; nextEpFetched=false; nextEpWarmed=false; hideNextUp();
   if(full.type==="episode"){
     $("#pTitle").innerHTML=`<span class="pt-main">${esc(full.grandparentTitle||"")}</span>`
       +`<span class="pt-sub">Season ${full.parentIndex} · Episode ${full.index} · ${esc(full.title||"")}</span>`;
@@ -1523,7 +1558,8 @@ async function playItem(it,offsetMs){
 function partOf(it){ const m=(it.Media||[])[0]; return m&&(m.Part||[])[0]; }
 function mediaOf(it){ return (it.Media||[])[0]; }
 function streamsOf(){ const p=partOf(currentItem); return (p&&p.Stream)||[]; }
-function isSubSelected(){ return streamsOf().some(s=>s.streamType===3&&s.selected); }
+function defaultSubSelected(it){ const p=partOf(it); return !!(p&&(p.Stream||[]).some(s=>s.streamType===3&&s.selected)); }
+function isSubSelected(){ return defaultSubSelected(currentItem); }
 
 function canDirectPlay(it){
   const m=mediaOf(it); if(!m) return false;
@@ -1539,17 +1575,27 @@ function canDirectPlay(it){
 
 function startStream(offsetMs){
   hideNextUp();
-  if(sessionId) stopSession(sessionId);          // free the old transcoder on the server
-  sessionId="hume-"+crypto.randomUUID();
-  cleanupHls(); video.onerror=null;
   const q=QUALITIES[qIndex]||QUALITIES[0];
   const needsServerMux = audioChanged || subOn;  // chosen tracks require the HLS path
-  if(q.mode==="original"){ directPlay(offsetMs,true); }
+  let useDirect=false, res=null, br=null;
+  if(q.mode==="original"){ useDirect=true; }
   else if(q.mode==="auto"){
-    if(!needsServerMux && autoStep===0 && canDirectPlay(currentItem)) directPlay(offsetMs,false);
-    else { const r=AUTO_LADDER[Math.min(autoStep,AUTO_LADDER.length-1)]; transcode(offsetMs,r.res,r.br); }
+    if(!needsServerMux && autoStep===0 && canDirectPlay(currentItem)) useDirect=true;
+    else { const r=AUTO_LADDER[Math.min(autoStep,AUTO_LADDER.length-1)]; res=r.res; br=r.br; }
   }
-  else transcode(offsetMs,q.res,q.br);
+  else { res=q.res; br=q.br; }
+
+  // Reuse a transcode session pre-warmed for this item if its profile still matches.
+  const warm=(!useDirect && warmedNext && warmedNext.ratingKey===String(currentItem.ratingKey)
+    && warmedNext.res===res && warmedNext.br===br) ? warmedNext : null;
+  if(warmedNext && warmedNext!==warm) stopSession(warmedNext.sessionId);
+  warmedNext=null;
+  if(sessionId && sessionId!==(warm&&warm.sessionId)) stopSession(sessionId); // free the old transcoder on the server
+  sessionId=warm?warm.sessionId:"hume-"+crypto.randomUUID();
+
+  cleanupHls(); video.onerror=null;
+  if(useDirect) directPlay(offsetMs,q.mode==="original");
+  else transcode(offsetMs,res,br);
 }
 
 function directPlay(offsetMs,forced){
@@ -1792,6 +1838,7 @@ video.addEventListener("timeupdate",()=>{
   if(video.buffered.length){ try{ const end=video.buffered.end(video.buffered.length-1);
     $("#buffered").style.width=(d?end/d*100:0)+"%"; }catch(_){} }
   maybePrefetchNext(d,t);
+  maybeWarmNext(d,t);
 });
 
 /* seek bar */
@@ -1851,6 +1898,7 @@ $("#closePlayer").onclick=closePlayer;
 function closePlayer(){
   reportTimeline("stopped"); stopTimeline(); cleanupHls();
   if(sessionId){ stopSession(sessionId); sessionId=null; }
+  if(warmedNext){ stopSession(warmedNext.sessionId); warmedNext=null; }
   hideNextUp();
   video.pause(); video.removeAttribute("src"); video.load();
   $("#player").classList.remove("show","min","idle","loading");
@@ -1926,7 +1974,48 @@ async function maybePrefetchNext(dur,t){
         nextEp=(nm.Metadata||[])[0]||null;
       }
     }
+    // Warm the "Up Next" thumbnail now so the overlay never pops in blank.
+    if(nextEp){ const im=new Image(); im.src=img(nextEp.thumb||nextEp.parentThumb,300,169); }
   }catch(_){}
+}
+
+/* Pre-start the next episode's transcode session a little before the current
+   one ends, so "Up Next"/auto-advance can resume an already-warm stream
+   instead of waiting through "Preparing stream" again. */
+function maybeWarmNext(dur,t){
+  if(nextEpWarmed||!nextEp||!dur) return;
+  if(dur-t>30) return;          // begin warming in the final ~30s
+  nextEpWarmed=true;
+  warmNextEpisode();
+}
+async function warmNextEpisode(){
+  const ep=nextEp; if(!ep) return;
+  let full=ep;
+  const m0=mediaOf(ep);
+  if(!m0||!m0.videoCodec||!((m0.Part||[])[0])){
+    try{ const mc=await api(`/library/metadata/${ep.ratingKey}`); full=(mc.Metadata||[])[0]||ep; }catch(_){ return; }
+    if(nextEp!==ep) return;     // user moved on while we were fetching
+    nextEp=full;
+  }
+  const q=QUALITIES[qIndex]||QUALITIES[0];
+  let res=null,br=null;
+  if(q.mode==="original") return;                                  // forced direct play — nothing to warm
+  if(q.mode==="convert"){ res=q.res; br=q.br; }
+  else if(canDirectPlay(full)&&!defaultSubSelected(full)) return;   // will direct play — nothing to warm
+  const wsid="hume-warm-"+crypto.randomUUID();
+  const params=new URLSearchParams({
+    path:`/library/metadata/${full.ratingKey}`,
+    mediaIndex:0, partIndex:0, protocol:"hls", fastSeek:1,
+    directPlay:0, directStream:1, directStreamAudio:1,
+    subtitles:"burn", subtitleSize:100, audioBoost:100, mediaBufferSize:102400,
+    location:server.local?"lan":"wan", autoAdjustQuality:0,
+    maxVideoBitrate: br||40000, videoQuality:100, offset:0,
+    "X-Plex-Client-Identifier":clientId(), "X-Plex-Session-Identifier":wsid,
+    "X-Plex-Platform":"Web", session:wsid, "X-Plex-Token":server.token
+  });
+  if(res) params.set("videoResolution",res);
+  fetch(`${server.uri}/video/:/transcode/universal/start.m3u8?${params.toString()}`).catch(()=>{});
+  warmedNext={ratingKey:String(full.ratingKey),sessionId:wsid,res,br};
 }
 function showNextUp(){
   if(!nextEp) return;
