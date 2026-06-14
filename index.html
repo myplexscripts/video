@@ -543,6 +543,30 @@
   .coll-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--dim);font-size:13px;
     font-weight:500}
   .coll-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
+  .coll-actions{display:flex;gap:12px;margin-top:24px}
+
+  /* ---- EPISODE ROW LIST ----
+     Compact numbered list used when a collection/playlist consists
+     entirely of episodes (mirrors the official Plex app's playlist view):
+     index, 16:9 thumb, show + "Sx · Ey — Title", duration. */
+  .ep-row-list{display:flex;flex-direction:column;padding:0 var(--edge) 16px}
+  .ep-row{display:flex;align-items:center;gap:16px;width:100%;padding:10px 8px;
+    background:none;border:none;border-radius:var(--radius-sm);cursor:pointer;text-align:left;
+    color:inherit;font:inherit}
+  .ep-row:hover{background:rgba(255,255,255,.05)}
+  .ep-row-num{flex:0 0 24px;text-align:center;color:var(--faint);font-size:13px;font-weight:600}
+  .ep-row-thumb{position:relative;flex:0 0 132px;aspect-ratio:16/9;border-radius:var(--radius-sm);
+    overflow:hidden;background:var(--bg2)}
+  .ep-row-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .ep-row-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.5)}
+  .ep-row-prog>i{display:block;height:100%;background:var(--accent)}
+  .ep-row-body{flex:1;min-width:0}
+  .ep-row-show{font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .ep-row-ep{font-size:13px;color:var(--dim);margin-top:3px;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap}
+  .ep-row-ep i{margin-left:6px;color:var(--accent)}
+  .ep-row-dur{flex:0 0 auto;color:var(--dim);font-size:13px;font-weight:600;
+    font-variant-numeric:tabular-nums;padding-left:12px}
 
   /* ---- PLAYER ---- */
   #player{position:fixed;inset:0;z-index:100;background:#000;display:none;flex-direction:column}
@@ -723,6 +747,10 @@
     .ep-card{width:220px}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
+    .ep-row{gap:10px;padding:8px 4px}
+    .ep-row-num{flex:0 0 18px;font-size:12px}
+    .ep-row-thumb{flex:0 0 96px}
+    .ep-row-dur{font-size:12px;padding-left:8px}
     .lib-toolbar .lib-title{font-size:18px}
     .lib-ctrl .cap{display:none}
     .lib-menu{max-width:calc(100vw - 24px)}
@@ -962,11 +990,12 @@ async function api(path){
   if(!r.ok) throw new Error(`Server error ${r.status}`);
   return (await r.json()).MediaContainer||{};
 }
+// Playlist/collection composite art is server-generated and isn't a valid
+// photo-transcoder resource — serve it directly instead.
+function isDirectArt(thumb){ return thumb.startsWith("/playlists/")||thumb.includes("/composite/"); }
 function img(thumb,w,h){
   if(!thumb) return "";
-  // Playlist composite art lives under /playlists/... and isn't a valid
-  // photo-transcoder resource — serve it directly instead.
-  if(thumb.startsWith("/playlists/")) return imgDirect(thumb);
+  if(isDirectArt(thumb)) return imgDirect(thumb);
   return `${server.uri}/photo/:/transcode?width=${w}&height=${h}&minSize=1&upscale=1`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
@@ -977,13 +1006,13 @@ function imgDirect(path){
 }
 function imgBlur(thumb){
   if(!thumb) return "";
-  if(thumb.startsWith("/playlists/")) return imgDirect(thumb);
+  if(isDirectArt(thumb)) return imgDirect(thumb);
   return `${server.uri}/photo/:/transcode?width=300&height=169&minSize=1&upscale=1&blur=100`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
 function imgAmbient(thumb){
   if(!thumb) return "";
-  if(thumb.startsWith("/playlists/")) return imgDirect(thumb);
+  if(isDirectArt(thumb)) return imgDirect(thumb);
   // A small, lightly-blurred source preserves distinct color regions from
   // the artwork; the heavy CSS blur on #ultraBlur turns them into soft,
   // saturated color blobs rather than a single muddy wash.
@@ -1504,12 +1533,19 @@ async function openPlaylist(p){
   try{
     const mc=await api(`/playlists/${p.ratingKey}/items`);
     const items=(mc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-    const cover=p.composite||p.thumb;
+    const cover=p.composite||p.thumb||mc.composite||mc.thumb;
     setUltraBlur(cover||(items[0]&&(items[0].art||items[0].thumb)));
+    const allEpisodes=items.length&&items.every(x=>x.type==="episode");
     c.innerHTML=collHero({...p,thumb:cover},"Playlist",items,true)
-      +(items.length?`<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
-        <div class="grid-view"></div></div>`:"<div class='empty'><i class='ph ph-playlist' aria-hidden='true'></i>This playlist is empty.</div>");
-    if(items.length){ const grid=c.querySelector(".grid-view"); items.forEach(it=>grid.appendChild(card(it))); }
+      +(items.length
+        ? allEpisodes
+          ? `<div class="rail-section"><div class="rail-head"><h3>Episodes</h3><span class="count">${items.length}</span></div>
+            <div class="ep-row-list"></div></div>`
+          : `<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
+            <div class="grid-view"></div></div>`
+        : "<div class='empty'><i class='ph ph-playlist' aria-hidden='true'></i>This playlist is empty.</div>");
+    fillCollItems(c,items,allEpisodes);
+    wireCollActions(c,items);
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 
@@ -1530,13 +1566,22 @@ async function openCollection(it){
       api(`/library/metadata/${it.ratingKey}`).catch(()=>({})),
       api(`/library/collections/${it.ratingKey}/children`)
     ]);
-    const m=(meta.Metadata||[])[0]||it;
-    const items=childrenMc.Metadata||[];
+    const m={...it,...(meta.Metadata||[])[0]};
+    if(!m.thumb) m.thumb=childrenMc.thumb;
+    if(!m.art) m.art=childrenMc.art;
+    const items=(childrenMc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
     setUltraBlur(m.art||m.thumb||(items[0]&&(items[0].art||items[0].thumb)));
+    const allEpisodes=items.length&&items.every(x=>x.type==="episode");
     c.innerHTML=collHero(m,"Collection",items,false)
-      +(items.length?`<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
-        <div class="grid-view"></div></div>`:"<div class='empty'><i class='ph ph-stack' aria-hidden='true'></i>This collection is empty.</div>");
-    if(items.length){ const grid=c.querySelector(".grid-view"); items.forEach(it2=>grid.appendChild(card(it2))); }
+      +(items.length
+        ? allEpisodes
+          ? `<div class="rail-section"><div class="rail-head"><h3>Episodes</h3><span class="count">${items.length}</span></div>
+            <div class="ep-row-list"></div></div>`
+          : `<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
+            <div class="grid-view"></div></div>`
+        : "<div class='empty'><i class='ph ph-stack' aria-hidden='true'></i>This collection is empty.</div>");
+    fillCollItems(c,items,allEpisodes);
+    wireCollActions(c,items);
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 function metaBits(m,isMovie){
@@ -1575,8 +1620,51 @@ function collHero(m,kicker,items,square){
       <h2>${esc(m.title)}</h2>
       ${m.summary?`<div class="coll-desc">${esc(m.summary)}</div>`:""}
       <div class="coll-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>
+      ${items.length?`<div class="coll-actions">
+        <button class="btn lg" id="collPlay"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>
+        <button class="btn glass lg" id="collShuffle"><i class="ph ph-shuffle" aria-hidden="true"></i> Shuffle</button>
+      </div>`:""}
     </div>
   </div>`;
+}
+/* ---- EPISODE ROW LIST ----
+   Renders one row of the numbered episode list used by TV
+   collections/playlists, mirroring the official Plex app's playlist view. */
+function epRowHTML(it,idx){
+  const pct=it.viewOffset&&it.duration?(it.viewOffset/it.duration*100):0;
+  const watched=it.viewCount>0&&!pct;
+  return `<button class="ep-row">
+    <div class="ep-row-num">${idx+1}</div>
+    <div class="ep-row-thumb"><img loading="lazy" alt="" src="${img(it.thumb||it.parentThumb||it.grandparentThumb,220,124)}">
+      ${pct?`<div class="ep-row-prog"><i style="width:${pct}%"></i></div>`:""}
+    </div>
+    <div class="ep-row-body">
+      <div class="ep-row-show">${esc(it.grandparentTitle||"")}</div>
+      <div class="ep-row-ep">S${it.parentIndex||0} · E${it.index||0} — ${esc(it.title||"")}${epWatchedIcon(watched)}</div>
+    </div>
+    <div class="ep-row-dur">${it.duration?fmtClock(it.duration/1000):""}</div>
+  </button>`;
+}
+// Fills the rail placeholder rendered alongside collHero with either a
+// numbered episode list (TV collections/playlists) or a poster grid.
+function fillCollItems(c,items,allEpisodes){
+  if(!items.length) return;
+  if(allEpisodes){
+    const list=c.querySelector(".ep-row-list");
+    items.forEach((it,idx)=>{
+      list.insertAdjacentHTML("beforeend",epRowHTML(it,idx));
+      list.lastElementChild.onclick=()=>navigate(`/episode/${it.ratingKey}`);
+    });
+  }else{
+    const grid=c.querySelector(".grid-view");
+    items.forEach(it=>grid.appendChild(card(it)));
+  }
+}
+function wireCollActions(c,items){
+  if(!items.length) return;
+  const playBtn=c.querySelector("#collPlay"), shuffleBtn=c.querySelector("#collShuffle");
+  if(playBtn) playBtn.onclick=()=>playItem(items[0],items[0].viewOffset||0);
+  if(shuffleBtn) shuffleBtn.onclick=()=>playItem(items[Math.floor(Math.random()*items.length)],0);
 }
 /* ---- TITLE ART ----
    Plex serves a transparent "clear logo" title treatment for many movies
