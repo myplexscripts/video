@@ -1689,6 +1689,19 @@ async function injectFirstWatched(ratingKey,isShow){
 async function fetchExtras(ratingKey){
   try{ const mc=await api(`/library/metadata/${ratingKey}/extras`); return mc.Metadata||[]; }catch(_){ return []; }
 }
+/* ---- RELATED RAILS (similar titles, "More with [actor]", collections...) ---- */
+async function fetchRelated(ratingKey){
+  try{
+    const mc=await api(`/library/metadata/${ratingKey}/related`);
+    return (mc.Hub||[]).map(h=>({title:h.title,items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type))})).filter(h=>h.items.length);
+  }catch(_){ return []; }
+}
+function appendRelatedRails(c,related){
+  related.forEach(h=>{
+    const wide=h.items.every(x=>x.type==="episode");
+    c.appendChild(railSection(h.title,h.items,wide,false));
+  });
+}
 const EXTRA_LABELS={trailer:"Trailer",behindthescenes:"Behind the Scenes",deleted:"Deleted Scene",
   featurette:"Featurette",interview:"Interview",scene:"Scene",short:"Short",other:"Extra"};
 function extraCardHTML(e){
@@ -1820,12 +1833,13 @@ function wireBackdrop(c,art){
 async function openMovie(it){
   setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    const [mc,extras]=await Promise.all([api(`/library/metadata/${it.ratingKey}`),fetchExtras(it.ratingKey)]);
+    const [mc,extras,related]=await Promise.all([api(`/library/metadata/${it.ratingKey}`),fetchExtras(it.ratingKey),fetchRelated(it.ratingKey)]);
     const m=(mc.Metadata||[])[0]||it;
     const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
       <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Start over</button>`
       :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
     c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
+    appendRelatedRails(c,related);
     wireBackdrop(c,m.art||m.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
@@ -1846,10 +1860,11 @@ function seasonCard(s,active){
 async function openShow(it,jumpSeasonKey){
   setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    const [meta,seasonsMc,extras]=await Promise.all([
+    const [meta,seasonsMc,extras,related]=await Promise.all([
       api(`/library/metadata/${it.ratingKey}`),
       api(`/library/metadata/${it.ratingKey}/children`),
-      fetchExtras(it.ratingKey)
+      fetchExtras(it.ratingKey),
+      fetchRelated(it.ratingKey)
     ]);
     const show=(meta.Metadata||[])[0]||it;
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
@@ -1861,6 +1876,7 @@ async function openShow(it,jumpSeasonKey){
       +castRailHTML(show)
       +extrasRailHTML(extras)
       +crewHTML(show);
+    appendRelatedRails(c,related);
     wireBackdrop(c,show.art||show.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     injectFirstWatched(show.ratingKey,true);
