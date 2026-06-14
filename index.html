@@ -312,6 +312,15 @@
     border-radius:11px;background:var(--accent);color:#141005;font-size:12px;font-weight:800;
     display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(0,0,0,.45)}
 
+  /* The card for the episode whose page you're on gets an accent ring + a
+     "Now viewing" tag so the current item reads as current in its own rail. */
+  .card.current .art{outline:2.5px solid var(--accent);outline-offset:2px}
+  .card.current .ct{color:var(--accent)}
+  .art .now-badge{position:absolute;left:8px;top:8px;z-index:3;display:inline-flex;align-items:center;gap:5px;
+    background:var(--accent);color:#141005;font-size:10px;font-weight:800;text-transform:uppercase;
+    letter-spacing:.4px;padding:4px 9px;border-radius:100px;box-shadow:0 2px 12px rgba(0,0,0,.45)}
+  .art .now-badge i{font-size:11px}
+
   /* Spotify-style mosaic cover for playlists/collections with no art of
      their own — built from the first few items' thumbnails. */
   .art .art-mosaic,.coll-art .art-mosaic{position:absolute;inset:0;display:grid;
@@ -359,16 +368,25 @@
     background:linear-gradient(to right,rgba(10,10,12,.92) 0%,rgba(10,10,12,.76) 40%,rgba(10,10,12,.25) 64%,transparent 80%),
     linear-gradient(to top,rgba(10,10,12,.9) 0%,rgba(10,10,12,.45) 24%,transparent 50%),
     linear-gradient(to bottom,rgba(10,10,12,.4) 0%,transparent 22%)}
-  .detail-row{position:relative;display:flex;gap:32px;padding:44px var(--edge);align-items:flex-end;width:100%}
+  .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
+    align-items:flex-start;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
     box-shadow:var(--shadow-lg);aspect-ratio:2/3;object-fit:cover;background:var(--bg2)}
-  .detail-poster.wide{width:340px;aspect-ratio:16/9}
-  .detail-info{flex:1;min-width:0;padding-bottom:6px;padding-right:280px}
-  .ep-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:1px;
-    text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:16px;
-    background:none;border:none;cursor:pointer;transition:opacity .15s var(--ease)}
-  .ep-kicker:hover{opacity:.7}
-  .ep-kicker .sep{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.5}
+  /* Episode thumbnail: pinned top-right with its top edge aligned to the
+     breadcrumb, so the info column reads cleanly down the left. */
+  .detail-poster.wide{width:360px;aspect-ratio:16/9;border:1px solid var(--line2)}
+  .detail-info{flex:1;min-width:0;padding-bottom:6px}
+  /* breadcrumb back-nav: a glass circular arrow chip + show / season crumb */
+  .ep-kicker{display:inline-flex;align-items:center;gap:11px;font-size:11.5px;letter-spacing:1.4px;
+    text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:20px;
+    background:none;border:none;padding:0;cursor:pointer}
+  .ep-kicker-ico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+    border-radius:50%;background:var(--surface2);border:1px solid var(--line2);font-size:14px;flex:0 0 auto;
+    backdrop-filter:blur(12px) saturate(1.4);-webkit-backdrop-filter:blur(12px) saturate(1.4);
+    transition:background-color .15s var(--ease),transform .15s var(--ease)}
+  .ep-kicker:hover .ep-kicker-ico{background:var(--surface3);transform:translateX(-2px)}
+  .ep-kicker-text{display:inline-flex;align-items:center;gap:10px;min-width:0;text-align:left}
+  .ep-kicker .sep{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.55;flex:0 0 auto}
   .detail-info h2{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98}
   .detail-info .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:16px 0;font-weight:500}
@@ -744,9 +762,9 @@
   /* ---- RESPONSIVE ---- */
   @media(max-width:900px){
     .searchbox{width:160px}
-    .detail-row{padding:28px var(--edge)}
+    .detail-row{padding:calc(var(--pill-clear) + 4px) var(--edge) 32px;gap:28px}
     .detail-poster{width:140px}
-    .detail-poster.wide{width:240px}
+    .detail-poster.wide{width:260px}
     .rate-float{padding:10px 12px;border-radius:var(--radius-sm)}
     .rate-stars{gap:5px}
     .rate-stars button{font-size:18px}
@@ -781,11 +799,11 @@
     .carousel .card{width:130px}.carousel .card.wide{width:210px}
     .featured .carousel .card{width:170px}
     .detail-info h2{font-size:28px}
-    .detail-info{padding-right:0}
     .rate-float{display:none}
     .detail-poster{width:110px}
-    .detail-row{flex-wrap:wrap}
-    .detail-poster.wide{width:100%}
+    .detail-row{flex-wrap:wrap;gap:20px}
+    /* On phones the thumbnail stacks back on top of the info column. */
+    .detail-poster.wide{width:100%;order:-1}
     .ep-card{width:220px}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
@@ -1763,15 +1781,18 @@ function episodeHero(m,actionsHTML){
       <div class="detail-bg" style="background-image:url('${imgBlur(art)}')"></div>
       <div class="detail-scrim"></div>
       <div class="detail-row">
-        <img class="detail-poster wide" src="${img(m.thumb,680,382)}" alt="">
         <div class="detail-info">
-          <button class="ep-kicker" id="epBackBtn"><i class="ph ph-arrow-left" aria-hidden="true"></i> ${esc(m.grandparentTitle||"")}<span class="sep"></span>Season ${m.parentIndex||0}</button>
+          <button class="ep-kicker" id="epBackBtn">
+            <span class="ep-kicker-ico"><i class="ph ph-arrow-left" aria-hidden="true"></i></span>
+            <span class="ep-kicker-text">${esc(m.grandparentTitle||"")}<span class="sep"></span>Season ${m.parentIndex||0}</span>
+          </button>
           <h2>${m.index?`${m.index}. `:""}${esc(m.title||"")}</h2>
           <div class="sub">${bits.filter(Boolean).join('<span class="sep"></span>')}</div>
           ${ratingsRowHTML(m,[])}
           <div class="summary">${esc(m.summary||"")}</div>
           <div class="detail-actions">${actionsHTML}</div>
         </div>
+        <img class="detail-poster wide" src="${img(m.thumb,680,382)}" alt="">
       </div>
       ${rateFloatHTML(m)}
     </div></div>`;
@@ -2129,7 +2150,18 @@ async function openEpisode(it){
     c.innerHTML=episodeHero(m,resume)+statRowHTML(m,true)+crewHTML(m)+castRailHTML(m)
       +(siblings.length?`<div class="rail-section"><div class="rail-head"><h3>More from Season ${m.parentIndex||""}</h3><span class="count">${siblings.length}</span></div>
         <div class="carousel" id="epSiblingRail"></div></div>`:"");
-    if(siblings.length){ const row=$("#epSiblingRail"); siblings.forEach(s=>row.appendChild(card(s,true))); }
+    if(siblings.length){ const row=$("#epSiblingRail");
+      siblings.forEach(s=>{
+        const cd=card(s,true);
+        if(String(s.ratingKey)===String(m.ratingKey)){
+          cd.classList.add("current");
+          const art=cd.querySelector(".art");
+          if(art){ const tag=document.createElement("div"); tag.className="now-badge";
+            tag.innerHTML='<i class="ph-fill ph-play" aria-hidden="true"></i> Now viewing'; art.appendChild(tag); }
+        }
+        row.appendChild(cd);
+      });
+    }
     wireBackdrop(c,m.art||m.grandparentArt||m.thumb);
     const back=$("#epBackBtn");
     if(back) back.onclick=()=>navigate(`/show/${m.grandparentRatingKey}/season/${m.parentRatingKey}`);
