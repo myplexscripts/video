@@ -360,14 +360,19 @@
     justify-content:space-between;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
   .detail-bg{position:absolute;inset:-20px;background-size:cover;background-position:center 20%;opacity:.55;
     transition:opacity .5s}
-  .detail-hero.full .detail-bg{inset:0;opacity:1}
+  /* On wide viewports the crisp backdrop is pinned to the right side, full
+     hero height, with its left edge fading out so the page's UltraBlur wash
+     shows through behind the title-logo and metadata on the left. */
+  .detail-hero.full .detail-bg{top:0;right:0;bottom:0;left:45%;opacity:1;
+    -webkit-mask-image:linear-gradient(to right,transparent,#000 22%);
+    mask-image:linear-gradient(to right,transparent,#000 22%)}
   .detail-scrim{position:absolute;inset:0;
     background:linear-gradient(to top,rgba(10,10,12,.68) 2%,rgba(10,10,12,.55) 40%,rgba(10,10,12,.2) 100%),
     linear-gradient(to right,rgba(10,10,12,.85),transparent 55%)}
   .detail-hero.full .detail-scrim{
-    background:linear-gradient(to right,rgba(10,10,12,.92) 0%,rgba(10,10,12,.76) 40%,rgba(10,10,12,.25) 64%,transparent 80%),
-    linear-gradient(to top,rgba(10,10,12,.9) 0%,rgba(10,10,12,.45) 24%,transparent 50%),
-    linear-gradient(to bottom,rgba(10,10,12,.4) 0%,transparent 22%)}
+    background:linear-gradient(to right,rgba(10,10,12,.5) 0%,rgba(10,10,12,.36) 38%,rgba(10,10,12,.12) 60%,transparent 78%),
+    linear-gradient(to top,rgba(10,10,12,.85) 0%,rgba(10,10,12,.4) 26%,transparent 52%),
+    linear-gradient(to bottom,rgba(10,10,12,.45) 0%,transparent 24%)}
   .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
     align-items:flex-start;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
@@ -762,6 +767,13 @@
   /* ---- RESPONSIVE ---- */
   @media(max-width:900px){
     .searchbox{width:160px}
+    /* Too narrow for a side-by-side split: fall back to the original
+       full-bleed backdrop with a heavier scrim for legibility. */
+    .detail-hero.full .detail-bg{left:0;-webkit-mask-image:none;mask-image:none}
+    .detail-hero.full .detail-scrim{
+      background:linear-gradient(to right,rgba(10,10,12,.92) 0%,rgba(10,10,12,.76) 40%,rgba(10,10,12,.25) 64%,transparent 80%),
+      linear-gradient(to top,rgba(10,10,12,.9) 0%,rgba(10,10,12,.45) 24%,transparent 50%),
+      linear-gradient(to bottom,rgba(10,10,12,.4) 0%,transparent 22%)}
     .detail-row{padding:calc(var(--pill-clear) + 4px) var(--edge) 32px;gap:28px}
     .detail-poster{width:140px}
     .detail-poster.wide{width:260px}
