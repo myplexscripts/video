@@ -367,19 +367,17 @@
   .detail-hero{position:relative;min-height:520px;display:flex;align-items:flex-end;overflow:hidden}
   .detail-hero.full{min-height:min(90vh,880px);align-items:stretch;flex-direction:column;
     justify-content:space-between;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
-  .detail-bg{position:absolute;inset:-20px;background-size:cover;background-position:center 20%;opacity:.55;
-    transition:opacity .5s}
-  /* Movie/show hero reuses the home hero's blurred-echo + height-fit crisp
-     image treatment (see .hero-bg-blur / .hero-bg-img): the artwork is
-     scaled to the hero's full height with no cropping and pinned to the
-     right, vignetting into the blurred echo on the left. */
-  .detail-hero.full .detail-bg{inset:0;opacity:1;overflow:hidden}
-  .detail-hero.full .detail-bg-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
+  .detail-bg{position:absolute;inset:0;overflow:hidden}
+  /* Shared "scale-to-height + blurred-echo + vignette" backdrop, reused by
+     every hero (.hero above, .detail-hero, .detail-hero.full, .coll-hero):
+     the artwork is scaled to the hero's full height with no cropping and
+     pinned to the right, vignetting into the blurred echo on the left. */
+  .detail-bg-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
     filter:blur(100px) saturate(1.9) brightness(1.05)}
-  .detail-hero.full .detail-bg-img{position:absolute;top:0;right:0;height:100%;width:auto;max-width:none;
+  .detail-bg-img{position:absolute;top:0;right:0;height:100%;width:auto;max-width:none;
     opacity:0;transition:opacity .6s var(--ease);
     -webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
-  .detail-hero.full .detail-bg-img.loaded{opacity:1}
+  .detail-bg-img.loaded{opacity:1}
   .detail-scrim{position:absolute;inset:0;
     background:linear-gradient(to top,rgba(10,10,12,.68) 2%,rgba(10,10,12,.55) 40%,rgba(10,10,12,.2) 100%),
     linear-gradient(to right,rgba(10,10,12,.85),transparent 55%)}
@@ -562,7 +560,8 @@
   .ep-menu i{font-size:16px;color:var(--dim);flex:0 0 auto}
 
   /* ---- COLLECTION / PLAYLIST HERO ---- */
-  .coll-hero{position:relative;padding:44px var(--edge);display:flex;gap:32px;align-items:flex-end;flex-wrap:wrap}
+  .coll-hero{position:relative;overflow:hidden;padding:44px var(--edge);display:flex;gap:32px;
+    align-items:flex-end;flex-wrap:wrap}
   .coll-art{position:relative;width:220px;aspect-ratio:2/3;flex:0 0 auto;border-radius:var(--radius-lg);
     overflow:hidden;box-shadow:var(--shadow-lg);background:var(--bg2)}
   .coll-art.square{aspect-ratio:1/1}
@@ -571,7 +570,7 @@
     font-size:56px;color:var(--faint)}
   .coll-art.broken img{display:none}
   .coll-art.broken .art-fallback{display:flex}
-  .coll-info{flex:1;min-width:240px;padding-bottom:6px}
+  .coll-info{position:relative;flex:1;min-width:240px;padding-bottom:6px}
   .coll-kicker{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);
     font-weight:700;margin-bottom:16px}
   .coll-info h2{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98;
@@ -1099,12 +1098,6 @@ function imgDirect(path,w,h){
   const sep=path.includes("?")?"&":"?";
   const dims=(w?`width=${Math.round(w)}&`:"")+(h?`height=${Math.round(h)}&`:"");
   return `${server.uri}${path}${sep}${dims}minSize=1&upscale=1&X-Plex-Token=${server.token}`;
-}
-function imgBlur(thumb){
-  if(!thumb) return "";
-  if(isDirectArt(thumb)) return imgDirect(thumb,300,300);
-  return `${server.uri}/photo/:/transcode?width=300&height=169&minSize=1&upscale=1&blur=100`
-    +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
 function imgAmbient(thumb){
   if(!thumb) return "";
@@ -1646,9 +1639,10 @@ async function openPlaylist(p){
     const mc=await api(`/playlists/${p.ratingKey}/items`);
     const items=(mc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
     const cover=p.composite||p.thumb||mc.composite||mc.thumb;
-    setUltraBlur(cover||(items[0]&&(items[0].art||items[0].thumb)));
+    const pl={...p,thumb:cover};
+    setUltraBlur(collArt(pl,items));
     const allEpisodes=items.length&&items.every(x=>x.type==="episode");
-    c.innerHTML=collHero({...p,thumb:cover},"Playlist",items,true)
+    c.innerHTML=collHero(pl,"Playlist",items,true)
       +(items.length
         ? allEpisodes
           ? `<div class="rail-section"><div class="rail-head"><h3>Episodes</h3><span class="count">${items.length}</span></div>
@@ -1658,6 +1652,7 @@ async function openPlaylist(p){
         : "<div class='empty'><i class='ph ph-playlist' aria-hidden='true'></i>This playlist is empty.</div>");
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
+    wireDetailBg(c,collArt(pl,items));
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 
@@ -1682,7 +1677,7 @@ async function openCollection(it){
     if(!m.thumb) m.thumb=childrenMc.thumb;
     if(!m.art) m.art=childrenMc.art;
     const items=(childrenMc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-    setUltraBlur(m.art||m.thumb||(items[0]&&(items[0].art||items[0].thumb)));
+    setUltraBlur(collArt(m,items));
     const allEpisodes=items.length&&items.every(x=>x.type==="episode");
     c.innerHTML=collHero(m,"Collection",items,false)
       +(items.length
@@ -1694,6 +1689,7 @@ async function openCollection(it){
         : "<div class='empty'><i class='ph ph-stack' aria-hidden='true'></i>This collection is empty.</div>");
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
+    wireDetailBg(c,collArt(m,items));
   }catch(e){ c.innerHTML=errHTML(e.message); }
 }
 function metaBits(m,isMovie){
@@ -1713,6 +1709,12 @@ function metaBits(m,isMovie){
    A dedicated editorial header for collections and playlists: cover art,
    description, item count, total duration, and creation date — instead of
    dropping them into a generic grid. */
+// Best-available art for a collection/playlist backdrop: its own art/cover,
+// falling back to the first item's art so an empty cover doesn't leave the
+// hero backdrop blank.
+function collArt(m,items){
+  return m.art||m.thumb||(items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb));
+}
 function collHero(m,kicker,items,square){
   const bits=[`${items.length} item${items.length===1?"":"s"}`];
   const totalDur=items.reduce((a,b)=>a+(b.duration||0),0);
@@ -1723,6 +1725,8 @@ function collHero(m,kicker,items,square){
   const mosaic=src?"":mosaicHTML(items);
   const fallbackIcon=square?"ph-playlist":"ph-stack";
   return `<div class="coll-hero">
+    <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
+    <div class="detail-scrim"></div>
     <div class="coll-art${square?" square":""}${src||mosaic?"":" broken"}">
       ${src?`<img src="${src}" alt="">`:mosaic}
       <i class="ph-fill ${fallbackIcon} art-fallback" aria-hidden="true"></i>
@@ -1825,7 +1829,7 @@ function episodeHero(m,actionsHTML){
   if(m.rating) bits.push(`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)" aria-hidden="true"></i> ${(+m.rating).toFixed(1)}</span>`);
   return `<div class="detail-wrap">
     <div class="detail-hero">
-      <div class="detail-bg" style="background-image:url('${imgBlur(art)}')"></div>
+      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
       <div class="detail-scrim"></div>
       <div class="detail-row">
         <div class="detail-info">
@@ -2037,17 +2041,14 @@ function wireRateFloat(c,m){
 }
 function wireBackdrop(c,art){
   setUltraBlur(art);
-  const bgImg=c.querySelector(".detail-bg-img");
-  if(bgImg){
-    const blur=c.querySelector(".detail-bg-blur");
-    if(blur) blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
-    bgImg.onload=()=>bgImg.classList.add("loaded");
-    bgImg.src=img(art,1600,900);
-    return;
-  }
-  const bg=c.querySelector(".detail-bg"); if(!bg) return;
-  const im=new Image(); im.onload=()=>{bg.style.backgroundImage=`url('${im.src}')`;};
-  im.src=img(art,1600,900);
+  wireDetailBg(c,art);
+}
+function wireDetailBg(c,art){
+  const bgImg=c.querySelector(".detail-bg-img"); if(!bgImg||!art) return;
+  const blur=c.querySelector(".detail-bg-blur");
+  if(blur) blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
+  bgImg.onload=()=>bgImg.classList.add("loaded");
+  bgImg.src=img(art,1600,900);
 }
 async function openMovie(it){
   setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
