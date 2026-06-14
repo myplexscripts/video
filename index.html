@@ -41,6 +41,10 @@
        toolbars, detail/collection heroes) aligns to this edge so content
        lines up into a single column instead of drifting between 36/44px. */
     --edge:72px;
+    /* Backdrop images are scaled to the hero's full height and pinned right;
+       this mask fades their left side into the blurred echo behind them with
+       soft, rounded (vignette-like) edges rather than a hard vertical line. */
+    --bg-vignette:radial-gradient(ellipse 78% 90% at 100% 50%,#000 48%,transparent 100%);
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -175,12 +179,20 @@
   /* ---- HERO ---- */
   .hero{position:relative;height:min(64vh,600px);min-height:420px;display:flex;align-items:flex-end;
     overflow:hidden}
-  .hero-bg{position:absolute;inset:-40px;background-size:cover;background-position:center 20%;
-    filter:blur(0px);transition:filter .6s,opacity .6s;opacity:.7}
-  .hero-bg.sharp{filter:none;opacity:.65}
+  /* Backdrop: a heavily blurred, saturated "echo" of the artwork fills the
+     whole hero; the crisp image sits on top, scaled to the hero's full
+     height (no cropping) and pinned to the right, with its left edge
+     fading into the blurred echo for a soft vignette blend. */
+  .hero-bg{position:absolute;inset:0;overflow:hidden}
+  .hero-bg-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
+    filter:blur(100px) saturate(1.9) brightness(1.05)}
+  .hero-bg-img,.hero-video{position:absolute;top:0;right:0;height:100%;width:auto;max-width:none;
+    opacity:0;transition:opacity .6s var(--ease);
+    -webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
+  .hero-bg-img.loaded,.hero-video.show{opacity:1}
   .hero-scrim{position:absolute;inset:0;
     background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.55) 35%,rgba(10,10,12,.15) 80%),
-    linear-gradient(to right,rgba(10,10,12,.85) 0%,rgba(10,10,12,.25) 40%,transparent 70%)}
+    linear-gradient(to right,rgba(10,10,12,.8) 0%,rgba(10,10,12,.35) 42%,rgba(10,10,12,.1) 65%,transparent 85%)}
   .hero-inner{position:relative;padding:0 var(--edge) 50px;max-width:700px}
   .hero-kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:1px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
@@ -194,9 +206,6 @@
   .hero p{color:var(--dim);line-height:1.6;font-size:14px;max-width:560px;margin-bottom:24px;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
-  .hero-video{position:absolute;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);
-    object-fit:cover;opacity:0;transition:opacity 1s var(--ease);pointer-events:none}
-  .hero-video.show{opacity:1}
   .hero-trailer-ctrls{position:absolute;right:var(--edge);bottom:24px;z-index:2;display:flex;gap:8px;
     opacity:0;transition:opacity .4s var(--ease)}
   .hero-trailer-ctrls.show{opacity:1}
@@ -360,17 +369,22 @@
     justify-content:space-between;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
   .detail-bg{position:absolute;inset:-20px;background-size:cover;background-position:center 20%;opacity:.55;
     transition:opacity .5s}
-  /* On wide viewports the crisp backdrop is pinned to the right side, full
-     hero height, with its left edge fading out so the page's UltraBlur wash
-     shows through behind the title-logo and metadata on the left. */
-  .detail-hero.full .detail-bg{top:0;right:0;bottom:0;left:45%;opacity:1;
-    -webkit-mask-image:linear-gradient(to right,transparent,#000 22%);
-    mask-image:linear-gradient(to right,transparent,#000 22%)}
+  /* Movie/show hero reuses the home hero's blurred-echo + height-fit crisp
+     image treatment (see .hero-bg-blur / .hero-bg-img): the artwork is
+     scaled to the hero's full height with no cropping and pinned to the
+     right, vignetting into the blurred echo on the left. */
+  .detail-hero.full .detail-bg{inset:0;opacity:1;overflow:hidden}
+  .detail-hero.full .detail-bg-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
+    filter:blur(100px) saturate(1.9) brightness(1.05)}
+  .detail-hero.full .detail-bg-img{position:absolute;top:0;right:0;height:100%;width:auto;max-width:none;
+    opacity:0;transition:opacity .6s var(--ease);
+    -webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
+  .detail-hero.full .detail-bg-img.loaded{opacity:1}
   .detail-scrim{position:absolute;inset:0;
     background:linear-gradient(to top,rgba(10,10,12,.68) 2%,rgba(10,10,12,.55) 40%,rgba(10,10,12,.2) 100%),
     linear-gradient(to right,rgba(10,10,12,.85),transparent 55%)}
   .detail-hero.full .detail-scrim{
-    background:linear-gradient(to right,rgba(10,10,12,.5) 0%,rgba(10,10,12,.36) 38%,rgba(10,10,12,.12) 60%,transparent 78%),
+    background:linear-gradient(to right,rgba(10,10,12,.7) 0%,rgba(10,10,12,.5) 35%,rgba(10,10,12,.18) 60%,transparent 80%),
     linear-gradient(to top,rgba(10,10,12,.85) 0%,rgba(10,10,12,.4) 26%,transparent 52%),
     linear-gradient(to bottom,rgba(10,10,12,.45) 0%,transparent 24%)}
   .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
@@ -767,13 +781,6 @@
   /* ---- RESPONSIVE ---- */
   @media(max-width:900px){
     .searchbox{width:160px}
-    /* Too narrow for a side-by-side split: fall back to the original
-       full-bleed backdrop with a heavier scrim for legibility. */
-    .detail-hero.full .detail-bg{left:0;-webkit-mask-image:none;mask-image:none}
-    .detail-hero.full .detail-scrim{
-      background:linear-gradient(to right,rgba(10,10,12,.92) 0%,rgba(10,10,12,.76) 40%,rgba(10,10,12,.25) 64%,transparent 80%),
-      linear-gradient(to top,rgba(10,10,12,.9) 0%,rgba(10,10,12,.45) 24%,transparent 50%),
-      linear-gradient(to bottom,rgba(10,10,12,.4) 0%,transparent 22%)}
     .detail-row{padding:calc(var(--pill-clear) + 4px) var(--edge) 32px;gap:28px}
     .detail-poster{width:140px}
     .detail-poster.wide{width:260px}
@@ -1282,7 +1289,7 @@ async function heroEl(it){
   const ratingBadges=ratingBadgesHTML(it);
   const ratingFallback=ratingBadges?"":(it.rating?`<span class="pill"><i class="ph-fill ph-star" style="color:var(--accent)" aria-hidden="true"></i> ${(+it.rating).toFixed(1)}</span>`:"");
   wrap.innerHTML=`
-    <div class="hero-bg" style="background-image:url('${imgBlur(art)}')"></div>
+    <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" alt=""></div>
     <div class="hero-scrim"></div>
     <div class="hero-inner">
       <div class="hero-kicker"><i class="ph-fill ${it.viewOffset?'ph-play-circle':'ph-sparkle'}" aria-hidden="true"></i>${it.viewOffset?'Continue Watching':'Featured'}</div>
@@ -1298,9 +1305,10 @@ async function heroEl(it){
       </div>
     </div>`;
   setTimeout(()=>{
-    const bg=wrap.querySelector(".hero-bg");
-    const im=new Image(); im.onload=()=>{bg.style.backgroundImage=`url('${im.src}')`;bg.classList.add("sharp");};
-    im.src=img(art,1600,900);
+    wrap.querySelector(".hero-bg-blur").style.backgroundImage=`url('${imgAmbient(art)}')`;
+    const bgImg=wrap.querySelector(".hero-bg-img");
+    bgImg.onload=()=>bgImg.classList.add("loaded");
+    bgImg.src=img(art,1600,900);
     wrap.querySelector("#heroPlay").onclick=()=>playItem(it,it.viewOffset||0);
     wrap.querySelector("#heroInfo").onclick=()=>{
       const target=isEp?{ratingKey:it.grandparentRatingKey,type:"show"}:it;
@@ -1791,7 +1799,7 @@ function detailHero(m,isMovie,actionsHTML,extras){
   const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
   return `<div class="detail-wrap">
     <div class="detail-hero full">
-      <div class="detail-bg" style="background-image:url('${imgBlur(art)}')"></div>
+      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
       <div class="detail-scrim"></div>
       <div class="detail-top">
         ${titleArtHTML(m)}
@@ -2029,6 +2037,14 @@ function wireRateFloat(c,m){
 }
 function wireBackdrop(c,art){
   setUltraBlur(art);
+  const bgImg=c.querySelector(".detail-bg-img");
+  if(bgImg){
+    const blur=c.querySelector(".detail-bg-blur");
+    if(blur) blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
+    bgImg.onload=()=>bgImg.classList.add("loaded");
+    bgImg.src=img(art,1600,900);
+    return;
+  }
   const bg=c.querySelector(".detail-bg"); if(!bg) return;
   const im=new Image(); im.onload=()=>{bg.style.backgroundImage=`url('${im.src}')`;};
   im.src=img(art,1600,900);
