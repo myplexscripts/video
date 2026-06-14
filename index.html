@@ -1415,6 +1415,16 @@ function card(it,wide,square){
     </div>
     <div class="ct">${esc(title)}</div>
     <div class="cs">${esc(sub)}</div>`;
+  // If a composite cover fails to load but we have the items, degrade to a
+  // mosaic rather than a bare placeholder icon (playlist/collection covers).
+  if(src && it._mosaicItems && it._mosaicItems.length){
+    const im=b.querySelector(".art > img");
+    if(im) im.addEventListener("error",()=>{
+      const mo=mosaicHTML(it._mosaicItems); if(!mo) return;
+      const art=im.closest(".art"); art.classList.remove("broken");
+      im.insertAdjacentHTML("beforebegin",mo); im.remove();
+    },{once:true});
+  }
   b.onclick=()=>{ const r=pathForItem(it); if(r) navigate(r); else openItem(it); };
   return b;
 }
@@ -1591,13 +1601,18 @@ async function showPlaylists(){
     const mc=await api("/playlists");
     const pls=(mc.Metadata||[]).filter(p=>p.playlistType==="video");
     if(!pls.length){ c.innerHTML="<div class='empty'><i class='ph ph-playlist' aria-hidden='true'></i>No video playlists.</div>"; return; }
-    // Most playlists have no composite/thumb of their own — grab their first
-    // few items so card() can build a mosaic cover instead of a bare icon.
+    // The /playlists list entry often omits the composite cover — it lives on
+    // the items CONTAINER instead (same source the playlist hero uses). Fetch
+    // the first few items to pick up that composite; only when the server has
+    // no composite at all do we build a mosaic from the item thumbs.
     await Promise.all(pls.map(async p=>{
       if(p.composite||p.thumb) return;
       try{
         const ic=await api(`/playlists/${p.ratingKey}/items?X-Plex-Container-Size=4`);
+        // Keep the items as a mosaic fallback, but prefer the container's
+        // composite cover when the server provides one.
         p._mosaicItems=(ic.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
+        if(ic.composite||ic.thumb) p.thumb=ic.composite||ic.thumb;
       }catch(_){}
     }));
     const grid=el("div","grid-view");
