@@ -1068,24 +1068,28 @@ async function api(path){
 function isDirectArt(thumb){ return thumb.startsWith("/playlists/")||thumb.includes("/composite/"); }
 function img(thumb,w,h){
   if(!thumb) return "";
-  if(isDirectArt(thumb)) return imgDirect(thumb);
+  if(isDirectArt(thumb)) return imgDirect(thumb,w,h);
   return `${server.uri}/photo/:/transcode?width=${w}&height=${h}&minSize=1&upscale=1`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
-function imgDirect(path){
+// Composite/playlist art is generated on demand from its OWN endpoint and must
+// carry explicit width/height — the photo transcoder can't size it, and the
+// composite endpoint returns nothing when dimensions are omitted.
+function imgDirect(path,w,h){
   if(!path) return "";
   const sep=path.includes("?")?"&":"?";
-  return `${server.uri}${path}${sep}X-Plex-Token=${server.token}`;
+  const dims=(w?`width=${Math.round(w)}&`:"")+(h?`height=${Math.round(h)}&`:"");
+  return `${server.uri}${path}${sep}${dims}minSize=1&upscale=1&X-Plex-Token=${server.token}`;
 }
 function imgBlur(thumb){
   if(!thumb) return "";
-  if(isDirectArt(thumb)) return imgDirect(thumb);
+  if(isDirectArt(thumb)) return imgDirect(thumb,300,300);
   return `${server.uri}/photo/:/transcode?width=300&height=169&minSize=1&upscale=1&blur=100`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
 function imgAmbient(thumb){
   if(!thumb) return "";
-  if(isDirectArt(thumb)) return imgDirect(thumb);
+  if(isDirectArt(thumb)) return imgDirect(thumb,240,240);
   // A small, lightly-blurred source preserves distinct color regions from
   // the artwork; the heavy CSS blur on #ultraBlur turns them into soft,
   // saturated color blobs rather than a single muddy wash.
@@ -1685,7 +1689,7 @@ function collHero(m,kicker,items,square){
   const fallbackIcon=square?"ph-playlist":"ph-stack";
   return `<div class="coll-hero">
     <div class="coll-art${square?" square":""}${src||mosaic?"":" broken"}">
-      ${src?`<img src="${src}" alt="" onerror="this.closest('.coll-art').classList.add('broken')">`:mosaic}
+      ${src?`<img src="${src}" alt="">`:mosaic}
       <i class="ph-fill ${fallbackIcon} art-fallback" aria-hidden="true"></i>
     </div>
     <div class="coll-info">
@@ -1734,6 +1738,14 @@ function fillCollItems(c,items,allEpisodes){
   }
 }
 function wireCollActions(c,items){
+  // If the composite cover ever fails to load, fall back to a mosaic built
+  // from the items so the header never collapses to a bare placeholder icon.
+  const art=c.querySelector(".coll-art"), cover=art&&art.querySelector(":scope > img");
+  if(cover) cover.addEventListener("error",()=>{
+    const mo=mosaicHTML(items);
+    if(mo){ art.classList.remove("broken"); cover.insertAdjacentHTML("beforebegin",mo); cover.remove(); }
+    else art.classList.add("broken");
+  },{once:true});
   if(!items.length) return;
   const playBtn=c.querySelector("#collPlay"), shuffleBtn=c.querySelector("#collShuffle");
   if(playBtn) playBtn.onclick=()=>playItem(items[0],items[0].viewOffset||0);
