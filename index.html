@@ -588,27 +588,32 @@
   .p-spinner span{font-size:13px;color:#cfcfd6;letter-spacing:.3px;font-weight:500}
 
   /* ---- PAUSE SCREEN ----
-     Ambient ultrablur pause overlay: dims the video and surfaces the
-     blurred artwork wash (.p-backdrop) behind title, synopsis, and a
-     glass resume button. */
-  .p-pause{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;gap:18px;text-align:center;padding:0 56px;opacity:0;visibility:hidden;
-    background:radial-gradient(120% 100% at 50% 50%,rgba(10,10,14,.55) 0%,rgba(10,10,14,.85) 100%);
+     Bottom-left ultrablur info panel shown while paused: the show's main
+     backdrop fuels the full-screen ultrablur wash (.p-backdrop), and the
+     show logo, metadata, and full synopsis sit over a corner scrim.
+     pointer-events pass through the empty area so a click anywhere resumes. */
+  .p-pause{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:flex-start;
+    justify-content:flex-end;gap:14px;text-align:left;padding:0 64px 132px;opacity:0;visibility:hidden;
+    pointer-events:none;
+    background:linear-gradient(90deg,rgba(8,8,12,.86) 0%,rgba(8,8,12,.45) 42%,transparent 74%),
+      linear-gradient(0deg,rgba(8,8,12,.55) 0%,transparent 46%);
     transform:translateY(14px);transition:opacity .45s var(--ease),visibility .45s var(--ease),transform .45s var(--ease)}
   #player.paused .p-pause{opacity:1;visibility:visible;transform:translateY(0)}
-  .p-pause-play{width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,.12);
+  .p-pause-logo{max-width:min(46vw,380px);max-height:132px;width:auto;height:auto;object-fit:contain;
+    object-position:left bottom;filter:drop-shadow(0 8px 30px rgba(0,0,0,.6))}
+  .p-pause-title{font-size:44px;font-weight:800;letter-spacing:-.02em;max-width:720px;
+    text-shadow:0 2px 28px rgba(0,0,0,.55)}
+  .p-pause-sub{font-size:14px;font-weight:600;color:var(--dim);letter-spacing:.02em;text-shadow:0 1px 12px rgba(0,0,0,.6)}
+  .p-pause-desc{font-size:15px;color:#dcdce2;line-height:1.7;max-width:620px;text-shadow:0 1px 14px rgba(0,0,0,.65)}
+  .p-pause-resume{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;margin-top:6px;
+    pointer-events:auto;padding:12px 26px;border-radius:100px;background:rgba(255,255,255,.14);
     backdrop-filter:blur(24px) saturate(1.7);-webkit-backdrop-filter:blur(24px) saturate(1.7);
-    border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 36px rgba(0,0,0,.45);
-    color:#fff;font-size:32px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+    border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 12px 36px rgba(0,0,0,.45);
+    color:#fff;font-size:15px;font-weight:700;
     transition:transform .15s var(--ease),background-color .15s var(--ease)}
-  .p-pause-play i{margin-left:3px}
-  .p-pause-play:hover{background:rgba(255,255,255,.2);transform:scale(1.06)}
-  .p-pause-play:active{transform:scale(.96)}
-  .p-pause-title{font-size:36px;font-weight:800;letter-spacing:-.02em;max-width:760px;
-    text-shadow:0 2px 28px rgba(0,0,0,.45)}
-  .p-pause-sub{font-size:14px;font-weight:600;color:var(--dim);letter-spacing:.02em;text-shadow:0 1px 12px rgba(0,0,0,.5)}
-  .p-pause-desc{font-size:14px;color:var(--dim);line-height:1.7;max-width:560px;text-shadow:0 1px 12px rgba(0,0,0,.5);
-    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .p-pause-resume i{font-size:18px}
+  .p-pause-resume:hover{background:rgba(255,255,255,.24);transform:translateY(-1px)}
+  .p-pause-resume:active{transform:scale(.97)}
 
   .p-top,.p-bottom{position:absolute;left:0;right:0;z-index:4;transition:opacity .25s,transform .25s}
   .p-top{top:0;padding:18px 24px;display:flex;align-items:center;gap:12px;
@@ -751,9 +756,9 @@
     .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:300px}
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
-    .p-pause-title{font-size:28px}
-    .p-pause-play{width:76px;height:76px;font-size:28px}
-    .p-pause{padding:0 40px;gap:14px}
+    .p-pause{padding:0 44px 120px}
+    .p-pause-title{font-size:32px}
+    .p-pause-logo{max-height:104px}
   }
   /* Below this, even the persistent 240px sidebar column gets too tight
      for both itself and a usable content column, so it becomes an
@@ -804,11 +809,12 @@
     .p-top{padding:14px 12px}
     .p-bottom{padding:8px 12px max(16px,env(safe-area-inset-bottom))}
     .p-controls{gap:2px}
-    .p-pause{padding:0 24px;gap:10px}
-    .p-pause-play{width:60px;height:60px;font-size:22px}
-    .p-pause-title{font-size:20px}
+    .p-pause{padding:0 22px 108px;gap:8px}
+    .p-pause-logo{max-height:72px;max-width:60vw}
+    .p-pause-title{font-size:22px}
     .p-pause-sub{font-size:12px}
-    .p-pause-desc{display:none}
+    .p-pause-desc{font-size:13px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+    .p-pause-resume{padding:10px 20px;font-size:14px}
     .p-controls .p-divider{display:none}
     .p-time{font-size:12px;margin:0 4px}
     #pipBtn{display:none}
@@ -873,10 +879,11 @@
   <div class="p-backdrop" id="pBackdrop"></div>
   <video id="video" playsinline></video>
   <div class="p-pause" id="pPause">
-    <button class="p-pause-play" id="pauseResume" aria-label="Resume"><i class="ph-fill ph-play" aria-hidden="true"></i></button>
+    <img class="p-pause-logo hidden" id="pPauseLogo" alt="">
     <div class="p-pause-title" id="pPauseTitle"></div>
     <div class="p-pause-sub hidden" id="pPauseSub"></div>
     <div class="p-pause-desc hidden" id="pPauseDesc"></div>
+    <button class="p-pause-resume" id="pauseResume"><i class="ph-fill ph-play" aria-hidden="true"></i><span>Resume</span></button>
   </div>
   <div class="next-up" id="nextUp">
     <img id="nuImg" alt=""><div class="nu-body"><div class="nu-k">Up next</div>
@@ -2617,6 +2624,13 @@ document.addEventListener("keydown",e=>{
 });
 
 /* ---- loading state + UltraBlur backdrop ---- */
+// The ultrablur wash should sample the SHOW's main backdrop, not the
+// per-episode thumbnail, so episodes prefer grandparentArt.
+function playerArt(item){
+  if(!item) return "";
+  if(item.type==="episode") return item.grandparentArt||item.art||item.grandparentThumb||item.thumb||"";
+  return item.art||item.thumb||"";
+}
 function playerLoading(on,text,item){
   const p=$("#player");
   p.classList.toggle("loading",!!on);
@@ -2624,12 +2638,15 @@ function playerLoading(on,text,item){
   $("#pSpinner").classList.toggle("hidden",!on);
   if(text) $("#pSpinnerText").textContent=text;
   if(on&&item){
-    const art=item.art||item.grandparentArt||item.thumb||item.grandparentThumb;
+    const art=playerArt(item);
     if(art) $("#pBackdrop").style.backgroundImage=`url('${imgAmbient(art)}')`;
   }
 }
 function setStatus(transcoding,text){ const s=$("#pStatus"); s.classList.remove("hidden");
   s.classList.toggle("transcode",!!transcoding); $("#pStatusText").textContent=text; }
+
+const showLogoCache={};   // grandparentRatingKey -> clearLogo url ("" when none)
+function clearLogoUrl(images){ const l=(images||[]).find(i=>i.type==="clearLogo"); return l?l.url:""; }
 function updatePauseInfo(){
   const m=currentItem||{};
   let title=m.title||"", sub="";
@@ -2643,11 +2660,44 @@ function updatePauseInfo(){
     if(m.contentRating) bits.push(m.contentRating);
     sub=bits.join("   ·   ");
   }
+  // Sample the show's main backdrop for the ultrablur wash.
+  const art=playerArt(m);
+  if(art) $("#pBackdrop").style.backgroundImage=`url('${imgAmbient(art)}')`;
+  // Default to the text title; loadPauseLogo() swaps in the show logo async.
   $("#pPauseTitle").textContent=title;
+  $("#pPauseTitle").classList.remove("hidden");
+  $("#pPauseLogo").classList.add("hidden");
   $("#pPauseSub").textContent=sub;
   $("#pPauseSub").classList.toggle("hidden",!sub);
   $("#pPauseDesc").textContent=m.summary||"";
   $("#pPauseDesc").classList.toggle("hidden",!m.summary);
+  loadPauseLogo(m,title);
+}
+// A show's clear logo lives on the show, not the episode, so for episodes we
+// fetch (and cache) the show metadata to surface its title treatment.
+async function loadPauseLogo(m,title){
+  let url="";
+  if(m.type==="episode"){
+    const gk=m.grandparentRatingKey;
+    if(gk!=null){
+      if(gk in showLogoCache){ url=showLogoCache[gk]; }
+      else{
+        try{ const sm=await api(`/library/metadata/${gk}`); url=clearLogoUrl(((sm.Metadata||[])[0]||{}).Image); }
+        catch(_){ url=""; }
+        showLogoCache[gk]=url;
+      }
+    }
+  }else{
+    url=clearLogoUrl(m.Image);
+  }
+  if(currentItem!==m) return;        // item changed while awaiting
+  const logoEl=$("#pPauseLogo"), titleEl=$("#pPauseTitle");
+  if(url){
+    logoEl.src=img(url,800,300); logoEl.alt=title;
+    logoEl.classList.remove("hidden"); titleEl.classList.add("hidden");
+  }else{
+    logoEl.classList.add("hidden"); titleEl.classList.remove("hidden");
+  }
 }
 
 /* ---- toast ---- */
