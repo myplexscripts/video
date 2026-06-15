@@ -113,6 +113,9 @@
   .btn i{font-size:17px}
   .btn.lg{padding:14px 30px;font-size:15px}
   .btn.sm{padding:8px 16px;font-size:13px}
+  .btn.icon{width:48px;height:48px;padding:0;justify-content:center;border-radius:50%;font-size:19px}
+  .btn.icon.active{background:var(--accent);color:#141005;border-color:transparent}
+  .btn.icon.active:hover{background:var(--accent)}
 
   /* ---- LOGIN ---- */
   #login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
@@ -1885,12 +1888,12 @@ function detailHero(m,isMovie,actionsHTML,extras){
         ${titleArtHTML(m)}
         <div class="sub">${metaBits(m,isMovie)}</div>
         ${genres?`<div class="genres">${genres}</div>`:""}
-      </div>
-      <div class="detail-bottom">
-        <div class="detail-actions">${actionsHTML}</div>
         ${ratingsRowHTML(m,extras)}
         <div class="summary">${esc(m.summary||"")}</div>
+      </div>
+      <div class="detail-bottom">
         ${statRowHTML(m,isMovie)}
+        <div class="detail-actions">${actionsHTML}</div>
       </div>
       ${rateFloatHTML(m)}
     </div></div>`;
@@ -1917,7 +1920,7 @@ function episodeHero(m,actionsHTML){
           <div class="sub">${bits.filter(Boolean).join('<span class="sep"></span>')}</div>
           ${ratingsRowHTML(m,[])}
           <div class="summary">${esc(m.summary||"")}</div>
-          <div class="detail-actions">${actionsHTML}</div>
+          <div class="detail-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
         </div>
         <img class="detail-poster wide" src="${img(m.thumb,680,382)}" alt="">
       </div>
@@ -2146,15 +2149,16 @@ async function openMovie(it){
   try{
     const [mc,extras,related]=await Promise.all([api(`/library/metadata/${it.ratingKey}`),fetchExtras(it.ratingKey),fetchRelated(it.ratingKey)]);
     const m=(mc.Metadata||[])[0]||it;
-    const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
+    const resume=(m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
       <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Start over</button>`
-      :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
+      :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`)+watchedToggleHTML(m,true);
     c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
     appendRelatedRails(c,related);
     wireBackdrop(c,m.art||m.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
     else $("#playBtnD").onclick=()=>playItem(m,0);
+    wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
   }catch(e){ c.innerHTML=errHTML(e); }
@@ -2179,7 +2183,8 @@ async function openShow(it,jumpSeasonKey){
     ]);
     const show=(meta.Metadata||[])[0]||it;
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
-    const actions=`<button class="btn lg" id="playShow"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
+    const actions=`<button class="btn lg" id="playShow"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>
+      <button class="btn glass lg" id="shuffleShow">${svgIcon("shuffle")} Shuffle</button>${watchedToggleHTML(show,false)}`;
     c.innerHTML=detailHero(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
         <div class="season-rail" id="seasonRail"></div></div>`:"")
@@ -2209,6 +2214,11 @@ async function openShow(it,jumpSeasonKey){
       const mc2=await api(`/library/metadata/${activeSeason.ratingKey}/children`);
       const eps=mc2.Metadata||[]; if(eps.length) playItem(eps[0],eps[0].viewOffset||0);
     };
+    $("#shuffleShow").onclick=async()=>{
+      const mc2=await api(`/library/metadata/${activeSeason.ratingKey}/children`);
+      const eps=mc2.Metadata||[]; if(eps.length) playItem(eps[Math.floor(Math.random()*eps.length)],0);
+    };
+    wireWatchedToggle(c,show,false,()=>{ if(activeSeason) loadEpisodes(activeSeason); });
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 /* ---- EPISODE WATCHED ICON ---- */
@@ -2223,6 +2233,44 @@ function closeEpMenus(){ document.querySelectorAll(".ep-menu-wrap.open").forEach
 async function setWatched(ratingKey,watched){
   await fetch(`${server.uri}/:/${watched?"scrobble":"unscrobble"}?key=${ratingKey}&identifier=com.plexapp.plugins.library&X-Plex-Token=${server.token}`,
     {headers:plexHeaders(server.token)});
+}
+/* ---- WATCHED TOGGLE ----
+   Pill button on movie/show/episode detail pages that flips the item's
+   watched state via setWatched(), then repaints the button and stat row in
+   place. For shows, "watched" means every episode has been seen. */
+function isWatched(m,isMovie){
+  return isMovie?!!m.viewCount:(!!m.leafCount&&m.viewedLeafCount===m.leafCount);
+}
+function watchedToggleHTML(m,isMovie){
+  const watched=isWatched(m,isMovie);
+  const label=watched?"Mark as unwatched":"Mark as watched";
+  return `<button class="btn glass icon${watched?" active":""}" id="watchedToggle" aria-pressed="${watched}" title="${label}" aria-label="${label}"><i class="${watched?"ph-fill ph-check-circle":"ph ph-circle"}" aria-hidden="true"></i></button>`;
+}
+function paintWatchedToggle(btn,m,isMovie){
+  const watched=isWatched(m,isMovie);
+  const label=watched?"Mark as unwatched":"Mark as watched";
+  btn.classList.toggle("active",watched);
+  btn.setAttribute("aria-pressed",watched); btn.title=label; btn.setAttribute("aria-label",label);
+  btn.innerHTML=`<i class="${watched?"ph-fill ph-check-circle":"ph ph-circle"}" aria-hidden="true"></i>`;
+}
+function wireWatchedToggle(c,m,isMovie,onChange){
+  const btn=c.querySelector("#watchedToggle"); if(!btn) return;
+  btn.onclick=async()=>{
+    const next=!isWatched(m,isMovie);
+    btn.disabled=true;
+    try{
+      await setWatched(m.ratingKey,next);
+      if(isMovie){ m.viewCount=next?1:0; m.viewOffset=0; }
+      else m.viewedLeafCount=next?(m.leafCount||0):0;
+      m.lastViewedAt=next?Math.floor(Date.now()/1000):null;
+      paintWatchedToggle(btn,m,isMovie);
+      const row=c.querySelector("#statRow"), html=statRowHTML(m,isMovie);
+      if(row){ if(html) row.outerHTML=html; else row.remove(); }
+      if(next) injectFirstWatched(m.ratingKey,!isMovie);
+      if(onChange) onChange(next);
+    }catch(_){}
+    finally{ btn.disabled=false; }
+  };
 }
 async function loadEpisodes(season){
   const list=$("#epList"); list.innerHTML="<div class='loading'>Loading episodes…</div>";
@@ -2314,6 +2362,7 @@ async function openEpisode(it){
     if(back) back.onclick=()=>navigate(`/show/${m.grandparentRatingKey}/season/${m.parentRatingKey}`);
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
     else $("#playBtnD").onclick=()=>playItem(m,0);
+    wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
   }catch(e){ c.innerHTML=errHTML(e); }
