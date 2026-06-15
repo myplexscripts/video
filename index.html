@@ -286,6 +286,25 @@
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
     scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch}
   .carousel::-webkit-scrollbar{height:0}
+  /* ---- RAIL ARROWS ----
+     Mouse/keyboard affordance for scrolling a rail (touch already swipes).
+     Shown only when the rail overflows; the edge arrow hides at each end. */
+  .rail-viewport{position:relative}
+  .rail-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;
+    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:rgba(20,20,24,.7);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    border:1px solid var(--frost-border);box-shadow:var(--frost-shadow);color:var(--text);
+    cursor:pointer;opacity:0;pointer-events:none;transition:opacity .18s var(--ease),background-color .15s,transform .1s var(--ease)}
+  .rail-arrow.prev{left:6px}
+  .rail-arrow.next{right:6px}
+  .rail-arrow .svgi{width:20px;height:20px}
+  .rail-arrow:hover{background:rgba(40,40,46,.85)}
+  .rail-arrow:active{transform:translateY(-50%) scale(.92)}
+  .rail-arrow.edge{display:none}
+  .rail-viewport.has-overflow:hover .rail-arrow:not(.edge),
+  .rail-viewport.has-overflow:focus-within .rail-arrow:not(.edge){opacity:1;pointer-events:auto}
+  @media (hover:none){ .rail-viewport.has-overflow .rail-arrow:not(.edge){opacity:1;pointer-events:auto} }
   .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px;
     padding:4px var(--edge) 16px}
 
@@ -354,7 +373,7 @@
   .card{scroll-snap-align:start;cursor:pointer;border:none;background:none;text-align:left;
     flex:0 0 auto;color:inherit;outline:none;border-radius:var(--radius-sm)}
   .carousel .card{width:180px}
-  .carousel .card.wide{width:290px}
+  .carousel .card.wide{width:262px}
   .card:focus-visible .art{outline:2px solid var(--accent);outline-offset:2px}
   .art{position:relative;border-radius:14px;overflow:hidden;background:var(--bg2);
     box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease);aspect-ratio:2/3}
@@ -405,7 +424,7 @@
 
   /* Featured (first rail): bigger cards */
   .featured .carousel .card{width:260px}
-  .featured .carousel .card.wide{width:380px}
+  .featured .carousel .card.wide{width:344px}
   .featured .art img{aspect-ratio:2/3}
   .featured .art img.wide{aspect-ratio:16/9}
 
@@ -782,7 +801,6 @@
     border:1px solid var(--frost-border);border-radius:var(--radius);overflow-y:auto;min-width:260px;display:none;
     box-shadow:var(--frost-shadow-lg);max-height:min(70vh,520px)}
   .p-menu.open{display:block}
-  .p-menu.chapters{top:auto;bottom:64px;right:16px;min-width:320px}
   .p-menu .mh{padding:12px 18px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;
     color:var(--faint);font-weight:700}
   .p-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;
@@ -790,16 +808,10 @@
     transition:background-color .1s;min-height:44px}
   .p-menu button:hover{background:var(--surface2)}
   .p-menu button:focus-visible{outline-offset:-2px}
-  .p-menu button i.ck{font-size:16px;color:var(--accent);opacity:0;width:18px;flex:0 0 auto}
-  .p-menu button.active i.ck{opacity:1}
+  .p-menu button i.ck,.p-menu button .svgi.ck{font-size:16px;width:18px;height:16px;color:var(--accent);opacity:0;flex:0 0 auto}
+  .p-menu button.active i.ck,.p-menu button.active .svgi.ck{opacity:1}
   .p-menu button .ml{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .p-menu button .msub{font-size:11px;color:var(--faint);font-weight:500}
-
-  /* chapter list items inside the chapters menu */
-  .chapter-item img{width:64px;height:36px;border-radius:6px;object-fit:cover;background:var(--bg2);flex:0 0 auto}
-  .chapter-item .ci{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
-  .chapter-item .ci-t{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chapter-item .ci-time{font-size:11px;color:var(--faint);font-weight:500;font-variant-numeric:tabular-nums}
 
   .mini-bar{display:none}
   .mini-play{display:none}
@@ -839,6 +851,52 @@
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .nu-actions{display:flex;gap:8px}
 
+  /* ---- SKIP INTRO / CREDITS (Plex markers) ---- */
+  .skip-marker{position:absolute;right:28px;bottom:110px;z-index:6;
+    background:rgba(20,20,24,.82);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    border:1px solid var(--frost-border);box-shadow:var(--frost-shadow);color:var(--text);
+    border-radius:10px;padding:11px 20px;font-size:14px;font-weight:600;font-family:var(--font);
+    cursor:pointer;transition:background-color .15s,transform .1s var(--ease),opacity .2s var(--ease)}
+  .skip-marker:hover{background:rgba(40,40,46,.92)}
+  .skip-marker:active{transform:scale(.97)}
+  #player.idle .skip-marker{bottom:40px}
+
+  /* ---- IN-PLAYER DRAWER (chapters / episodes / related) ---- */
+  .p-drawer{position:absolute;top:0;right:0;bottom:0;z-index:20;width:min(390px,86vw);
+    display:flex;flex-direction:column;transform:translateX(100%);transition:transform .26s var(--ease);
+    background:rgba(14,14,18,.78);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    border-left:1px solid var(--frost-border);box-shadow:-12px 0 40px rgba(0,0,0,.45)}
+  .p-drawer.show{transform:translateX(0)}
+  .p-drawer-head{display:flex;align-items:center;gap:8px;padding:16px 12px 12px 18px;flex:0 0 auto}
+  .pd-tabs{display:flex;gap:4px;flex:1;min-width:0;overflow:hidden}
+  .pd-tab{background:none;border:none;color:var(--dim);font-family:var(--font);font-size:13.5px;
+    font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;white-space:nowrap;
+    transition:background-color .15s,color .15s}
+  .pd-tab:hover{background:var(--surface2);color:var(--text)}
+  .pd-tab.active{background:var(--surface3);color:var(--text)}
+  .pd-body{flex:1;min-height:0;overflow-y:auto;padding:4px 12px 20px;display:flex;flex-direction:column;gap:4px}
+  .pd-row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:none;
+    color:var(--text);font-family:var(--font);padding:8px;border-radius:10px;cursor:pointer;
+    transition:background-color .15s}
+  .pd-row:hover{background:var(--surface2)}
+  .pd-row.now{background:var(--accent-wash)}
+  .pd-row .pd-thumb{position:relative;width:108px;aspect-ratio:16/9;border-radius:7px;object-fit:cover;
+    background:var(--bg2);flex:0 0 auto}
+  .pd-row .pd-thumb-wrap{position:relative;flex:0 0 auto}
+  .pd-row .pd-prog{position:absolute;left:4px;right:4px;bottom:4px;height:3px;border-radius:2px;
+    background:rgba(0,0,0,.5);overflow:hidden}
+  .pd-row .pd-prog > i{display:block;height:100%;background:var(--accent)}
+  .pd-row .pd-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .pd-row .pd-t{font-size:13px;font-weight:600;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pd-row .pd-s{font-size:11.5px;color:var(--faint);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pd-row.now .pd-s{color:var(--accent)}
+  .pd-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--accent)}
+  .pd-empty{color:var(--faint);font-size:13px;padding:24px 8px;text-align:center}
+  #player.has-drawer .p-controls,#player.has-drawer .p-seek{padding-right:0}
+
   /* ---- RESPONSIVE ---- */
   @media(max-width:900px){
     .searchbox{width:160px}
@@ -850,8 +908,8 @@
     .rate-stars button{font-size:18px}
     .coll-hero{padding:28px var(--edge)}
     .coll-art{width:160px}
-    .carousel .card{width:150px}.carousel .card.wide{width:240px}
-    .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:300px}
+    .carousel .card{width:150px}.carousel .card.wide{width:216px}
+    .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:272px}
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
     .p-pause{padding:0 44px 120px}
@@ -876,7 +934,7 @@
     .hero h2{font-size:40px}
     .hero-inner{padding-bottom:36px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
-    .carousel .card{width:130px}.carousel .card.wide{width:210px}
+    .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
     .detail-info h2{font-size:28px}
     .rate-float{display:none}
@@ -917,7 +975,7 @@
     .p-time{font-size:12px;margin:0 4px}
     #pipBtn{display:none}
     .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
-    .p-menu.chapters{right:12px;min-width:0;max-width:calc(100vw - 24px)}
+    .p-drawer{width:100%}
   }
 </style>
 </head>
@@ -983,6 +1041,7 @@
     <div class="p-pause-desc hidden" id="pPauseDesc"></div>
     <button class="p-pause-resume" id="pauseResume"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span><span>Resume</span></button>
   </div>
+  <button class="skip-marker" id="skipIntro" hidden>Skip Intro</button>
   <div class="next-up" id="nextUp">
     <img id="nuImg" alt=""><div class="nu-body"><div class="nu-k">Up next</div>
     <div class="nu-t" id="nuTitle"></div>
@@ -1021,11 +1080,17 @@
         <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume"></div>
       <div class="spacer"></div>
       <div class="p-status hidden" id="pStatus" role="status"><span class="dot" aria-hidden="true"></span><span id="pStatusText"></span></div>
-      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters" title="Chapters" aria-haspopup="menu" aria-expanded="false" hidden><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
+      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters & related" title="Chapters & related" aria-haspopup="true" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
       <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><span class="svgi" style="--i:url('assets/images/icons/ui/frame-corners.svg')" aria-hidden="true"></span></button>
       <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
     </div>
-    <div class="p-menu chapters" id="chaptersMenu" role="menu" aria-label="Chapters"></div>
+  </div>
+  <div class="p-drawer" id="pDrawer" aria-hidden="true">
+    <div class="p-drawer-head">
+      <div class="pd-tabs" id="pdTabs" role="tablist"></div>
+      <button class="pbtn bare" id="pDrawerClose" aria-label="Close panel"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button>
+    </div>
+    <div class="pd-body" id="pdBody"></div>
   </div>
   <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
   <div class="mini-bar" id="miniBar">
@@ -1463,10 +1528,33 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb){
   const head=el("div","rail-head"+(actorThumb?" with-avatar":""));
   head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
   if(seeAll) head.querySelector(".see-all").onclick=()=>{ seeAllCache={title,items,wide,libLabel}; navigate("/see-all"); };
+  const viewport=el("div","rail-viewport");
   const row=el("div","carousel");
   items.forEach(it=>row.appendChild(card(it,wide)));
-  sec.appendChild(head); sec.appendChild(row);
+  const prev=el("button","rail-arrow prev edge"); prev.type="button"; prev.setAttribute("aria-label","Scroll left");
+  prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
+  const next=el("button","rail-arrow next"); next.type="button"; next.setAttribute("aria-label","Scroll right");
+  next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
+  viewport.appendChild(prev); viewport.appendChild(row); viewport.appendChild(next);
+  wireRailArrows(viewport,row,prev,next);
+  sec.appendChild(head); sec.appendChild(viewport);
   return sec;
+}
+// Show/scroll a rail's prev/next arrows. Arrows only appear when the rail
+// overflows (CSS .has-overflow), and the arrow at the current edge is hidden.
+function wireRailArrows(viewport,carousel,prev,next){
+  const update=()=>{
+    const max=carousel.scrollWidth-carousel.clientWidth;
+    viewport.classList.toggle("has-overflow",max>4);
+    prev.classList.toggle("edge",carousel.scrollLeft<=2);
+    next.classList.toggle("edge",carousel.scrollLeft>=max-2);
+  };
+  const page=dir=>carousel.scrollBy({left:dir*Math.max(240,carousel.clientWidth*0.9),behavior:"smooth"});
+  prev.onclick=()=>page(-1);
+  next.onclick=()=>page(1);
+  carousel.addEventListener("scroll",update,{passive:true});
+  if(window.ResizeObserver) new ResizeObserver(update).observe(carousel);
+  requestAnimationFrame(update);
 }
 function card(it,wide,square){
   const b=el("button","card"+(wide?" wide":"")+(square?" square":""));
@@ -2468,6 +2556,8 @@ let audioChanged=false, subOn=false;  // track overrides force the server-mux pa
 let prevEp=null, nextEp=null, nuTimer=null;
 let nextEpWarmed=false, warmedNext=null; // warmedNext: {ratingKey,sessionId,res,br} | null
 let everPlayed=false;
+let introMarkerDone=false, creditsUpNextShown=false; // Plex intro/credits marker state
+let seasonEps=[]; // the current episode's full season, for the in-player Episodes panel
 
 const QUALITIES=[
   {label:"Auto",        sub:"Adapts to keep playback smooth", mode:"auto"},
@@ -2491,14 +2581,16 @@ async function playItem(it,offsetMs){
   playerOpener=document.activeElement;
   $("#player").classList.add("show");
   playerLoading(true,"Loading", it);
+  // Always pull full metadata WITH chapters + intro/credits markers so the
+  // chapters panel and the credits-triggered "Up Next" have data to work with
+  // (a detail-page item usually arrives without either).
   let full=it;
-  const m0=(it.Media||[])[0];
-  if(!m0||!m0.videoCodec||!((m0.Part||[])[0])){
-    try{ const mc=await api(`/library/metadata/${it.ratingKey}`); full=(mc.Metadata||[])[0]||it; }catch(_){}
-  }
+  try{ const mc=await api(`/library/metadata/${it.ratingKey}?includeChapters=1&includeMarkers=1`); full=(mc.Metadata||[])[0]||it; }catch(_){}
   currentItem=full; triedFallback=false; autoStep=0; stalls=[]; everPlayed=false;
+  introMarkerDone=false; creditsUpNextShown=false;
   audioChanged=false; subOn=isSubSelected();
-  prevEp=null; nextEp=null; nextEpWarmed=false; hideNextUp();
+  prevEp=null; nextEp=null; nextEpWarmed=false; hideNextUp(); $("#skipIntro").hidden=true;
+  seasonEps=[];
   updateEpNav();
   loadAdjacentEpisodes();
   if(full.type==="episode"){
@@ -2512,7 +2604,7 @@ async function playItem(it,offsetMs){
   updatePauseInfo();
   buildPlayerMenu();
   renderChapterMarks();
-  buildChaptersMenu();
+  buildDrawer();
   startStream(offsetMs||0);
   bindActivity();
   setTimeout(()=>$("#playBtn").focus(),50);
@@ -2728,33 +2820,116 @@ function renderChapterMarks(){
     wrap.appendChild(mark);
   });
 }
-function buildChaptersMenu(){
-  const menu=$("#chaptersMenu"); menu.innerHTML="";
+/* ---- IN-PLAYER DRAWER: chapters / episodes / related ----
+   A YouTube/Netflix-style side panel reachable while watching. The list-bullets
+   control toggles it; tabs are built from whatever the current item has. */
+let drawerTab="chapters", drawerRelated=null, drawerRelatedKey=null;
+function drawerTabs(){
+  const tabs=[];
+  if(((currentItem&&currentItem.Chapter)||[]).length) tabs.push({id:"chapters",label:"Chapters"});
+  if(currentItem&&currentItem.type==="episode") tabs.push({id:"episodes",label:"Episodes"});
+  tabs.push({id:"related",label:"Related"});
+  return tabs;
+}
+function buildDrawer(){
+  const tabs=drawerTabs();
+  const bar=$("#pdTabs"); bar.innerHTML="";
+  tabs.forEach(t=>{
+    const b=el("button","pd-tab"); b.textContent=t.label; b.dataset.tab=t.id;
+    b.setAttribute("role","tab"); b.onclick=()=>selectDrawerTab(t.id);
+    bar.appendChild(b);
+  });
+  if(!tabs.some(t=>t.id===drawerTab)) drawerTab=tabs[0].id;
+  if($("#pDrawer").classList.contains("show")) selectDrawerTab(drawerTab);
+}
+function selectDrawerTab(id){
+  drawerTab=id;
+  $("#pdTabs").querySelectorAll(".pd-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));
+  const body=$("#pdBody");
+  if(id==="chapters") renderDrawerChapters(body);
+  else if(id==="episodes") renderDrawerEpisodes(body);
+  else renderDrawerRelated(body);
+}
+function renderDrawerChapters(body){
   const chapters=(currentItem&&currentItem.Chapter)||[];
-  const btn=$("#chaptersBtn");
-  btn.hidden=!chapters.length;
-  if(!chapters.length){ menu.classList.remove("open"); return; }
-  menu.insertAdjacentHTML("beforeend",'<div class="mh">Chapters</div>');
-  chapters.forEach(ch=>{
-    const b=el("button","chapter-item"); b.setAttribute("role","menuitem");
-    b.innerHTML=`${ch.thumb?`<img loading="lazy" alt="" src="${img(ch.thumb,128,72)}">`:""}
-      <span class="ci"><span class="ci-t">${esc(ch.tag||"Chapter")}</span>
-      <span class="ci-time">${fmtClock(ch.startTimeOffset/1000)}</span></span>`;
-    b.onclick=()=>{ if(video.duration) video.currentTime=ch.startTimeOffset/1000;
-      menu.classList.remove("open"); video.play().catch(()=>{}); };
-    menu.appendChild(b);
+  body.innerHTML="";
+  if(!chapters.length){ body.innerHTML=`<div class="pd-empty">No chapters for this title.</div>`; return; }
+  const cur=video.currentTime||0;
+  chapters.forEach((ch,idx)=>{
+    const start=(ch.startTimeOffset||0)/1000;
+    const end=ch.endTimeOffset?ch.endTimeOffset/1000:(chapters[idx+1]?chapters[idx+1].startTimeOffset/1000:1e9);
+    const now=cur>=start&&cur<end;
+    const b=el("button","pd-row"+(now?" now":"")); b.setAttribute("role","menuitem");
+    b.innerHTML=`<div class="pd-thumb-wrap">${ch.thumb?`<img class="pd-thumb" loading="lazy" alt="" src="${img(ch.thumb,192,108)}">`:`<div class="pd-thumb"></div>`}</div>
+      <div class="pd-meta"><div class="pd-t">${esc(ch.tag||("Chapter "+(idx+1)))}</div>
+      <div class="pd-s">${fmtClock(start)}</div></div>`;
+    b.onclick=()=>{ if(video.duration) video.currentTime=start; video.play().catch(()=>{}); selectDrawerTab("chapters"); };
+    body.appendChild(b);
   });
 }
-$("#chaptersBtn").onclick=e=>{ e.stopPropagation(); $("#pMenu").classList.remove("open");
-  $("#settingsBtn").setAttribute("aria-expanded","false");
-  const open=$("#chaptersMenu").classList.toggle("open");
-  $("#chaptersBtn").setAttribute("aria-expanded",String(open));
-  if(open) $("#chaptersMenu").querySelector("button")?.focus(); };
-document.addEventListener("click",e=>{
-  if(!$("#chaptersMenu").contains(e.target)&&e.target!==$("#chaptersBtn")){
-    $("#chaptersMenu").classList.remove("open"); $("#chaptersBtn").setAttribute("aria-expanded","false");
+function renderDrawerEpisodes(body){
+  body.innerHTML="";
+  const eps=seasonEps||[];
+  if(!eps.length){ body.innerHTML=`<div class="pd-empty">Episode list unavailable.</div>`; return; }
+  eps.forEach(ep=>{
+    const now=String(ep.ratingKey)===String(currentItem.ratingKey);
+    const pct=ep.viewOffset&&ep.duration?(ep.viewOffset/ep.duration*100):0;
+    const b=el("button","pd-row"+(now?" now":""));
+    b.innerHTML=`<div class="pd-thumb-wrap"><img class="pd-thumb" loading="lazy" alt="" src="${img(ep.thumb||ep.parentThumb,192,108)}">${pct?`<div class="pd-prog"><i style="width:${pct}%"></i></div>`:""}</div>
+      <div class="pd-meta"><div class="pd-t">${esc(ep.title||("Episode "+ep.index))}</div>
+      <div class="pd-s">${now?"Now playing":("E"+(ep.index||"?"))}${ep.duration?" · "+fmtDur(ep.duration):""}</div></div>`;
+    if(!now) b.onclick=()=>playItem(ep,0);
+    body.appendChild(b);
+  });
+  body.querySelector(".pd-row.now")?.scrollIntoView({block:"center"});
+}
+async function renderDrawerRelated(body){
+  const key=String(currentItem&&currentItem.ratingKey);
+  if(drawerRelatedKey!==key){
+    body.innerHTML=`<div class="pd-empty">Loading…</div>`;
+    drawerRelatedKey=key;
+    drawerRelated=await fetchRelated(key).catch(()=>[]);
   }
-});
+  if(drawerTab!=="related"||String(currentItem&&currentItem.ratingKey)!==key) return;
+  const seen=new Set([key]), list=[];
+  (drawerRelated||[]).forEach(h=>h.items.forEach(it=>{ const k=String(it.ratingKey);
+    if(!seen.has(k)){ seen.add(k); list.push(it); } }));
+  body.innerHTML="";
+  if(!list.length){ body.innerHTML=`<div class="pd-empty">Nothing related found.</div>`; return; }
+  list.slice(0,30).forEach(it=>{
+    const ep=it.type==="episode";
+    const title=ep?(it.grandparentTitle||it.title):it.title;
+    const sub=ep?`S${it.parentIndex||0}E${it.index||0}`:[it.year,it.type==="show"?"Show":it.type==="collection"?"Collection":""].filter(Boolean).join(" · ");
+    const thumb=ep?(it.thumb||it.grandparentThumb):(it.thumb||it.art);
+    const b=el("button","pd-row");
+    b.innerHTML=`<div class="pd-thumb-wrap"><img class="pd-thumb" loading="lazy" alt="" src="${img(thumb,192,108)}"></div>
+      <div class="pd-meta"><div class="pd-t">${esc(title||"")}</div><div class="pd-s">${esc(sub)}</div></div>`;
+    b.onclick=()=>openRelated(it);
+    body.appendChild(b);
+  });
+}
+function openRelated(it){
+  // Movies/episodes play right here; anything else needs its detail page.
+  if(it.type==="movie"||it.type==="episode"){ playItem(it,it.viewOffset||0); }
+  else { const r=pathForItem(it); closePlayer(); if(r) navigate(r); }
+}
+function openDrawer(){
+  buildDrawer();
+  $("#pMenu").classList.remove("open"); $("#settingsBtn").setAttribute("aria-expanded","false");
+  $("#pDrawer").classList.add("show"); $("#pDrawer").setAttribute("aria-hidden","false");
+  $("#player").classList.add("has-drawer");
+  $("#chaptersBtn").setAttribute("aria-expanded","true");
+  selectDrawerTab(drawerTab);
+  $("#pDrawer").querySelector(".pd-tab.active")?.focus();
+}
+function closeDrawer(){
+  $("#pDrawer").classList.remove("show"); $("#pDrawer").setAttribute("aria-hidden","true");
+  $("#player").classList.remove("has-drawer");
+  $("#chaptersBtn").setAttribute("aria-expanded","false");
+}
+$("#chaptersBtn").onclick=e=>{ e.stopPropagation();
+  if($("#pDrawer").classList.contains("show")) closeDrawer(); else openDrawer(); };
+$("#pDrawerClose").onclick=closeDrawer;
 
 /* ---- accessible menu keyboard navigation (arrows / escape / tab) ---- */
 function menuKeyHandler(menu,toggleBtn){
@@ -2771,7 +2946,6 @@ function menuKeyHandler(menu,toggleBtn){
   });
 }
 menuKeyHandler($("#pMenu"),$("#settingsBtn"));
-menuKeyHandler($("#chaptersMenu"),$("#chaptersBtn"));
 
 /* ---- transport controls ---- */
 $("#playBtn").onclick=togglePlay;
@@ -2803,7 +2977,33 @@ video.addEventListener("timeupdate",()=>{
   if(video.buffered.length){ try{ const end=video.buffered.end(video.buffered.length-1);
     $("#buffered").style.width=(d?end/d*100:0)+"%"; }catch(_){} }
   maybeWarmNext(d,t);
+  handleMarkers(t);
 });
+
+/* ---- Plex intro/credits markers: Skip Intro + credits-triggered Up Next ---- */
+function currentMarker(type,t){
+  const ms=t*1000;
+  return ((currentItem&&currentItem.Marker)||[]).find(m=>{
+    if(m.type!==type) return false;
+    const s=m.startTimeOffset||0, e=m.endTimeOffset||Infinity;
+    return ms>=s && ms<e;
+  });
+}
+function handleMarkers(t){
+  const btn=$("#skipIntro");
+  const intro=introMarkerDone?null:currentMarker("intro",t);
+  if(intro){ if(btn.hidden){ btn.hidden=false; btn.dataset.to=String((intro.endTimeOffset||0)/1000); } }
+  else if(!btn.hidden){ btn.hidden=true; }
+  // During the credits, surface "Up Next" early (episodes with a known next).
+  if(!creditsUpNextShown && nextEp && currentMarker("credits",t)){
+    creditsUpNextShown=true; showNextUp();
+  }
+}
+$("#skipIntro").onclick=()=>{
+  const to=parseFloat($("#skipIntro").dataset.to||"0");
+  if(to&&video.duration) video.currentTime=to;
+  introMarkerDone=true; $("#skipIntro").hidden=true; video.play().catch(()=>{});
+};
 
 /* seek bar */
 const track=$("#seekTrack"); let scrubbing=false;
@@ -2869,11 +3069,11 @@ function closePlayer(){
   reportTimeline("stopped"); stopTimeline(); cleanupHls();
   if(sessionId){ stopSession(sessionId); sessionId=null; }
   if(warmedNext){ stopSession(warmedNext.sessionId); warmedNext=null; }
-  hideNextUp();
+  hideNextUp(); $("#skipIntro").hidden=true;
   video.pause(); video.removeAttribute("src"); video.load();
-  $("#player").classList.remove("show","min","idle","loading","paused");
+  $("#player").classList.remove("show","min","idle","loading","paused","has-drawer");
   currentItem=null;
-  closeSettingsMenu(); $("#chaptersMenu").classList.remove("open"); $("#chaptersBtn").setAttribute("aria-expanded","false");
+  closeSettingsMenu(); closeDrawer();
   if(playerOpener&&document.contains(playerOpener)) playerOpener.focus();
   playerOpener=null;
 }
@@ -2901,7 +3101,12 @@ document.addEventListener("keydown",e=>{
     case "ArrowDown": video.volume=Math.max(0,video.volume-0.1); updateVolIcon(); break;
     case "f": toggleFull(); break;
     case "m": video.muted=!video.muted; updateVolIcon(); break;
-    case "Escape": if(!document.fullscreenElement) closePlayer(); break;
+    case "Escape":
+      if($("#pDrawer").classList.contains("show")){ closeDrawer(); $("#chaptersBtn").focus(); }
+      else if(!document.fullscreenElement) closePlayer();
+      break;
+    case "c": if(((currentItem&&currentItem.Chapter)||[]).length||currentItem){
+      if($("#pDrawer").classList.contains("show")) closeDrawer(); else openDrawer(); } break;
   }
 });
 
@@ -3002,6 +3207,8 @@ async function loadAdjacentEpisodes(){
     const mc=await api(`/library/metadata/${item.parentRatingKey}/children`);
     if(currentItem!==item) return;
     const eps=mc.Metadata||[];
+    seasonEps=eps;
+    if($("#pDrawer").classList.contains("show")&&drawerTab==="episodes") renderDrawerEpisodes($("#pdBody"));
     const i=eps.findIndex(e=>String(e.ratingKey)===String(item.ratingKey));
     let p=i>0?eps[i-1]:null;
     let n=(i>-1&&eps[i+1])?eps[i+1]:null;
