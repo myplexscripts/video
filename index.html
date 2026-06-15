@@ -405,10 +405,6 @@
   .featured .art img.wide{aspect-ratio:16/9}
 
   .loading,.empty{color:var(--dim);font-size:14px;padding:48px var(--edge)}
-  .debug-block{margin:8px var(--edge) 32px;font-size:12px;color:var(--dim)}
-  .debug-block summary{cursor:pointer;padding:8px 0;color:var(--faint)}
-  .debug-block pre{white-space:pre-wrap;word-break:break-all;background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:12px;max-height:50vh;overflow:auto}
   .empty i,.empty .svgi{font-size:38px;color:var(--faint);display:block;margin-bottom:12px}
   .err{color:#ff8585;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.15);
     border-radius:var(--radius-sm);padding:16px 18px;margin:20px var(--edge);font-size:13.5px;
@@ -1474,7 +1470,7 @@ function card(it,wide,square){
   const b=el("button","card"+(wide?" wide":"")+(square?" square":""));
   const ep=it.type==="episode";
   const useWide = wide || ep;
-  const thumb = square ? (it.composite||it.thumb||it.parentThumb)
+  const thumb = square ? (it.thumb||it.composite||it.parentThumb)
     : useWide ? (it.thumb||it.grandparentThumb||it.parentThumb) : (it.thumb||it.parentThumb);
   const pct = it.viewOffset&&it.duration ? (it.viewOffset/it.duration*100) : 0;
   const title = ep ? (it.title||it.grandparentTitle||"") : (it.title||"");
@@ -1707,31 +1703,22 @@ async function showPlaylists(){
     const mc=await api("/playlists");
     const pls=(mc.Metadata||[]).filter(p=>p.playlistType==="video");
     if(!pls.length){ c.innerHTML=pageHeadHTML("Playlists")+`<div class='empty'>${svgIcon("playlist")}No video playlists.</div>`; return; }
-    // TEMP DEBUG: snapshot each playlist's raw art-related fields (before any
-    // fallback below) plus its items container's, so the actual field Plex
-    // uses for a playlist's cover can be confirmed from the rendered page.
-    const debugInfo=pls.map(p=>({title:p.title,ratingKey:p.ratingKey,composite:p.composite,thumb:p.thumb,art:p.art,Image:p.Image}));
-    // The /playlists list entry's own composite/thumb is sometimes present
-    // but unusable (e.g. a stale or placeholder path), and the real cover
-    // often lives on the items CONTAINER instead (same source the playlist
-    // hero uses). Always grab a few items: it doubles as a mosaic fallback if
-    // the cover image fails to load (see card()), and supplies a cover when
-    // the playlist itself has none of its own.
-    await Promise.all(pls.map(async (p,i)=>{
+    // A playlist's `thumb` is its real cover (a custom poster, or Plex's
+    // auto-titled "<Show> Universe" art) and is what card() should show;
+    // `composite` is just a generic collage of its items' thumbs and is only
+    // a fallback for playlists with no cover of their own. Always grab a few
+    // items too: they double as a mosaic fallback if the cover image fails to
+    // load (see card()), and supply a cover when the playlist has neither.
+    await Promise.all(pls.map(async p=>{
       try{
         const ic=await api(`/playlists/${p.ratingKey}/items?X-Plex-Container-Size=4`);
         p._mosaicItems=(ic.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-        debugInfo[i].itemsContainerComposite=ic.composite;
-        debugInfo[i].itemsContainerThumb=ic.thumb;
         if(!p.composite&&!p.thumb&&(ic.composite||ic.thumb)) p.thumb=ic.composite||ic.thumb;
       }catch(_){}
     }));
     const grid=el("div","grid-view");
-    pls.forEach(p=>grid.appendChild(card({...p,thumb:p.composite||p.thumb},false,true)));
+    pls.forEach(p=>grid.appendChild(card(p,false,true)));
     c.innerHTML=pageHeadHTML("Playlists"); c.appendChild(grid);
-    const dbg=el("details","debug-block");
-    dbg.innerHTML=`<summary>Debug: playlist art fields (tap to expand, screenshot &amp; share)</summary><pre>${esc(JSON.stringify(debugInfo,null,2))}</pre>`;
-    c.appendChild(dbg);
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 async function openPlaylist(p){
@@ -1739,7 +1726,7 @@ async function openPlaylist(p){
   try{
     const mc=await api(`/playlists/${p.ratingKey}/items`);
     const items=(mc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-    const cover=p.composite||p.thumb||mc.composite||mc.thumb;
+    const cover=p.thumb||p.composite||mc.thumb||mc.composite;
     const pl={...p,thumb:cover};
     setUltraBlur(collArt(pl,items));
     const allEpisodes=items.length&&items.every(x=>x.type==="episode");
