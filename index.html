@@ -28,6 +28,7 @@
     --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.13);
     --text:#f5f5f7; --dim:#aeaeb6; --faint:#8e8e96;
     --accent:#e8b825; --accent2:#d4a620; --accent-wash:rgba(232,184,37,.14);
+    --accent-glass:rgba(232,184,37,.85); --accent-glass-hover:rgba(232,184,37,.95);
     --radius:16px; --radius-sm:10px; --radius-xs:8px; --radius-lg:22px;
     --shadow-sm:0 1px 3px rgba(0,0,0,.3); --shadow:0 4px 24px rgba(0,0,0,.4);
     --shadow-lg:0 12px 48px rgba(0,0,0,.55);
@@ -102,8 +103,10 @@
   }
 
   /* ---- BTN ---- */
-  .btn{background:var(--accent);color:#141005;border:none;padding:12px 24px;border-radius:100px;
+  .btn{background:var(--accent-glass);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    color:#141005;border:1px solid rgba(255,255,255,.3);padding:12px 24px;border-radius:100px;
     font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;
+    box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25);
     transition:filter .15s var(--ease),background-color .15s var(--ease);letter-spacing:-.01em}
   .btn:hover{filter:brightness(1.08)}
   .btn:active{filter:brightness(.94)}
@@ -114,8 +117,8 @@
   .btn.lg{padding:14px 30px;font-size:15px}
   .btn.sm{padding:8px 16px;font-size:13px}
   .btn.icon{width:48px;height:48px;padding:0;justify-content:center;border-radius:50%;font-size:19px}
-  .btn.icon.active{background:var(--accent);color:#141005;border-color:transparent}
-  .btn.icon.active:hover{background:var(--accent)}
+  .btn.icon.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
+  .btn.icon.active:hover{background:var(--accent-glass-hover)}
 
   /* ---- LOGIN ---- */
   #login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
@@ -230,6 +233,7 @@
   .hero-inner{position:relative;padding:0 var(--edge) 50px;max-width:700px}
   .hero-kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:1px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
+  .hero-kicker i,.hero-kicker .svgi{font-size:16px}
   .hero h2{font-size:clamp(40px,7.5vw,92px);font-weight:900;letter-spacing:-.04em;line-height:.97}
   .hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:18px 0 14px;font-weight:500}
@@ -265,6 +269,10 @@
   .rail-head h3{font-size:21px;font-weight:800;letter-spacing:-.02em}
   .featured .rail-head h3{font-size:27px}
   .rail-head .count{font-size:12px;color:var(--faint);font-weight:500;padding-bottom:3px}
+  .rail-head.with-avatar{align-items:center}
+  .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+    box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--frost-border),var(--frost-shadow-sm)}
+  .rail-head-avatar img{width:100%;height:100%;object-fit:cover;display:block}
   .see-all{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;
     font-weight:600;color:var(--dim);background:none;border:none;cursor:pointer;
     padding-bottom:3px;font-family:var(--font);transition:color .15s var(--ease)}
@@ -287,7 +295,8 @@
     font-weight:600;font-family:var(--font);cursor:pointer;box-shadow:var(--frost-shadow-sm);
     transition:background-color .15s,color .15s,border-color .15s}
   .lib-tab:hover{background:var(--surface3);color:var(--text)}
-  .lib-tab.active{background:var(--accent);color:#141005;border-color:var(--accent);box-shadow:none}
+  .lib-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
+  .lib-tab.active:hover{background:var(--accent-glass-hover)}
 
   /* ---- LIBRARY TOOLBAR ----
      A "Liquid Glass" control strip for the library grid: live, client-side
@@ -495,7 +504,8 @@
   .rating-badge .src{display:inline-flex;align-items:center;justify-content:center;height:22px;flex:0 0 auto}
   .rating-badge .src img{height:100%;width:auto;display:block}
   .rating-badge b{font-weight:700}
-  .rating-badge.trailer{padding:7px 16px}
+  .rating-badge.trailer{padding:7px 16px;cursor:pointer;transition:background-color .15s var(--ease)}
+  .rating-badge.trailer:hover{background:var(--surface3)}
   .rating-badge.trailer .svgi{color:var(--accent);font-size:16px}
 
   /* ---- META STAT ROW (added / watched history) ---- */
@@ -950,7 +960,7 @@
     <main class="main" id="main">
       <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><i class="ph ph-list" aria-hidden="true"></i></button>
       <div class="searchbox" id="searchBox" role="search">
-        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+        ${svgIcon("magnifying-glass")}
         <label class="sr-only" for="search">Search</label>
         <input id="search" placeholder="Search" autocomplete="off">
       </div>
@@ -969,13 +979,13 @@
     <div class="p-pause-title" id="pPauseTitle"></div>
     <div class="p-pause-sub hidden" id="pPauseSub"></div>
     <div class="p-pause-desc hidden" id="pPauseDesc"></div>
-    <button class="p-pause-resume" id="pauseResume"><i class="ph-fill ph-play" aria-hidden="true"></i><span>Resume</span></button>
+    <button class="p-pause-resume" id="pauseResume">${svgIcon("play-fill")}<span>Resume</span></button>
   </div>
   <div class="next-up" id="nextUp">
     <img id="nuImg" alt=""><div class="nu-body"><div class="nu-k">Up next</div>
     <div class="nu-t" id="nuTitle"></div>
     <div class="nu-actions">
-      <button class="btn" id="nuPlay" style="padding:8px 16px;font-size:13px"><i class="ph-fill ph-play" aria-hidden="true"></i> Play now</button>
+      <button class="btn" id="nuPlay" style="padding:8px 16px;font-size:13px">${svgIcon("play-fill")} Play now</button>
       <button class="btn glass" id="nuCancel" style="padding:8px 16px;font-size:13px">Cancel</button>
     </div></div>
   </div>
@@ -986,7 +996,7 @@
     <button class="pbtn" id="minPlayer" title="Minimize" aria-label="Minimize player"><i class="ph ph-corners-in" aria-hidden="true"></i></button>
     <div class="pt" id="pTitle"></div>
     <div class="p-top-right">
-      <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false"><i class="ph ph-gear-six" aria-hidden="true"></i></button>
+      <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false">${svgIcon("gear")}</button>
       <div class="p-menu" id="pMenu" role="menu" aria-label="Playback settings"></div>
     </div>
   </div>
@@ -999,9 +1009,9 @@
     </div></div>
     <div class="p-controls">
       <button class="pbtn bare hidden" id="prevEpBtn" aria-label="Previous episode" title="Previous episode"><span class="svgi flip" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i><span class="skip-n" aria-hidden="true">10</span></button>
-      <button class="pbtn play-main" id="playBtn" aria-label="Play"><i class="ph-fill ph-play" aria-hidden="true"></i></button>
-      <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i><span class="skip-n" aria-hidden="true">10</span></button>
+      <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds">${svgIcon("arrow-counter-clockwise")}<span class="skip-n" aria-hidden="true">10</span></button>
+      <button class="pbtn play-main" id="playBtn" aria-label="Play">${svgIcon("play-fill")}</button>
+      <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds">${svgIcon("arrow-clockwise")}<span class="skip-n" aria-hidden="true">10</span></button>
       <button class="pbtn bare hidden" id="nextEpBtn" aria-label="Next episode" title="Next episode"><span class="svgi" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
       <div class="p-divider" aria-hidden="true"></div>
       <div class="p-time"><span id="curTime">0:00</span><span class="slash">/</span><span id="durTime">0:00</span></div>
@@ -1015,7 +1025,7 @@
     </div>
     <div class="p-menu chapters" id="chaptersMenu" role="menu" aria-label="Chapters"></div>
   </div>
-  <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><i class="ph-fill ph-play" aria-hidden="true"></i></button>
+  <button class="pbtn mini-play" id="miniPlay" aria-label="Play">${svgIcon("play-fill")}</button>
   <div class="mini-bar" id="miniBar">
     <span class="mt" id="miniTitle"></span>
     <button class="pbtn" id="expandPlayer" aria-label="Expand player"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
@@ -1116,7 +1126,7 @@ async function showServerPicker(servers){
     const box=el("div","err err-offline"); box.setAttribute("role","alert");
     box.innerHTML=`<i class="ph ph-wifi-slash" aria-hidden="true"></i>
       <div><b>Can't reach your Plex server</b><div>Make sure it's online and reachable from this device, then try again.</div></div>`;
-    const b=el("button","btn glass sm"); b.innerHTML='<i class="ph ph-arrow-clockwise" aria-hidden="true"></i> Try Again';
+    const b=el("button","btn glass sm"); b.innerHTML='${svgIcon("arrow-clockwise")} Try Again';
     b.onclick=()=>showServerPicker(servers);
     box.appendChild(b); wrap.appendChild(box);
     return;
@@ -1223,7 +1233,7 @@ function buildNav(){
     b.onclick=()=>{ fn(); closeSidebar(); };
     nav.appendChild(b); return b;
   };
-  item("ph-house","Home",()=>navigate("/"),{id:"navHome"});
+  item("svg:house","Home",()=>navigate("/"),{id:"navHome"});
   const lab=el("div","nav-label"); lab.textContent="Libraries"; nav.appendChild(lab);
   sections.forEach(s=> item(s.type==="show"?"svg:television":"svg:movies", s.title, ()=>navigate(`/library/${s.key}`), {lib:s.key}) );
   const lab2=el("div","nav-label"); lab2.textContent="More"; nav.appendChild(lab2);
@@ -1351,7 +1361,7 @@ async function heroEl(it){
     <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" alt=""></div>
     <div class="hero-scrim"></div>
     <div class="hero-inner">
-      <div class="hero-kicker"><i class="ph-fill ${it.viewOffset?'ph-play-circle':'ph-sparkle'}" aria-hidden="true"></i>${it.viewOffset?'Continue Watching':'Featured'}</div>
+      <div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):'<i class="ph-fill ph-sparkle" aria-hidden="true"></i>'}${it.viewOffset?'Continue Watching':'Featured'}</div>
       ${titleArtHTML(it,title)}
       <div class="hero-meta">
         ${ratingBadges}${ratingFallback}
@@ -1359,8 +1369,8 @@ async function heroEl(it){
       </div>
       <p>${esc(it.summary||"")}</p>
       <div class="hero-actions">
-        <button class="btn lg" id="heroPlay"><i class="ph-fill ph-play" aria-hidden="true"></i> ${it.viewOffset?"Resume":"Play"}</button>
-        <button class="btn glass lg" id="heroInfo"><i class="ph ph-info" aria-hidden="true"></i> Details</button>
+        <button class="btn lg" id="heroPlay">${svgIcon("play-fill")} ${it.viewOffset?"Resume":"Play"}</button>
+        <button class="btn glass lg" id="heroInfo">${svgIcon("info")} Details</button>
       </div>
     </div>`;
   setTimeout(()=>{
@@ -1440,7 +1450,7 @@ async function setupHeroTrailer(wrap,it){
 /* ---- RAIL SECTION ----
    Each rail gets its own subtle UltraBlur color wash, derived from its
    first item's art, plus an optional small "library" kicker label. */
-function railSection(title,items,wide,featured,libLabel,seeAll){
+function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb){
   const sec=el("div","rail-section"+(featured?" featured":""));
   const firstArt=items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb||items[0].parentThumb);
   if(firstArt){
@@ -1448,8 +1458,8 @@ function railSection(title,items,wide,featured,libLabel,seeAll){
     amb.style.backgroundImage=`url('${imgAmbient(firstArt)}')`;
     sec.appendChild(amb);
   }
-  const head=el("div","rail-head");
-  head.innerHTML=`<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All <i class="ph ph-arrow-right" aria-hidden="true"></i></button>`:""}`;
+  const head=el("div","rail-head"+(actorThumb?" with-avatar":""));
+  head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All <i class="ph ph-arrow-right" aria-hidden="true"></i></button>`:""}`;
   if(seeAll) head.querySelector(".see-all").onclick=()=>{ seeAllCache={title,items,wide,libLabel}; navigate("/see-all"); };
   const row=el("div","carousel");
   items.forEach(it=>row.appendChild(card(it,wide)));
@@ -1488,7 +1498,7 @@ function card(it,wide,square){
       ${src?`<img class="${useWide&&!square?"wide":""}" loading="lazy" alt="${esc(title)}"
         src="${src}" onerror="this.closest('.art').classList.add('broken')">`:mosaic}
       ${fallbackIconHTML}
-      <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
+      <div class="play-hover">${svgIcon("play-circle-fill")}</div>
       ${badge}
       ${pct?`<div class="watch-prog"><i style="width:${pct}%"></i></div>`:""}
     </div>
@@ -1816,7 +1826,7 @@ function collHero(m,kicker,items,square){
       ${m.summary?`<div class="coll-desc">${esc(m.summary)}</div>`:""}
       <div class="coll-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>
       ${items.length?`<div class="coll-actions">
-        <button class="btn lg" id="collPlay"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>
+        <button class="btn lg" id="collPlay">${svgIcon("play-fill")} Play</button>
         <button class="btn glass lg" id="collShuffle">${svgIcon("shuffle")} Shuffle</button>
       </div>`:""}
     </div>
@@ -1991,13 +2001,20 @@ async function fetchExtras(ratingKey){
 async function fetchRelated(ratingKey){
   try{
     const mc=await api(`/library/metadata/${ratingKey}/related?count=24`);
-    return (mc.Hub||[]).map(h=>({title:h.title,items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type))})).filter(h=>h.items.length);
+    return (mc.Hub||[]).map(h=>({title:h.title,hubIdentifier:h.hubIdentifier,items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type))})).filter(h=>h.items.length);
   }catch(_){ return []; }
 }
-function appendRelatedRails(c,related){
+function appendRelatedRails(c,related,m){
+  const cast=(m&&m.Role)||[];
   related.forEach(h=>{
     const wide=h.items.every(x=>x.type==="episode");
-    c.appendChild(railSection(h.title,h.items,wide,false));
+    let actorThumb=null;
+    if(/\.actor\./i.test(h.hubIdentifier||"")){
+      const name=(h.title||"").replace(/^More with\s+/i,"").trim();
+      const role=cast.find(r=>r.tag===name);
+      if(role&&role.thumb) actorThumb=role.thumb;
+    }
+    c.appendChild(railSection(h.title,h.items,wide,false,null,false,actorThumb));
   });
 }
 const EXTRA_LABELS={trailer:"Trailer",behindthescenes:"Behind the Scenes",deleted:"Deleted Scene",
@@ -2008,7 +2025,7 @@ function extraCardHTML(e){
     <div class="art"><img class="wide" loading="lazy" src="${img(e.thumb,480,270)}" alt="">
       <div class="extra-badge">${esc(label)}</div>
       ${e.duration?`<div class="extra-dur">${fmtClock(e.duration/1000)}</div>`:""}
-      <div class="play-hover"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>
+      <div class="play-hover">${svgIcon("play-circle-fill")}</div>
     </div>
     <div class="ct">${esc(e.title)}</div>
   </button>`;
@@ -2149,11 +2166,11 @@ async function openMovie(it){
   try{
     const [mc,extras,related]=await Promise.all([api(`/library/metadata/${it.ratingKey}`),fetchExtras(it.ratingKey),fetchRelated(it.ratingKey)]);
     const m=(mc.Metadata||[])[0]||it;
-    const resume=(m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
-      <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Start over</button>`
-      :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`)+watchedToggleHTML(m,true);
+    const resume=(m.viewOffset?`<button class="btn lg" id="resumeBtn">${svgIcon("play-fill")} Resume · ${fmtClock(m.viewOffset/1000)}</button>
+      <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
+      :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
     c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
-    appendRelatedRails(c,related);
+    appendRelatedRails(c,related,m);
     wireBackdrop(c,m.art||m.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
@@ -2183,7 +2200,7 @@ async function openShow(it,jumpSeasonKey){
     ]);
     const show=(meta.Metadata||[])[0]||it;
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
-    const actions=`<button class="btn lg" id="playShow"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>
+    const actions=`<button class="btn lg" id="playShow">${svgIcon("play-fill")} Play</button>
       <button class="btn glass lg" id="shuffleShow">${svgIcon("shuffle")} Shuffle</button>${watchedToggleHTML(show,false)}`;
     c.innerHTML=detailHero(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
@@ -2192,7 +2209,7 @@ async function openShow(it,jumpSeasonKey){
       +castRailHTML(show)
       +extrasRailHTML(extras)
       +crewHTML(show);
-    appendRelatedRails(c,related);
+    appendRelatedRails(c,related,show);
     wireBackdrop(c,show.art||show.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
     injectFirstWatched(show.ratingKey,true);
@@ -2223,7 +2240,7 @@ async function openShow(it,jumpSeasonKey){
 }
 /* ---- EPISODE WATCHED ICON ---- */
 function epWatchedIcon(watched){
-  return watched?' <i class="ph ph-check-circle" style="color:var(--accent)" aria-label="Watched"></i>':"";
+  return watched?` ${svgIcon("check-circle-fill","","color:var(--accent)")}`:"";
 }
 function closeEpMenus(){ document.querySelectorAll(".ep-menu-wrap.open").forEach(w=>{
   w.classList.remove("open"); const b=w.querySelector(".ep-more"); if(b) b.setAttribute("aria-expanded","false"); }); }
@@ -2244,14 +2261,14 @@ function isWatched(m,isMovie){
 function watchedToggleHTML(m,isMovie){
   const watched=isWatched(m,isMovie);
   const label=watched?"Mark as unwatched":"Mark as watched";
-  return `<button class="btn glass icon${watched?" active":""}" id="watchedToggle" aria-pressed="${watched}" title="${label}" aria-label="${label}"><i class="${watched?"ph-fill ph-check-circle":"ph ph-circle"}" aria-hidden="true"></i></button>`;
+  return `<button class="btn glass icon${watched?" active":""}" id="watchedToggle" aria-pressed="${watched}" title="${label}" aria-label="${label}">${svgIcon(watched?"check-circle-fill":"check-circle")}</button>`;
 }
 function paintWatchedToggle(btn,m,isMovie){
   const watched=isWatched(m,isMovie);
   const label=watched?"Mark as unwatched":"Mark as watched";
   btn.classList.toggle("active",watched);
   btn.setAttribute("aria-pressed",watched); btn.title=label; btn.setAttribute("aria-label",label);
-  btn.innerHTML=`<i class="${watched?"ph-fill ph-check-circle":"ph ph-circle"}" aria-hidden="true"></i>`;
+  btn.innerHTML=`${svgIcon(watched?"check-circle-fill":"check-circle")}`;
 }
 function wireWatchedToggle(c,m,isMovie,onChange){
   const btn=c.querySelector("#watchedToggle"); if(!btn) return;
@@ -2290,19 +2307,19 @@ async function loadEpisodes(season){
         <button class="ep-thumb" aria-label="Play ${esc(epm.title||"Episode")}"${upcoming?" disabled":""}>
           <img loading="lazy" alt="" src="${img(epm.thumb,440,248)}">
           <div class="ep-tag${upcoming?" upcoming":""}">${esc(tag)}</div>
-          ${!upcoming?`<div class="ep-play"><i class="ph-fill ph-play-circle" aria-hidden="true"></i></div>`:""}
+          ${!upcoming?`<div class="ep-play">${svgIcon("play-circle-fill")}</div>`:""}
           ${pct?`<div class="ep-prog"><i style="width:${pct}%"></i></div>`:""}
         </button>
         <div class="ep-card-body">
           <div class="et">${esc(epm.title)}${epWatchedIcon(watched)}</div>
           <div class="ed">${esc(epm.summary||"")}</div>
           <div class="ep-card-foot">
-            <span class="edur">${epm.duration?`<i class="ph-fill ph-play-circle" aria-hidden="true"></i> ${fmtDur(epm.duration)}`:(upcoming?esc(tag):"")}</span>
+            <span class="edur">${epm.duration?`${svgIcon("play-circle-fill")} ${fmtDur(epm.duration)}`:(upcoming?esc(tag):"")}</span>
             ${!upcoming?`<div class="ep-menu-wrap">
               <button class="ep-more" aria-haspopup="true" aria-expanded="false" aria-label="More options for ${esc(epm.title||"episode")}"><i class="ph ph-dots-three" aria-hidden="true"></i></button>
               <div class="ep-menu" role="menu">
-                <button role="menuitem" data-action="watched"><i class="ph ph-check-circle" aria-hidden="true"></i><span>Mark as Watched</span></button>
-                <button role="menuitem" data-action="unwatched"><i class="ph ph-circle" aria-hidden="true"></i><span>Mark as Unwatched</span></button>
+                <button role="menuitem" data-action="watched">${svgIcon("check-circle-fill")}<span>Mark as Watched</span></button>
+                <button role="menuitem" data-action="unwatched">${svgIcon("check-circle")}<span>Mark as Unwatched</span></button>
               </div>
             </div>`:""}
           </div>
@@ -2337,9 +2354,9 @@ async function openEpisode(it){
   try{
     const mc=await api(`/library/metadata/${it.ratingKey}`);
     const m=(mc.Metadata||[])[0]||it;
-    const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn"><i class="ph-fill ph-play" aria-hidden="true"></i> Resume · ${fmtClock(m.viewOffset/1000)}</button>
-      <button class="btn glass lg" id="restartBtn"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Start over</button>`
-      :`<button class="btn lg" id="playBtnD"><i class="ph-fill ph-play" aria-hidden="true"></i> Play</button>`;
+    const resume=m.viewOffset?`<button class="btn lg" id="resumeBtn">${svgIcon("play-fill")} Resume · ${fmtClock(m.viewOffset/1000)}</button>
+      <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
+      :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`;
     const siblingsMc=m.parentRatingKey?await api(`/library/metadata/${m.parentRatingKey}/children`).catch(()=>({})):{};
     const siblings=(siblingsMc.Metadata||[]).filter(s=>s.type==="episode");
     c.innerHTML=episodeHero(m,resume)+statRowHTML(m,true)+crewHTML(m)+castRailHTML(m)
@@ -2352,7 +2369,7 @@ async function openEpisode(it){
           cd.classList.add("current");
           const art=cd.querySelector(".art");
           if(art){ const tag=document.createElement("div"); tag.className="now-badge";
-            tag.innerHTML='<i class="ph-fill ph-play" aria-hidden="true"></i> Now viewing'; art.appendChild(tag); }
+            tag.innerHTML='${svgIcon("play-fill")} Now viewing'; art.appendChild(tag); }
         }
         row.appendChild(cd);
       });
@@ -2391,7 +2408,7 @@ async function runSearch(q){
     const total=hubs.reduce((a,h)=>a+h.items.length,0);
     const head=`<div class="search-head"><h2>"${esc(q)}"</h2>${total?`<span class="count">${total} result${total===1?"":"s"}</span>`:""}</div>`;
     if(!hubs.length){
-      c.innerHTML=head+`<div class="empty"><i class="ph ph-magnifying-glass" aria-hidden="true"></i>No results for "${esc(q)}"
+      c.innerHTML=head+`<div class="empty">${svgIcon("magnifying-glass")}No results for "${esc(q)}"
         <div style="margin-top:6px;font-size:13px">Try a different title, cast member, or genre.</div></div>`;
       return;
     }
@@ -3021,12 +3038,12 @@ function showNextUp(){
   $("#nextUp").classList.add("show");
   let n=10;
   const btn=$("#nuPlay");
-  btn.innerHTML=`<i class="ph-fill ph-play" aria-hidden="true"></i> Play now · ${n}`;
+  btn.innerHTML=`${svgIcon("play-fill")} Play now · ${n}`;
   clearInterval(nuTimer);
   nuTimer=setInterval(()=>{
     n--;
     if(n<=0){ hideNextUp(); playItem(nextEp,0); return; }
-    btn.innerHTML=`<i class="ph-fill ph-play" aria-hidden="true"></i> Play now · ${n}`;
+    btn.innerHTML=`${svgIcon("play-fill")} Play now · ${n}`;
   },1000);
 }
 function hideNextUp(){ $("#nextUp").classList.remove("show"); clearInterval(nuTimer); nuTimer=null; }
@@ -3077,7 +3094,7 @@ function errHTML(e,retry){
   const msg=(e&&e.message)||String(e);
   if(e&&e.offline) return `<div class="err err-offline" role="alert"><i class="ph ph-wifi-slash" aria-hidden="true"></i>
     <div><b>Server unavailable</b><div>${esc(msg)}</div></div>
-    <button class="btn glass sm" onclick="${retry||"route"}()"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i> Try Again</button></div>`;
+    <button class="btn glass sm" onclick="${retry||"route"}()">${svgIcon("arrow-clockwise")} Try Again</button></div>`;
   return `<div class="err" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i><div>${esc(msg)}</div></div>`;
 }
 
