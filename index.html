@@ -54,6 +54,10 @@
        with a soft outer drop shadow that seats it on the page. */
     --frost-blur:24px; --frost-blur-lg:40px; --frost-sat:1.8;
     --frost-border:var(--line2);
+    /* A thinner, more translucent glass for panels that float directly over
+       backdrop art (e.g. the rating panel) - lets the blurred/saturated
+       artwork read through as a frosted tint instead of a solid card. */
+    --frost-tint:rgba(20,20,24,.4);
     --frost-edge:
       inset 0 0 0 1px rgba(255,255,255,.07),
       inset 1.5px 2px 1px -1.5px rgba(255,255,255,.55),
@@ -76,7 +80,7 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
   body{background:var(--bg);color:var(--text);font-family:var(--font);
-    -webkit-font-smoothing:antialiased;overflow:hidden}
+    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow:hidden}
   button,input{font-family:inherit;color:inherit}
   button{cursor:pointer}
   img{display:block}
@@ -455,7 +459,7 @@
 
   /* ---- RATE FLOAT (star rating) ---- */
   .rate-float{position:absolute;right:var(--edge);bottom:var(--edge);z-index:4;
-    background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    background:var(--frost-tint);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     border:1px solid var(--frost-border);border-radius:var(--radius);padding:12px 16px;
     box-shadow:var(--frost-shadow-lg)}
   .rate-stars{display:flex;gap:8px}
