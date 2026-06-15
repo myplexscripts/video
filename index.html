@@ -151,7 +151,7 @@
   /* ---- APP SHELL ---- */
   #app{display:none;height:100%;position:relative;z-index:1}
   .shell{display:grid;grid-template-columns:240px 1fr;height:100%}
-  .sidebar{background:rgba(15,15,19,.38);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+  .sidebar{background:rgba(15,15,19,.94);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));border-right:1px solid var(--frost-border);
     box-shadow:var(--frost-edge);display:flex;flex-direction:column;overflow-y:auto;z-index:20}
   .brand{display:flex;align-items:center;gap:10px;padding:22px 20px 20px}
@@ -1945,7 +1945,7 @@ async function fetchExtras(ratingKey){
 /* ---- RELATED RAILS (similar titles, "More with [actor]", collections...) ---- */
 async function fetchRelated(ratingKey){
   try{
-    const mc=await api(`/library/metadata/${ratingKey}/related`);
+    const mc=await api(`/library/metadata/${ratingKey}/related?count=24`);
     return (mc.Hub||[]).map(h=>({title:h.title,items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type))})).filter(h=>h.items.length);
   }catch(_){ return []; }
 }
