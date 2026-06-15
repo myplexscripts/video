@@ -240,7 +240,7 @@
   .see-all i{font-size:14px;transition:transform .15s var(--ease)}
   .see-all:hover i{transform:translateX(2px)}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch}
+    scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch}
   .carousel::-webkit-scrollbar{height:0}
   .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px;
     padding:4px var(--edge) 16px}
@@ -2036,15 +2036,25 @@ async function rateItem(ratingKey,stars){
 }
 function wireRateFloat(c,m){
   const root=c.querySelector(".rate-float"); if(!root) return;
-  paintStars(root,(m.userRating||0)/2);
-  root.querySelectorAll(".rate-stars button").forEach(b=>{
-    b.onclick=async()=>{
-      const n=+b.dataset.star, prev=Math.round((m.userRating||0)/2), next=n===prev?0:n;
+  const group=root.querySelector(".rate-stars");
+  const current=()=>(m.userRating||0)/2;
+  paintStars(root,current());
+  const valueFromEvent=(b,e)=>{
+    const n=+b.dataset.star;
+    if(!e.clientX&&!e.clientY) return n;
+    const r=b.getBoundingClientRect();
+    return (e.clientX-r.left)<r.width/2?n-0.5:n;
+  };
+  group.querySelectorAll("button").forEach(b=>{
+    b.onmousemove=e=>paintStars(root,valueFromEvent(b,e));
+    b.onclick=async e=>{
+      const val=valueFromEvent(b,e), prev=current(), next=val===prev?0:val;
       paintStars(root,next);
       try{ await rateItem(m.ratingKey,next); m.userRating=next*2; }
       catch(_){ paintStars(root,prev); }
     };
   });
+  group.onmouseleave=()=>paintStars(root,current());
 }
 function wireBackdrop(c,art){
   setUltraBlur(art);
