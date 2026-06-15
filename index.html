@@ -1703,18 +1703,17 @@ async function showPlaylists(){
     const mc=await api("/playlists");
     const pls=(mc.Metadata||[]).filter(p=>p.playlistType==="video");
     if(!pls.length){ c.innerHTML=pageHeadHTML("Playlists")+`<div class='empty'>${svgIcon("playlist")}No video playlists.</div>`; return; }
-    // The /playlists list entry often omits the composite cover — it lives on
-    // the items CONTAINER instead (same source the playlist hero uses). Fetch
-    // the first few items to pick up that composite; only when the server has
-    // no composite at all do we build a mosaic from the item thumbs.
+    // The /playlists list entry's own composite/thumb is sometimes present
+    // but unusable (e.g. a stale or placeholder path), and the real cover
+    // often lives on the items CONTAINER instead (same source the playlist
+    // hero uses). Always grab a few items: it doubles as a mosaic fallback if
+    // the cover image fails to load (see card()), and supplies a cover when
+    // the playlist itself has none of its own.
     await Promise.all(pls.map(async p=>{
-      if(p.composite||p.thumb) return;
       try{
         const ic=await api(`/playlists/${p.ratingKey}/items?X-Plex-Container-Size=4`);
-        // Keep the items as a mosaic fallback, but prefer the container's
-        // composite cover when the server provides one.
         p._mosaicItems=(ic.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-        if(ic.composite||ic.thumb) p.thumb=ic.composite||ic.thumb;
+        if(!p.composite&&!p.thumb&&(ic.composite||ic.thumb)) p.thumb=ic.composite||ic.thumb;
       }catch(_){}
     }));
     const grid=el("div","grid-view");
@@ -1810,6 +1809,29 @@ function collHero(m,kicker,items,square){
   if(totalDur) bits.push(fmtDur(totalDur));
   if(m.addedAt) bits.push(`Added ${fmtDate(m.addedAt)}`);
   if(m.smart) bits.push("Smart");
+  const metaHTML=`<div class="coll-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>`;
+  const playBtns=items.length?`
+        <button class="btn lg" id="collPlay">${svgIcon("play-fill")} Play</button>
+        <button class="btn glass lg" id="collShuffle">${svgIcon("shuffle")} Shuffle</button>`:"";
+  // A collection/playlist with its own logo and/or backdrop art gets the same
+  // full-bleed hero as a movie/show; otherwise fall back to the cover+text
+  // layout below, where collArt() uses the cover itself as the backdrop.
+  if(m.art||(m.Image||[]).some(i=>i.type==="clearLogo")){
+    return `<div class="detail-wrap">
+      <div class="detail-hero full">
+        <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
+        <div class="detail-scrim"></div>
+        <div class="detail-top">
+          <div class="coll-kicker">${esc(kicker)}</div>
+          ${titleArtHTML(m)}
+          ${m.summary?`<div class="summary">${esc(m.summary)}</div>`:""}
+        </div>
+        <div class="detail-bottom">
+          ${metaHTML}
+          ${playBtns?`<div class="detail-actions">${playBtns}</div>`:""}
+        </div>
+      </div></div>`;
+  }
   const src=img(m.thumb,440,square?440:660);
   const mosaic=src?"":mosaicHTML(items);
   const fallbackIconHTML=square?`<span class="art-fallback">${svgIcon("playlist")}</span>`:`<i class="ph-fill ph-stack art-fallback" aria-hidden="true"></i>`;
@@ -1824,11 +1846,8 @@ function collHero(m,kicker,items,square){
       <div class="coll-kicker">${esc(kicker)}</div>
       <h2>${esc(m.title)}</h2>
       ${m.summary?`<div class="coll-desc">${esc(m.summary)}</div>`:""}
-      <div class="coll-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>
-      ${items.length?`<div class="coll-actions">
-        <button class="btn lg" id="collPlay">${svgIcon("play-fill")} Play</button>
-        <button class="btn glass lg" id="collShuffle">${svgIcon("shuffle")} Shuffle</button>
-      </div>`:""}
+      ${metaHTML}
+      ${playBtns?`<div class="coll-actions">${playBtns}</div>`:""}
     </div>
   </div>`;
 }
