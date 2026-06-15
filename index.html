@@ -392,6 +392,13 @@
     border-radius:var(--radius-sm);padding:16px 18px;margin:20px var(--edge);font-size:13.5px;
     display:flex;gap:10px;align-items:flex-start;backdrop-filter:blur(12px)}
   .err i{font-size:18px;margin-top:1px}
+  /* Distinct, non-alarming treatment for "can't reach the Plex server" -
+     this is an external/network condition, not an app error. */
+  .err.err-offline{color:var(--dim);background:var(--surface);border-color:var(--line2);
+    align-items:center;flex-wrap:wrap;gap:14px}
+  .err-offline i{font-size:22px;color:var(--faint);margin-top:0}
+  .err-offline b{color:var(--text);font-size:14px}
+  .err-offline .btn{margin-left:auto}
 
   /* ---- DETAIL ----
      The global UltraBlur underlay supplies the ambient color wash. Movie/show
@@ -1094,7 +1101,16 @@ async function showServerPicker(servers){
   const wrap=$("#serverList"); wrap.innerHTML="<div class='loading'>Testing connections…</div>";
   const results=[];
   for(const s of servers){ const c=await pickConnection(s); if(c) results.push(c); }
-  if(!results.length){ wrap.innerHTML="<div class='err' role='alert'><i class='ph ph-warning' aria-hidden='true'></i><div>No reachable servers.</div></div>"; return; }
+  if(!results.length){
+    wrap.innerHTML="";
+    const box=el("div","err err-offline"); box.setAttribute("role","alert");
+    box.innerHTML=`<i class="ph ph-wifi-slash" aria-hidden="true"></i>
+      <div><b>Can't reach your Plex server</b><div>Make sure it's online and reachable from this device, then try again.</div></div>`;
+    const b=el("button","btn glass sm"); b.innerHTML='<i class="ph ph-arrow-clockwise" aria-hidden="true"></i> Try Again';
+    b.onclick=()=>showServerPicker(servers);
+    box.appendChild(b); wrap.appendChild(box);
+    return;
+  }
   wrap.innerHTML="";
   results.forEach(c=>{
     const card=el("div","server-card");
@@ -1110,7 +1126,13 @@ function selectServer(c){ server=c; localStorage.setItem(LS.server,JSON.stringif
 /* ============================================================ API */
 async function api(path){
   const sep=path.includes("?")?"&":"?";
-  const r=await fetch(`${server.uri}${path}${sep}X-Plex-Token=${server.token}`,{headers:plexHeaders(server.token)});
+  let r;
+  try{
+    r=await fetch(`${server.uri}${path}${sep}X-Plex-Token=${server.token}`,{headers:plexHeaders(server.token)});
+  }catch(_){
+    const err=new Error(`Can't reach ${(server&&server.name)||"your Plex server"}. Check that it's online and try again.`);
+    err.offline=true; throw err;
+  }
   if(!r.ok) throw new Error(`Server error ${r.status}`);
   return (await r.json()).MediaContainer||{};
 }
@@ -1178,7 +1200,7 @@ async function bootApp(){
     const mc=await api("/library/sections");
     sections=(mc.Directory||[]).filter(s=>s.type==="movie"||s.type==="show");
     buildNav(); route();
-  }catch(e){ $("#content").innerHTML=errHTML(e.message); }
+  }catch(e){ $("#content").innerHTML=errHTML(e,"bootApp"); }
 }
 function buildNav(){
   const nav=$("#nav"); nav.innerHTML="";
@@ -1260,7 +1282,7 @@ async function route(){
       }
       default: return showHome();
     }
-  }catch(e){ $("#content").innerHTML=errHTML(e.message); }
+  }catch(e){ $("#content").innerHTML=errHTML(e); }
 }
 window.addEventListener("hashchange", route);
 
@@ -1295,7 +1317,7 @@ async function showHome(){
     });
     if(!cw.length && !videoHubs.length)
       c.innerHTML=`<div class='empty'>${svgIcon("movies")}Nothing here yet. Add some media.</div>`;
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 function collectItems(mc){
   if(mc.Metadata) return mc.Metadata.filter(x=>VIDEO_TYPES.includes(x.type));
@@ -1524,7 +1546,7 @@ async function showLibraryRecommended(section){
       });
     }
     wireLibTabs(c);
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 async function showLibrary(section){
   setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
@@ -1547,7 +1569,7 @@ async function showLibrary(section){
     wireLibTabs(c);
     wireLibToolbar();
     renderLibGrid();
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 function libToolbarHTML(section){
   const sort=LIB_SORTS.find(s=>s.key===libState.sort)||LIB_SORTS[0];
@@ -1665,7 +1687,7 @@ async function showPlaylists(){
     const grid=el("div","grid-view");
     pls.forEach(p=>grid.appendChild(card({...p,thumb:p.composite||p.thumb},false,true)));
     c.innerHTML=""; c.appendChild(grid);
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 async function openPlaylist(p){
   setTitle(p.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
@@ -1687,7 +1709,7 @@ async function openPlaylist(p){
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
     wireDetailBg(c,collArt(pl,items));
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 
 /* ============================================================ DETAIL */
@@ -1724,7 +1746,7 @@ async function openCollection(it){
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
     wireDetailBg(c,collArt(m,items));
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 function metaBits(m,isMovie){
   const year=m.year||(m.originallyAvailableAt||"").slice(0,4);
@@ -2115,7 +2137,7 @@ async function openMovie(it){
     else $("#playBtnD").onclick=()=>playItem(m,0);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 /* ---- SEASON SWITCHER (artwork cards, not pill tabs) ---- */
 function seasonCard(s,active){
@@ -2167,7 +2189,7 @@ async function openShow(it,jumpSeasonKey){
       const mc2=await api(`/library/metadata/${activeSeason.ratingKey}/children`);
       const eps=mc2.Metadata||[]; if(eps.length) playItem(eps[0],eps[0].viewOffset||0);
     };
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 /* ---- EPISODE WATCHED ICON ---- */
 function epWatchedIcon(watched){
@@ -2239,7 +2261,7 @@ async function loadEpisodes(season){
       list.appendChild(card);
     });
     if(!eps.length) list.innerHTML="<div class='empty'>No episodes.</div>";
-  }catch(e){ list.innerHTML=errHTML(e.message); }
+  }catch(e){ list.innerHTML=errHTML(e); }
 }
 /* ---- EPISODE DETAIL PAGE ---- */
 async function openEpisode(it){
@@ -2274,7 +2296,7 @@ async function openEpisode(it){
     else $("#playBtnD").onclick=()=>playItem(m,0);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 
 /* ============================================================ SEARCH */
@@ -2306,7 +2328,7 @@ async function runSearch(q){
     }
     c.innerHTML=head;
     hubs.forEach(h=>c.appendChild(railSection(h.title,h.items,h.items.every(i=>i.type==="episode"),false)));
-  }catch(e){ c.innerHTML=errHTML(e.message); }
+  }catch(e){ c.innerHTML=errHTML(e); }
 }
 
 /* ============================================================ PLAYER ENGINE
@@ -2976,7 +2998,13 @@ function fmtComing(s){ const d=new Date(s); if(isNaN(d)) return "";
 function fmtClock(s){ if(!s||isNaN(s))return"0:00"; s=Math.floor(s);
   const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
   return h>0?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`; }
-function errHTML(m){ return `<div class="err" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i><div>${esc(m)}</div></div>`; }
+function errHTML(e,retry){
+  const msg=(e&&e.message)||String(e);
+  if(e&&e.offline) return `<div class="err err-offline" role="alert"><i class="ph ph-wifi-slash" aria-hidden="true"></i>
+    <div><b>Server unavailable</b><div>${esc(msg)}</div></div>
+    <button class="btn glass sm" onclick="${retry||"route"}()"><i class="ph ph-arrow-clockwise" aria-hidden="true"></i> Try Again</button></div>`;
+  return `<div class="err" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i><div>${esc(msg)}</div></div>`;
+}
 
 $("#menuToggle").onclick=()=>{ $("#sidebar").classList.add("open"); $("#scrimNav").classList.add("show"); };
 $("#scrimNav").onclick=closeSidebar;
