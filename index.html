@@ -872,7 +872,6 @@
   .p-sheet-handle:hover{background:rgba(255,255,255,.2)}
   .p-sheet-handle .svgi{width:16px;height:16px;transform:rotate(180deg)}
   #player.idle .p-sheet-handle,#player.sheet-open .p-sheet-handle{opacity:0;pointer-events:none}
-  #player.sheet-open .p-top,#player.sheet-open .p-bottom{opacity:0;pointer-events:none;transition:opacity .2s}
 
   .p-sheet{position:absolute;left:0;right:0;bottom:0;z-index:15;max-height:64%;
     display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s var(--ease);
@@ -899,10 +898,9 @@
   .ps-card.now .ps-thumb-wrap{outline:2px solid var(--accent);outline-offset:-2px}
   .ps-card .ps-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.5)}
   .ps-card .ps-prog>i{display:block;height:100%;background:var(--accent)}
-  .ps-card .ps-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    opacity:0;background:rgba(0,0,0,0);transition:opacity .15s,background-color .15s}
-  .ps-card:hover .ps-play{opacity:1;background:rgba(0,0,0,.25)}
-  .ps-card .ps-play .svgi{width:34px;height:34px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
+  .ps-card .play-hover{position:absolute;inset:0;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s var(--ease)}
+  .ps-card:hover .play-hover,.ps-card:focus-visible .play-hover{opacity:1}
+  .ps-card .play-hover .svgi{width:36px;height:36px;font-size:36px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
   .ps-card .ps-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
   .ps-card .ps-t{font-size:13px;font-weight:600;line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ps-card .ps-s{font-size:12px;color:var(--faint);font-weight:500;flex:0 0 auto;font-variant-numeric:tabular-nums}
@@ -2855,7 +2853,7 @@ function toggleSheet(){ sheetOpen()?closeSheet():openSheet(); }
 function sheetCard(opts){
   const b=el("button","ps-card"+(opts.now?" now":"")); b.setAttribute("role","menuitem");
   b.innerHTML=`<div class="ps-thumb-wrap"><img loading="lazy" alt="" src="${img(opts.thumb,272,153)}">
-    <span class="ps-play">${svgIcon("play-fill")}</span>
+    <div class="play-hover">${svgIcon("play-circle-fill")}</div>
     ${opts.pct?`<div class="ps-prog"><i style="width:${opts.pct}%"></i></div>`:""}</div>
     <div class="ps-row"><div class="ps-t">${esc(opts.title||"")}</div><div class="ps-s">${esc(opts.sub||"")}</div></div>`;
   if(opts.onClick) b.onclick=opts.onClick;
@@ -2863,7 +2861,16 @@ function sheetCard(opts){
 }
 function sheetSection(label){
   const sec=el("div","ps-section");
-  sec.innerHTML=`<div class="ps-head">${esc(label)}</div><div class="ps-rail" role="menu"></div>`;
+  const head=el("div","ps-head"); head.textContent=label;
+  const viewport=el("div","rail-viewport");
+  const rail=el("div","ps-rail"); rail.setAttribute("role","menu");
+  const prev=el("button","rail-arrow prev edge"); prev.type="button"; prev.setAttribute("aria-label","Scroll left");
+  prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
+  const next=el("button","rail-arrow next"); next.type="button"; next.setAttribute("aria-label","Scroll right");
+  next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
+  viewport.appendChild(prev); viewport.appendChild(rail); viewport.appendChild(next);
+  wireRailArrows(viewport,rail,prev,next);
+  sec.appendChild(head); sec.appendChild(viewport);
   return sec;
 }
 async function renderSheet(){
@@ -2901,9 +2908,10 @@ async function renderSheet(){
   relRail.innerHTML=`<div class="ps-empty">Loading…</div>`;
   body.appendChild(relSec);
   const key=String(currentItem&&currentItem.ratingKey);
-  const hubs=await fetchRelated(key).catch(()=>[]);
+  const relKey=currentItem&&currentItem.type==="episode"?String(currentItem.grandparentRatingKey||currentItem.ratingKey):key;
+  const hubs=await fetchRelated(relKey).catch(()=>[]);
   if(!sheetOpen()||String(currentItem&&currentItem.ratingKey)!==key) return;
-  const seen=new Set([key]), list=[];
+  const seen=new Set([key,relKey]), list=[];
   (hubs||[]).forEach(h=>h.items.forEach(it=>{ const k=String(it.ratingKey);
     if(!seen.has(k)){ seen.add(k); list.push(it); } }));
   relRail.innerHTML="";
