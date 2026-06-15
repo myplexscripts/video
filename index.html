@@ -960,7 +960,7 @@
     <main class="main" id="main">
       <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><i class="ph ph-list" aria-hidden="true"></i></button>
       <div class="searchbox" id="searchBox" role="search">
-        ${svgIcon("magnifying-glass")}
+        <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
         <label class="sr-only" for="search">Search</label>
         <input id="search" placeholder="Search" autocomplete="off">
       </div>
@@ -979,13 +979,13 @@
     <div class="p-pause-title" id="pPauseTitle"></div>
     <div class="p-pause-sub hidden" id="pPauseSub"></div>
     <div class="p-pause-desc hidden" id="pPauseDesc"></div>
-    <button class="p-pause-resume" id="pauseResume">${svgIcon("play-fill")}<span>Resume</span></button>
+    <button class="p-pause-resume" id="pauseResume"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span><span>Resume</span></button>
   </div>
   <div class="next-up" id="nextUp">
     <img id="nuImg" alt=""><div class="nu-body"><div class="nu-k">Up next</div>
     <div class="nu-t" id="nuTitle"></div>
     <div class="nu-actions">
-      <button class="btn" id="nuPlay" style="padding:8px 16px;font-size:13px">${svgIcon("play-fill")} Play now</button>
+      <button class="btn" id="nuPlay" style="padding:8px 16px;font-size:13px"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span> Play now</button>
       <button class="btn glass" id="nuCancel" style="padding:8px 16px;font-size:13px">Cancel</button>
     </div></div>
   </div>
@@ -996,7 +996,7 @@
     <button class="pbtn" id="minPlayer" title="Minimize" aria-label="Minimize player"><i class="ph ph-corners-in" aria-hidden="true"></i></button>
     <div class="pt" id="pTitle"></div>
     <div class="p-top-right">
-      <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false">${svgIcon("gear")}</button>
+      <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/gear.svg')" aria-hidden="true"></span></button>
       <div class="p-menu" id="pMenu" role="menu" aria-label="Playback settings"></div>
     </div>
   </div>
@@ -1009,9 +1009,9 @@
     </div></div>
     <div class="p-controls">
       <button class="pbtn bare hidden" id="prevEpBtn" aria-label="Previous episode" title="Previous episode"><span class="svgi flip" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds">${svgIcon("arrow-counter-clockwise")}<span class="skip-n" aria-hidden="true">10</span></button>
-      <button class="pbtn play-main" id="playBtn" aria-label="Play">${svgIcon("play-fill")}</button>
-      <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds">${svgIcon("arrow-clockwise")}<span class="skip-n" aria-hidden="true">10</span></button>
+      <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-counter-clockwise.svg')" aria-hidden="true"></span><span class="skip-n" aria-hidden="true">10</span></button>
+      <button class="pbtn play-main" id="playBtn" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
+      <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-clockwise.svg')" aria-hidden="true"></span><span class="skip-n" aria-hidden="true">10</span></button>
       <button class="pbtn bare hidden" id="nextEpBtn" aria-label="Next episode" title="Next episode"><span class="svgi" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
       <div class="p-divider" aria-hidden="true"></div>
       <div class="p-time"><span id="curTime">0:00</span><span class="slash">/</span><span id="durTime">0:00</span></div>
@@ -1025,7 +1025,7 @@
     </div>
     <div class="p-menu chapters" id="chaptersMenu" role="menu" aria-label="Chapters"></div>
   </div>
-  <button class="pbtn mini-play" id="miniPlay" aria-label="Play">${svgIcon("play-fill")}</button>
+  <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
   <div class="mini-bar" id="miniBar">
     <span class="mt" id="miniTitle"></span>
     <button class="pbtn" id="expandPlayer" aria-label="Expand player"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
@@ -1126,7 +1126,7 @@ async function showServerPicker(servers){
     const box=el("div","err err-offline"); box.setAttribute("role","alert");
     box.innerHTML=`<i class="ph ph-wifi-slash" aria-hidden="true"></i>
       <div><b>Can't reach your Plex server</b><div>Make sure it's online and reachable from this device, then try again.</div></div>`;
-    const b=el("button","btn glass sm"); b.innerHTML='${svgIcon("arrow-clockwise")} Try Again';
+    const b=el("button","btn glass sm"); b.innerHTML=`${svgIcon("arrow-clockwise")} Try Again`;
     b.onclick=()=>showServerPicker(servers);
     box.appendChild(b); wrap.appendChild(box);
     return;
@@ -2369,7 +2369,7 @@ async function openEpisode(it){
           cd.classList.add("current");
           const art=cd.querySelector(".art");
           if(art){ const tag=document.createElement("div"); tag.className="now-badge";
-            tag.innerHTML='${svgIcon("play-fill")} Now viewing'; art.appendChild(tag); }
+            tag.innerHTML=`${svgIcon("play-fill")} Now viewing`; art.appendChild(tag); }
         }
         row.appendChild(cd);
       });
