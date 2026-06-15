@@ -404,7 +404,7 @@
      pinned bottom-left (.detail-bottom), leaving the art to read large on the
      right. Episode pages keep the original poster+info row layout. */
   .detail-wrap{position:relative}
-  .detail-hero{position:relative;min-height:520px;display:flex;align-items:flex-end;overflow:hidden}
+  .detail-hero{position:relative;min-height:520px;display:flex;align-items:flex-start;overflow:hidden}
   .detail-hero.full{min-height:min(90vh,880px);align-items:stretch;flex-direction:column;
     justify-content:space-between;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
   .detail-bg{position:absolute;inset:0;overflow:hidden}
@@ -450,6 +450,7 @@
     margin:16px 0;font-weight:500}
   .sub .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
   .summary{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin-bottom:22px}
+  .detail-hero:not(.full) .summary{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
   .detail-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 
   /* ---- FULL HERO (movie/show detail) ---- */
@@ -1882,7 +1883,7 @@ function episodeHero(m,actionsHTML){
   if(m.rating) bits.push(`<span class="pill">${svgIcon("star-fill","","color:var(--accent)")} ${(+m.rating).toFixed(1)}</span>`);
   return `<div class="detail-wrap">
     <div class="detail-hero">
-      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
+      <div class="detail-bg"><div class="detail-bg-blur"></div></div>
       <div class="detail-scrim"></div>
       <div class="detail-row">
         <div class="detail-info">
@@ -2112,11 +2113,11 @@ function wireBackdrop(c,art){
   wireDetailBg(c,art);
 }
 function wireDetailBg(c,art){
-  const bgImg=c.querySelector(".detail-bg-img"); if(!bgImg||!art) return;
+  if(!art) return;
   const blur=c.querySelector(".detail-bg-blur");
   if(blur) blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
-  bgImg.onload=()=>bgImg.classList.add("loaded");
-  bgImg.src=img(art,1600,900);
+  const bgImg=c.querySelector(".detail-bg-img");
+  if(bgImg){ bgImg.onload=()=>bgImg.classList.add("loaded"); bgImg.src=img(art,1600,900); }
 }
 async function openMovie(it){
   setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
