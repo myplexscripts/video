@@ -9,9 +9,6 @@
 <title>Hume</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/favicon.png">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <style>
   @font-face{font-family:'Circular';font-weight:400;font-style:normal;font-display:swap;
@@ -113,7 +110,7 @@
   .btn.glass{background:var(--surface2);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     color:var(--text);border:1px solid var(--frost-border);box-shadow:var(--frost-shadow-sm)}
   .btn.glass:hover{background:var(--surface3)}
-  .btn i{font-size:17px}
+  .btn i,.btn .svgi{font-size:17px;width:17px;height:17px}
   .btn.lg{padding:14px 30px;font-size:15px}
   .btn.sm{padding:8px 16px;font-size:13px}
   .btn.icon{width:48px;height:48px;padding:0;justify-content:center;border-radius:50%;font-size:19px}
@@ -125,7 +122,7 @@
     justify-content:center;gap:28px;text-align:center;padding:24px;z-index:1;
     background:radial-gradient(ellipse 900px 450px at 50% 30%, var(--accent-wash),transparent),var(--bg)}
   .logo-lockup{display:flex;align-items:center;gap:14px}
-  .logo-lockup i{font-size:48px;color:var(--accent)}
+  .logo-lockup i,.logo-lockup .svgi{font-size:48px;width:48px;height:48px;color:var(--accent)}
   .logo-lockup h1{font-size:44px;font-weight:800;letter-spacing:-.03em}
   #login p{color:var(--dim);max-width:400px;line-height:1.6;font-size:14px}
 
@@ -161,7 +158,7 @@
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     display:flex;flex-direction:column;overflow-y:auto;z-index:20}
   .brand{display:flex;align-items:center;gap:10px;padding:22px 20px 20px}
-  .brand i{font-size:24px;color:var(--accent)}
+  .brand i,.brand .svgi{font-size:24px;width:24px;height:24px;color:var(--accent)}
   .brand b{font-size:18px;font-weight:800;letter-spacing:-.02em}
   .brand .ver{font-size:10px;color:var(--faint);margin-left:4px}
   .nav{display:flex;flex-direction:column;padding:4px 10px;gap:2px}
@@ -208,10 +205,17 @@
     box-shadow:var(--frost-shadow);
     transition:border-color .15s,background-color .15s,box-shadow .15s,width .2s,padding .2s}
   .searchbox:focus-within{background:var(--surface3);box-shadow:var(--frost-shadow-lg)}
-  .searchbox i{color:var(--faint);font-size:16px;flex:0 0 auto}
+  .searchbox i,.searchbox .svgi{color:var(--faint);font-size:16px;width:16px;height:16px;flex:0 0 auto}
   .searchbox input{background:none;border:none;color:var(--text);font-size:13px;width:100%;outline:none;
     font-family:var(--font)}
-  .searchbox input::placeholder{color:var(--faint)}
+  .searchbox input::placeholder{color:var(--faint);opacity:1}
+  /* Adaptive legibility: while idle, the icon + text invert against whatever
+     sits behind the box (bright artwork or dark page alike) via difference
+     blending, so "Search" never washes out. On focus we drop the blend for
+     stable, high-contrast editing. */
+  .searchbox:not(:focus-within) .svgi,
+  .searchbox:not(:focus-within) input{color:#fff;mix-blend-mode:difference}
+  .searchbox:not(:focus-within) input::placeholder{color:#fff;opacity:1}
 
   /* ---- HERO ---- */
   .hero{position:relative;height:min(64vh,600px);min-height:420px;display:flex;align-items:flex-end;
@@ -277,8 +281,8 @@
     font-weight:600;color:var(--dim);background:none;border:none;cursor:pointer;
     padding-bottom:3px;font-family:var(--font);transition:color .15s var(--ease)}
   .see-all:hover{color:var(--text)}
-  .see-all i{font-size:14px;transition:transform .15s var(--ease)}
-  .see-all:hover i{transform:translateX(2px)}
+  .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
+  .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
     scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch}
   .carousel::-webkit-scrollbar{height:0}
@@ -325,11 +329,11 @@
     font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);
     box-shadow:var(--frost-shadow-sm);transition:background-color .15s,border-color .15s}
   .lib-ctrl:hover{background:var(--surface3)}
-  .lib-ctrl i.lead{font-size:15px;color:var(--faint)}
+  .lib-ctrl i.lead,.lib-ctrl .svgi.lead{font-size:15px;width:15px;height:15px;color:var(--faint)}
   .lib-ctrl .cap{color:var(--faint);font-weight:500}
-  .lib-ctrl i.caret{font-size:12px;color:var(--faint);transition:transform .15s var(--ease)}
+  .lib-ctrl i.caret,.lib-ctrl .svgi.caret{font-size:12px;width:12px;height:12px;color:var(--faint);transition:transform .15s var(--ease)}
   .lib-ctrl-wrap.open .lib-ctrl{background:var(--surface3);border-color:var(--accent)}
-  .lib-ctrl-wrap.open .lib-ctrl i.caret{transform:rotate(180deg)}
+  .lib-ctrl-wrap.open .lib-ctrl i.caret,.lib-ctrl-wrap.open .lib-ctrl .svgi.caret{transform:rotate(180deg)}
   .lib-menu{position:absolute;top:46px;right:0;z-index:14;min-width:210px;max-height:min(60vh,420px);
     overflow-y:auto;background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));border:1px solid var(--frost-border);
@@ -340,8 +344,8 @@
     cursor:pointer;transition:background-color .1s;min-height:40px;font-family:var(--font)}
   .lib-menu button:hover{background:var(--surface2)}
   .lib-menu button.active{color:var(--accent)}
-  .lib-menu button i.ck{font-size:15px;color:var(--accent);opacity:0;width:16px;flex:0 0 auto}
-  .lib-menu button.active i.ck{opacity:1}
+  .lib-menu button i.ck,.lib-menu button .svgi.ck{font-size:15px;height:15px;color:var(--accent);opacity:0;width:16px;flex:0 0 auto}
+  .lib-menu button.active i.ck,.lib-menu button.active .svgi.ck{opacity:1}
   .lib-menu button .ml{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* ---- CARD ----
@@ -365,7 +369,8 @@
   .art .play-hover{position:absolute;inset:0;background:rgba(0,0,0,.25);
     display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s var(--ease)}
   .card:hover .art .play-hover,.card:focus-visible .art .play-hover{opacity:1}
-  .play-hover i{font-size:40px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
+  .play-hover i,.play-hover .svgi{width:64px;height:64px;font-size:64px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
+  .card.wide .play-hover .svgi{width:56px;height:56px;font-size:56px}
   .art .watch-prog{position:absolute;left:6px;right:6px;bottom:6px;height:4px;background:rgba(0,0,0,.5);
     border-radius:3px;overflow:hidden}
   .art .watch-prog > i{display:block;height:100%;background:var(--accent);border-radius:3px}
@@ -382,7 +387,7 @@
   .art .now-badge{position:absolute;left:8px;top:8px;z-index:3;display:inline-flex;align-items:center;gap:5px;
     background:var(--accent);color:#141005;font-size:10px;font-weight:800;text-transform:uppercase;
     letter-spacing:.4px;padding:4px 9px;border-radius:100px;box-shadow:0 2px 12px rgba(0,0,0,.45)}
-  .art .now-badge i{font-size:11px}
+  .art .now-badge i,.art .now-badge .svgi{font-size:11px;width:11px;height:11px}
 
   /* Spotify-style mosaic cover for playlists/collections with no art of
      their own — built from the first few items' thumbnails. */
@@ -409,12 +414,12 @@
   .err{color:#ff8585;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.15);
     border-radius:var(--radius-sm);padding:16px 18px;margin:20px var(--edge);font-size:13.5px;
     display:flex;gap:10px;align-items:flex-start;backdrop-filter:blur(12px)}
-  .err i{font-size:18px;margin-top:1px}
+  .err i,.err .svgi{font-size:18px;width:18px;height:18px;margin-top:1px;flex:0 0 auto}
   /* Distinct, non-alarming treatment for "can't reach the Plex server" -
      this is an external/network condition, not an app error. */
   .err.err-offline{color:var(--dim);background:var(--surface);border-color:var(--line2);
     align-items:center;flex-wrap:wrap;gap:14px}
-  .err-offline i{font-size:22px;color:var(--faint);margin-top:0}
+  .err-offline i,.err-offline .svgi{font-size:22px;width:22px;height:22px;color:var(--faint);margin-top:0}
   .err-offline b{color:var(--text);font-size:14px}
   .err-offline .btn{margin-left:auto}
 
@@ -557,7 +562,7 @@
   .trailer-state.hidden{display:none}
   .trailer-state .ring{width:40px;height:40px;border-radius:50%;
     border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite}
-  .trailer-state i{font-size:28px;color:var(--faint)}
+  .trailer-state i,.trailer-state .svgi{font-size:28px;width:28px;height:28px;color:var(--faint)}
 
   /* ---- SEASON SWITCHER (artwork, not pill tabs) ---- */
   .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch}
@@ -595,12 +600,12 @@
   .ep-card .ep-prog>i{display:block;height:100%;background:var(--accent)}
   .ep-card-body{padding-top:12px;display:flex;flex-direction:column;flex:1;min-width:0}
   .ep-card-body .et{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
-  .ep-card-body .et i{margin-left:6px;font-size:13px;vertical-align:-1px}
+  .ep-card-body .et i,.ep-card-body .et .svgi{margin-left:6px;font-size:13px;width:13px;height:13px;vertical-align:-1px}
   .ep-card-body .ed{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.55;flex:1;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .ep-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;min-height:32px}
   .ep-card-foot .edur{font-size:12px;color:var(--dim);font-weight:600;display:inline-flex;align-items:center;gap:6px}
-  .ep-card-foot .edur i{font-size:16px;color:var(--accent)}
+  .ep-card-foot .edur i,.ep-card-foot .edur .svgi{font-size:16px;width:16px;height:16px;color:var(--accent)}
 
   /* "..." overflow menu — mark an episode watched / unwatched via Plex */
   .ep-menu-wrap{position:relative;margin-left:auto}
@@ -617,7 +622,7 @@
     border:none;color:var(--text);padding:10px 12px;font-size:13px;font-weight:500;border-radius:9px;
     cursor:pointer;transition:background-color .1s;font-family:var(--font)}
   .ep-menu button:hover{background:var(--surface2)}
-  .ep-menu i{font-size:16px;color:var(--dim);flex:0 0 auto}
+  .ep-menu i,.ep-menu .svgi{font-size:16px;width:16px;height:16px;color:var(--dim);flex:0 0 auto}
 
   /* ---- COLLECTION / PLAYLIST HERO ---- */
   .coll-hero{position:relative;overflow:hidden;padding:44px var(--edge);display:flex;gap:32px;
@@ -660,7 +665,7 @@
   .ep-row-show{font-size:15px;font-weight:700;letter-spacing:-.01em}
   .ep-row-ep{font-size:13px;color:var(--dim);margin-top:3px;overflow:hidden;text-overflow:ellipsis;
     white-space:nowrap}
-  .ep-row-ep i{margin-left:6px;color:var(--accent)}
+  .ep-row-ep i,.ep-row-ep .svgi{margin-left:6px;color:var(--accent);vertical-align:-2px}
   .ep-row-dur{flex:0 0 auto;color:var(--dim);font-size:13px;font-weight:600;
     font-variant-numeric:tabular-nums;padding-left:12px}
 
@@ -707,7 +712,7 @@
     border:1px solid rgba(255,255,255,.22);box-shadow:var(--frost-edge),0 12px 36px rgba(0,0,0,.45);
     color:#fff;font-size:15px;font-weight:700;
     transition:transform .15s var(--ease),background-color .15s var(--ease)}
-  .p-pause-resume i{font-size:18px}
+  .p-pause-resume i,.p-pause-resume .svgi{font-size:18px;width:18px;height:18px}
   .p-pause-resume:hover{background:rgba(255,255,255,.24);transform:translateY(-1px)}
   .p-pause-resume:active{transform:scale(.97)}
 
@@ -738,9 +743,6 @@
     box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .pbtn.play-main:hover{background:rgba(232,184,37,.32);border-color:rgba(232,184,37,.6)}
   .pbtn:disabled{opacity:.32;pointer-events:none}
-  .pbtn.skip{position:relative}
-  .pbtn.skip .skip-n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    margin-top:2px;font-size:9px;font-weight:800;letter-spacing:-.02em;pointer-events:none}
 
   .p-seek{padding:6px 2px 10px}
   .p-seek-track{position:relative;height:5px;background:rgba(255,255,255,.18);border-radius:3px;
@@ -933,9 +935,9 @@
 
 <!-- LOGIN -->
 <div id="login">
-  <div class="logo-lockup"><i class="ph-fill ph-popcorn" aria-hidden="true"></i><h1>Hume</h1></div>
+  <div class="logo-lockup"><span class="svgi" style="--i:url('assets/images/icons/ui/popcorn-duotone.svg')" aria-hidden="true"></span><h1>Hume</h1></div>
   <p>Sign in with your Plex account to stream your video library. Your password never touches this app.</p>
-  <button class="btn lg" id="signInBtn"><i class="ph ph-sign-in" aria-hidden="true"></i> Sign in with Plex</button>
+  <button class="btn lg" id="signInBtn"><span class="svgi" style="--i:url('assets/images/icons/ui/sign-in.svg')" aria-hidden="true"></span> Sign in with Plex</button>
   <div id="loginErr" class="err hidden" style="margin:0;max-width:420px" role="alert"></div>
 </div>
 
@@ -951,14 +953,14 @@
   <div class="scrim-nav" id="scrimNav"></div>
   <div class="shell">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><i class="ph-fill ph-popcorn" aria-hidden="true"></i><b>Hume</b><span class="ver">v0.4</span></div>
+      <div class="brand"><span class="svgi" style="--i:url('assets/images/icons/ui/popcorn-duotone.svg')" aria-hidden="true"></span><b>Hume</b><span class="ver">v0.4</span></div>
       <nav class="nav" id="nav" aria-label="Main"></nav>
       <div class="sidebar-foot">
         <button class="nav-item" id="logoutBtn"><span class="svgi" style="--i:url('assets/images/icons/ui/sign-out.svg')" aria-hidden="true"></span> Sign out</button>
       </div>
     </aside>
     <main class="main" id="main">
-      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><i class="ph ph-list" aria-hidden="true"></i></button>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/list.svg')" aria-hidden="true"></span></button>
       <div class="searchbox" id="searchBox" role="search">
         <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
         <label class="sr-only" for="search">Search</label>
@@ -992,8 +994,8 @@
   <div id="toast" role="status" aria-live="polite"></div>
   <div class="p-spinner hidden" id="pSpinner" role="status" aria-live="polite"><div class="ring"></div><span id="pSpinnerText">Loading</span></div>
   <div class="p-top" id="pTop">
-    <button class="pbtn" id="closePlayer" title="Close" aria-label="Close player"><i class="ph ph-x" aria-hidden="true"></i></button>
-    <button class="pbtn" id="minPlayer" title="Minimize" aria-label="Minimize player"><i class="ph ph-corners-in" aria-hidden="true"></i></button>
+    <button class="pbtn" id="closePlayer" title="Close" aria-label="Close player"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button>
+    <button class="pbtn" id="minPlayer" title="Minimize" aria-label="Minimize player"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-in.svg')" aria-hidden="true"></span></button>
     <div class="pt" id="pTitle"></div>
     <div class="p-top-right">
       <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/gear.svg')" aria-hidden="true"></span></button>
@@ -1009,27 +1011,27 @@
     </div></div>
     <div class="p-controls">
       <button class="pbtn bare hidden" id="prevEpBtn" aria-label="Previous episode" title="Previous episode"><span class="svgi flip" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-counter-clockwise.svg')" aria-hidden="true"></span><span class="skip-n" aria-hidden="true">10</span></button>
+      <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-counter-clockwise.svg')" aria-hidden="true"></span></button>
       <button class="pbtn play-main" id="playBtn" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-clockwise.svg')" aria-hidden="true"></span><span class="skip-n" aria-hidden="true">10</span></button>
+      <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-clockwise.svg')" aria-hidden="true"></span></button>
       <button class="pbtn bare hidden" id="nextEpBtn" aria-label="Next episode" title="Next episode"><span class="svgi" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
       <div class="p-divider" aria-hidden="true"></div>
       <div class="p-time"><span id="curTime">0:00</span><span class="slash">/</span><span id="durTime">0:00</span></div>
-      <div class="p-vol"><button class="pbtn bare" id="muteBtn" aria-label="Mute"><i class="ph ph-speaker-high" aria-hidden="true"></i></button>
+      <div class="p-vol"><button class="pbtn bare" id="muteBtn" aria-label="Mute"><span class="svgi" style="--i:url('assets/images/icons/ui/speaker-high.svg')" aria-hidden="true"></span></button>
         <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume"></div>
       <div class="spacer"></div>
       <div class="p-status hidden" id="pStatus" role="status"><span class="dot" aria-hidden="true"></span><span id="pStatusText"></span></div>
-      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters" title="Chapters" aria-haspopup="menu" aria-expanded="false" hidden><i class="ph ph-list-bullets" aria-hidden="true"></i></button>
-      <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><i class="ph ph-picture-in-picture" aria-hidden="true"></i></button>
-      <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
+      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters" title="Chapters" aria-haspopup="menu" aria-expanded="false" hidden><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
+      <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><span class="svgi" style="--i:url('assets/images/icons/ui/frame-corners.svg')" aria-hidden="true"></span></button>
+      <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
     </div>
     <div class="p-menu chapters" id="chaptersMenu" role="menu" aria-label="Chapters"></div>
   </div>
   <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
   <div class="mini-bar" id="miniBar">
     <span class="mt" id="miniTitle"></span>
-    <button class="pbtn" id="expandPlayer" aria-label="Expand player"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
-    <button class="pbtn" id="closeMini" aria-label="Close player"><i class="ph ph-x" aria-hidden="true"></i></button>
+    <button class="pbtn" id="expandPlayer" aria-label="Expand player"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
+    <button class="pbtn" id="closeMini" aria-label="Close player"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button>
   </div>
 </div>
 
@@ -1124,7 +1126,7 @@ async function showServerPicker(servers){
   if(!results.length){
     wrap.innerHTML="";
     const box=el("div","err err-offline"); box.setAttribute("role","alert");
-    box.innerHTML=`<i class="ph ph-wifi-slash" aria-hidden="true"></i>
+    box.innerHTML=`${svgIcon("wifi-slash")}
       <div><b>Can't reach your Plex server</b><div>Make sure it's online and reachable from this device, then try again.</div></div>`;
     const b=el("button","btn glass sm"); b.innerHTML=`${svgIcon("arrow-clockwise")} Try Again`;
     b.onclick=()=>showServerPicker(servers);
@@ -1136,7 +1138,7 @@ async function showServerPicker(servers){
     const card=el("div","server-card");
     const tag=c.local?"<span class='badge'>Local</span>":(c.relay?"<span class='badge relay'>Relay</span>":"<span class='badge remote'>Remote</span>");
     card.innerHTML=`<div><div class="sn">${esc(c.name)}</div><div class="meta">${tag} ${new URL(c.uri).host}</div></div>`;
-    const b=el("button","btn"); b.innerHTML='<i class="ph ph-plug" aria-hidden="true"></i> Connect';
+    const b=el("button","btn"); b.innerHTML=`${svgIcon("plug")} Connect`;
     b.onclick=()=>selectServer(c); card.appendChild(b); wrap.appendChild(card);
   });
 }
@@ -1228,7 +1230,7 @@ function buildNav(){
     const b=el("button","nav-item");
     if(opts.id) b.id=opts.id;
     if(opts.lib!=null) b.dataset.lib=opts.lib;
-    const iconHTML=icon.startsWith("svg:")?svgIcon(icon.slice(4)):`<i class="ph ${icon}" aria-hidden="true"></i>`;
+    const iconHTML=svgIcon(icon.replace(/^svg:/,""));
     b.innerHTML=`${iconHTML} ${esc(label)}`;
     b.onclick=()=>{ fn(); closeSidebar(); };
     nav.appendChild(b); return b;
@@ -1361,7 +1363,7 @@ async function heroEl(it){
     <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" alt=""></div>
     <div class="hero-scrim"></div>
     <div class="hero-inner">
-      <div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):'<i class="ph-fill ph-sparkle" aria-hidden="true"></i>'}${it.viewOffset?'Continue Watching':'Featured'}</div>
+      <div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>
       ${titleArtHTML(it,title)}
       <div class="hero-meta">
         ${ratingBadges}${ratingFallback}
@@ -1417,8 +1419,8 @@ async function setupHeroTrailer(wrap,it){
     video.className="hero-video"; video.muted=true; video.loop=true; video.autoplay=true;
     video.playsInline=true; video.preload="auto"; video.setAttribute("aria-hidden","true");
     const ctrls=el("div","hero-trailer-ctrls");
-    ctrls.innerHTML=`<button class="pbtn" id="heroMute" aria-label="Unmute trailer"><i class="ph-fill ph-speaker-x" aria-hidden="true"></i></button>
-      <button class="pbtn" id="heroClose" aria-label="Stop trailer preview"><i class="ph ph-x" aria-hidden="true"></i></button>`;
+    ctrls.innerHTML=`<button class="pbtn" id="heroMute" aria-label="Unmute trailer">${svgIcon("speaker-none")}</button>
+      <button class="pbtn" id="heroClose" aria-label="Stop trailer preview">${svgIcon("x")}</button>`;
     let revealed=false;
     const reveal=()=>{
       if(revealed||token!==heroVideoToken) return; revealed=true;
@@ -1433,7 +1435,7 @@ async function setupHeroTrailer(wrap,it){
     const muteBtn=ctrls.querySelector("#heroMute");
     muteBtn.onclick=()=>{
       video.muted=!video.muted;
-      muteBtn.querySelector("i").className=video.muted?"ph-fill ph-speaker-x":"ph-fill ph-speaker-high";
+      setSvgIcon(muteBtn,video.muted?"speaker-none":"speaker-high");
       muteBtn.setAttribute("aria-label",video.muted?"Unmute trailer":"Mute trailer");
     };
     ctrls.querySelector("#heroClose").onclick=()=>{
@@ -1459,7 +1461,7 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb){
     sec.appendChild(amb);
   }
   const head=el("div","rail-head"+(actorThumb?" with-avatar":""));
-  head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All <i class="ph ph-arrow-right" aria-hidden="true"></i></button>`:""}`;
+  head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
   if(seeAll) head.querySelector(".see-all").onclick=()=>{ seeAllCache={title,items,wide,libLabel}; navigate("/see-all"); };
   const row=el("div","carousel");
   items.forEach(it=>row.appendChild(card(it,wide)));
@@ -1482,7 +1484,7 @@ function card(it,wide,square){
   const dim2 = square ? 320 : (useWide?270:510);
   const src=img(thumb,dim,dim2);
   const mosaic=src?"":mosaicHTML(it._mosaicItems);
-  const fallbackIconHTML = it._collection ? `<i class="ph-fill ph-stack art-fallback" aria-hidden="true"></i>`
+  const fallbackIconHTML = it._collection ? `<span class="art-fallback">${svgIcon("stack-fill")}</span>`
     : `<span class="art-fallback">${svgIcon(it.type==="playlist"?"playlist":it.type==="show"?"television":"movies")}</span>`;
   let badge="";
   if(!pct && !it._collection && it.type!=="playlist"){
@@ -1533,11 +1535,11 @@ function showSeeAll(){
 
 /* ============================================================ LIBRARY */
 const LIB_SORTS=[
-  {key:"added",  label:"Recently Added",   icon:"ph-clock-counter-clockwise"},
-  {key:"title",  label:"Title (A–Z)",      icon:"ph-sort-ascending"},
-  {key:"year",   label:"Release Year",     icon:"ph-calendar-blank"},
-  {key:"rating", label:"Rating",           icon:"ph-star"},
-  {key:"watched",label:"Recently Watched", icon:"ph-eye"},
+  {key:"added",  label:"Recently Added",   icon:"clock-counter-clockwise"},
+  {key:"title",  label:"Title (A–Z)",      icon:"sort-ascending"},
+  {key:"year",   label:"Release Year",     icon:"calendar-blank"},
+  {key:"rating", label:"Rating",           icon:"star-fill"},
+  {key:"watched",label:"Recently Watched", icon:"eye"},
 ];
 const LIB_FILTERS=[
   {key:"all",       label:"All"},
@@ -1568,7 +1570,7 @@ async function showLibraryRecommended(section){
     c.innerHTML=pageHeadHTML(section.title)+libTabsHTML(section,"recommended");
     if(!videoHubs.length){
       const empty=el("div","empty");
-      empty.innerHTML=`<i class="ph ph-sparkle" aria-hidden="true"></i>No recommendations yet.
+      empty.innerHTML=`${svgIcon("sparkle-fill")}No recommendations yet.
         <div style="margin-top:14px"><button class="btn glass sm" id="libGoAll">Browse all ${esc(section.type==="show"?"shows":"movies")}</button></div>`;
       c.appendChild(empty);
       $("#libGoAll").onclick=()=>navigate(`/library/${section.key}/all`);
@@ -1610,13 +1612,13 @@ function libToolbarHTML(section){
   const menu=(items,kind,cur)=>items.map(o=>{
     const v=o.key!==undefined?o.key:o;
     return `<button data-${kind}="${esc(v)}" class="${v===cur?"active":""}" role="menuitemradio" aria-checked="${v===cur}">
-      <i class="ph ph-check ck" aria-hidden="true"></i><span class="ml">${esc(o.label!==undefined?o.label:(v||"All Genres"))}</span></button>`;
+      ${svgIcon("check","ck")}<span class="ml">${esc(o.label!==undefined?o.label:(v||"All Genres"))}</span></button>`;
   }).join("");
   const genreCtrl=libState.genres.length?`
     <div class="lib-ctrl-wrap" id="libGenreWrap">
       <button class="lib-ctrl" id="libGenreBtn" aria-haspopup="true" aria-expanded="false">
-        <i class="ph ph-tag lead" aria-hidden="true"></i><span id="libGenreCap">${libState.genre?esc(libState.genre):"All Genres"}</span>
-        <i class="ph ph-caret-down caret" aria-hidden="true"></i></button>
+        ${svgIcon("tag","lead")}<span id="libGenreCap">${libState.genre?esc(libState.genre):"All Genres"}</span>
+        ${svgIcon("caret-down","caret")}</button>
       <div class="lib-menu" role="menu">${menu([{key:"",label:"All Genres"},...libState.genres.map(g=>({key:g,label:g}))],"genre",libState.genre)}</div>
     </div>`:"";
   return `<div class="lib-toolbar">
@@ -1625,14 +1627,14 @@ function libToolbarHTML(section){
     <span class="spacer"></span>
     <div class="lib-ctrl-wrap" id="libSortWrap">
       <button class="lib-ctrl" id="libSortBtn" aria-haspopup="true" aria-expanded="false">
-        <i class="ph ${sort.icon} lead" aria-hidden="true"></i><span class="cap">Sort:</span> <span id="libSortCap">${esc(sort.label)}</span>
-        <i class="ph ph-caret-down caret" aria-hidden="true"></i></button>
+        ${svgIcon(sort.icon,"lead")}<span class="cap">Sort:</span> <span id="libSortCap">${esc(sort.label)}</span>
+        ${svgIcon("caret-down","caret")}</button>
       <div class="lib-menu" role="menu">${menu(LIB_SORTS,"sort",libState.sort)}</div>
     </div>
     <div class="lib-ctrl-wrap" id="libFilterWrap">
       <button class="lib-ctrl" id="libFilterBtn" aria-haspopup="true" aria-expanded="false">
-        <i class="ph ph-funnel lead" aria-hidden="true"></i><span class="cap">Show:</span> <span id="libFilterCap">${esc(filter.label)}</span>
-        <i class="ph ph-caret-down caret" aria-hidden="true"></i></button>
+        ${svgIcon("funnel","lead")}<span class="cap">Show:</span> <span id="libFilterCap">${esc(filter.label)}</span>
+        ${svgIcon("caret-down","caret")}</button>
       <div class="lib-menu" role="menu">${menu(LIB_FILTERS,"filter",libState.filter)}</div>
     </div>
     ${genreCtrl}
@@ -1691,7 +1693,7 @@ function renderLibGrid(){
     ? String(val(a)).localeCompare(String(val(b)))
     : (val(b)-val(a)));
   grid.innerHTML="";
-  if(!items.length){ grid.innerHTML="<div class='empty' style='grid-column:1/-1'><i class='ph ph-funnel' aria-hidden='true'></i>No titles match these filters.</div>"; }
+  if(!items.length){ grid.innerHTML=`<div class='empty' style='grid-column:1/-1'>${svgIcon("funnel")}No titles match these filters.</div>`; }
   else items.forEach(it=>grid.appendChild(card(it)));
   const cnt=$("#libCount"); if(cnt) cnt.textContent=`${items.length} ${items.length===1?"title":"titles"}`;
 }
@@ -1740,7 +1742,7 @@ async function openPlaylist(p){
         : `<div class='empty'>${svgIcon("playlist")}This playlist is empty.</div>`);
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
-    wireDetailBg(c,collArt(pl,items));
+    wireDetailBg(c,collBackdrop(pl));
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
@@ -1774,10 +1776,10 @@ async function openCollection(it){
             <div class="ep-row-list"></div></div>`
           : `<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
             <div class="grid-view"></div></div>`
-        : "<div class='empty'><i class='ph ph-stack' aria-hidden='true'></i>This collection is empty.</div>");
+        : `<div class='empty'>${svgIcon("stack")}This collection is empty.</div>`);
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
-    wireDetailBg(c,collArt(m,items));
+    wireDetailBg(c,collBackdrop(m));
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 function metaBits(m,isMovie){
@@ -1803,7 +1805,18 @@ function metaBits(m,isMovie){
 function collArt(m,items){
   return m.art||m.thumb||(items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb));
 }
+// The collection/playlist's OWN backdrop art for the hero. When it has none,
+// returns "" so the hero falls back to the ambient ultrablur rather than a
+// blurred copy of the cover or an arbitrary item's art (item 2). (Collections
+// inherit the children container's art into m.art in openCollection, so they
+// still get a proper backdrop here.)
+function collBackdrop(m){
+  return m.art||"";
+}
 function collHero(m,kicker,items,square){
+  const isPlaylist=m.type==="playlist";
+  const hasLogo=(m.Image||[]).some(i=>i.type==="clearLogo");
+  const backdrop=collBackdrop(m);
   const bits=[`${items.length} item${items.length===1?"":"s"}`];
   const totalDur=items.reduce((a,b)=>a+(b.duration||0),0);
   if(totalDur) bits.push(fmtDur(totalDur));
@@ -1813,13 +1826,18 @@ function collHero(m,kicker,items,square){
   const playBtns=items.length?`
         <button class="btn lg" id="collPlay">${svgIcon("play-fill")} Play</button>
         <button class="btn glass lg" id="collShuffle">${svgIcon("shuffle")} Shuffle</button>`:"";
-  // A collection/playlist with its own logo and/or backdrop art gets the same
-  // full-bleed hero as a movie/show; otherwise fall back to the cover+text
-  // layout below, where collArt() uses the cover itself as the backdrop.
-  if(m.art||(m.Image||[]).some(i=>i.type==="clearLogo")){
+  // Only render the in-hero backdrop layer when there's a real backdrop image;
+  // with none, the hero stays transparent so the page's ambient ultrablur
+  // shows through instead (item 2).
+  const bgHTML=backdrop?`<div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>`:"";
+  // A collection with its own logo and/or backdrop art gets the same full-bleed
+  // editorial hero as a movie/show (logo title, no cover poster). Playlists
+  // always keep the cover-poster layout below so their cover stays visible,
+  // regardless of any logo/backdrop they may have (item 1).
+  if(!isPlaylist && (m.art||hasLogo)){
     return `<div class="detail-wrap">
       <div class="detail-hero full">
-        <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
+        ${bgHTML}
         <div class="detail-scrim"></div>
         <div class="detail-top">
           <div class="coll-kicker">${esc(kicker)}</div>
@@ -1834,9 +1852,9 @@ function collHero(m,kicker,items,square){
   }
   const src=img(m.thumb,440,square?440:660);
   const mosaic=src?"":mosaicHTML(items);
-  const fallbackIconHTML=square?`<span class="art-fallback">${svgIcon("playlist")}</span>`:`<i class="ph-fill ph-stack art-fallback" aria-hidden="true"></i>`;
+  const fallbackIconHTML=square?`<span class="art-fallback">${svgIcon("playlist")}</span>`:`<span class="art-fallback">${svgIcon("stack-fill")}</span>`;
   return `<div class="coll-hero">
-    <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
+    ${bgHTML}
     <div class="detail-scrim"></div>
     <div class="coll-art${square?" square":""}${src||mosaic?"":" broken"}">
       ${src?`<img src="${src}" alt="">`:mosaic}
@@ -2083,9 +2101,9 @@ async function openTrailerModal(item){
   closeTrailerModal();
   const modal=el("div","trailer-modal");
   modal.innerHTML=`<div class="trailer-window">
-      <button class="pbtn" id="trailerClose" aria-label="Close trailer"><i class="ph ph-x" aria-hidden="true"></i></button>
+      <button class="pbtn" id="trailerClose" aria-label="Close trailer">${svgIcon("x")}</button>
       <div class="trailer-state" id="trailerLoading"><div class="ring"></div></div>
-      <div class="trailer-state hidden" id="trailerError"><i class="ph ph-warning-circle" aria-hidden="true"></i><span>Trailer unavailable</span></div>
+      <div class="trailer-state hidden" id="trailerError">${svgIcon("warning-circle")}<span>Trailer unavailable</span></div>
       <video id="trailerVideo" controls playsinline preload="metadata" aria-label="Trailer"></video>
     </div>`;
   modal.addEventListener("click",e=>{ if(e.target===modal) closeTrailerModal(); });
@@ -2335,7 +2353,7 @@ async function loadEpisodes(season){
           <div class="ep-card-foot">
             <span class="edur">${epm.duration?`${svgIcon("play-circle-fill")} ${fmtDur(epm.duration)}`:(upcoming?esc(tag):"")}</span>
             ${!upcoming?`<div class="ep-menu-wrap">
-              <button class="ep-more" aria-haspopup="true" aria-expanded="false" aria-label="More options for ${esc(epm.title||"episode")}"><i class="ph ph-dots-three" aria-hidden="true"></i></button>
+              <button class="ep-more" aria-haspopup="true" aria-expanded="false" aria-label="More options for ${esc(epm.title||"episode")}">${svgIcon("dots-three")}</button>
               <div class="ep-menu" role="menu">
                 <button role="menuitem" data-action="watched">${svgIcon("check-circle-fill")}<span>Mark as Watched</span></button>
                 <button role="menuitem" data-action="unwatched">${svgIcon("check-circle")}<span>Mark as Unwatched</span></button>
@@ -2640,7 +2658,7 @@ function buildPlayerMenu(){
   const radio=(active,html,onclick)=>{
     const b=el("button",active?"active":""); b.setAttribute("role","menuitemradio");
     b.setAttribute("aria-checked",String(active));
-    b.innerHTML=`<i class="ph ph-check ck" aria-hidden="true"></i>${html}`;
+    b.innerHTML=`${svgIcon("check","ck")}${html}`;
     b.onclick=onclick; m.appendChild(b);
   };
   add('<div class="mh">Quality</div>');
@@ -2764,7 +2782,7 @@ video.addEventListener("dblclick",toggleFull);
 video.addEventListener("play",()=>{ setPlayIcon(true); $("#player").classList.remove("paused"); });
 video.addEventListener("pause",()=>{ setPlayIcon(false); if(everPlayed) $("#player").classList.add("paused"); });
 function setPlayIcon(playing){
-  const icon=`<i class="ph-fill ph-${playing?"pause":"play"}" aria-hidden="true"></i>`;
+  const icon=svgIcon(playing?"pause":"play-fill");
   const label=playing?"Pause":"Play";
   $("#playBtn").innerHTML=icon; $("#playBtn").setAttribute("aria-label",label);
   $("#miniPlay").innerHTML=icon; $("#miniPlay").setAttribute("aria-label",label);
@@ -2815,8 +2833,8 @@ const vol=$("#volSlider");
 vol.oninput=e=>{ video.volume=+e.target.value; video.muted=video.volume===0; updateVolIcon(); };
 $("#muteBtn").onclick=()=>{ video.muted=!video.muted; updateVolIcon(); };
 function updateVolIcon(){ const v=video.muted?0:video.volume;
-  const ic=v===0?"ph-speaker-x":v<0.5?"ph-speaker-low":"ph-speaker-high";
-  $("#muteBtn").innerHTML=`<i class="ph ${ic}" aria-hidden="true"></i>`;
+  const ic=v===0?"speaker-none":v<0.5?"speaker-low":"speaker-high";
+  $("#muteBtn").innerHTML=svgIcon(ic);
   $("#muteBtn").setAttribute("aria-label",v===0?"Unmute":"Mute");
   vol.value=video.muted?0:video.volume; }
 
@@ -2826,7 +2844,7 @@ function toggleFull(){ if(document.fullscreenElement) document.exitFullscreen();
   else $("#player").requestFullscreen?.().catch(()=>{}); }
 document.addEventListener("fullscreenchange",()=>{
   const f=!!document.fullscreenElement;
-  $("#fullBtn").innerHTML=`<i class="ph ph-corners-${f?"in":"out"}" aria-hidden="true"></i>`;
+  $("#fullBtn").innerHTML=svgIcon(f?"corners-in":"corners-out");
   $("#fullBtn").setAttribute("aria-label",f?"Exit fullscreen":"Fullscreen"); });
 
 /* PiP */
@@ -3097,6 +3115,12 @@ function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,m=>({"&":"&amp;
 function svgIcon(name,cls,style){
   return `<span class="svgi${cls?` ${cls}`:""}" style="--i:url('assets/images/icons/ui/${name}.svg')${style?`;${style}`:""}" aria-hidden="true"></span>`;
 }
+// Swap the icon on an existing rendered .svgi span (or a container holding one)
+// without rebuilding markup — keeps any classes/listeners on the element.
+function setSvgIcon(elOrSpan,name){
+  const s=elOrSpan.classList&&elOrSpan.classList.contains("svgi")?elOrSpan:elOrSpan.querySelector(".svgi");
+  if(s) s.style.setProperty("--i",`url('assets/images/icons/ui/${name}.svg')`);
+}
 function fmtDur(ms){ if(!ms)return""; const m=Math.round(ms/60000);
   return m<60?m+"m":Math.floor(m/60)+"h "+(m%60)+"m"; }
 function fmtDate(ts){ if(!ts) return ""; return new Date(ts*1000).toLocaleDateString(undefined,
@@ -3111,10 +3135,10 @@ function fmtClock(s){ if(!s||isNaN(s))return"0:00"; s=Math.floor(s);
   return h>0?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`; }
 function errHTML(e,retry){
   const msg=(e&&e.message)||String(e);
-  if(e&&e.offline) return `<div class="err err-offline" role="alert"><i class="ph ph-wifi-slash" aria-hidden="true"></i>
+  if(e&&e.offline) return `<div class="err err-offline" role="alert">${svgIcon("wifi-slash")}
     <div><b>Server unavailable</b><div>${esc(msg)}</div></div>
     <button class="btn glass sm" onclick="${retry||"route"}()">${svgIcon("arrow-clockwise")} Try Again</button></div>`;
-  return `<div class="err" role="alert"><i class="ph ph-warning-circle" aria-hidden="true"></i><div>${esc(msg)}</div></div>`;
+  return `<div class="err" role="alert">${svgIcon("warning-circle")}<div>${esc(msg)}</div></div>`;
 }
 
 $("#menuToggle").onclick=()=>{ $("#sidebar").classList.add("open"); $("#scrimNav").classList.add("show"); };
