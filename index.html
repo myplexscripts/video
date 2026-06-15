@@ -862,40 +862,52 @@
   .skip-marker:active{transform:scale(.97)}
   #player.idle .skip-marker{bottom:40px}
 
-  /* ---- IN-PLAYER DRAWER (chapters / episodes / related) ---- */
-  .p-drawer{position:absolute;top:0;right:0;bottom:0;z-index:20;width:min(390px,86vw);
-    display:flex;flex-direction:column;transform:translateX(100%);transition:transform .26s var(--ease);
-    background:rgba(14,14,18,.78);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+  /* ---- BOTTOM SHEET: chapters / play queue / related (swipe up, Plex-style) ---- */
+  .p-sheet-handle{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:10;
+    width:60px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.12);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;touch-action:none;
+    transition:opacity .2s,background-color .15s}
+  .p-sheet-handle:hover{background:rgba(255,255,255,.2)}
+  .p-sheet-handle .svgi{width:16px;height:16px;transform:rotate(180deg)}
+  #player.idle .p-sheet-handle,#player.sheet-open .p-sheet-handle{opacity:0;pointer-events:none}
+  #player.sheet-open .p-top,#player.sheet-open .p-bottom{opacity:0;pointer-events:none;transition:opacity .2s}
+
+  .p-sheet{position:absolute;left:0;right:0;bottom:0;z-index:15;max-height:64%;
+    display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s var(--ease);
+    background:rgba(14,14,18,.86);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    border-left:1px solid var(--frost-border);box-shadow:-12px 0 40px rgba(0,0,0,.45)}
-  .p-drawer.show{transform:translateX(0)}
-  .p-drawer-head{display:flex;align-items:center;gap:8px;padding:16px 12px 12px 18px;flex:0 0 auto}
-  .pd-tabs{display:flex;gap:4px;flex:1;min-width:0;overflow:hidden}
-  .pd-tab{background:none;border:none;color:var(--dim);font-family:var(--font);font-size:13.5px;
-    font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;white-space:nowrap;
-    transition:background-color .15s,color .15s}
-  .pd-tab:hover{background:var(--surface2);color:var(--text)}
-  .pd-tab.active{background:var(--surface3);color:var(--text)}
-  .pd-body{flex:1;min-height:0;overflow-y:auto;padding:4px 12px 20px;display:flex;flex-direction:column;gap:4px}
-  .pd-row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:none;
-    color:var(--text);font-family:var(--font);padding:8px;border-radius:10px;cursor:pointer;
-    transition:background-color .15s}
-  .pd-row:hover{background:var(--surface2)}
-  .pd-row.now{background:var(--accent-wash)}
-  .pd-row .pd-thumb{position:relative;width:108px;aspect-ratio:16/9;border-radius:7px;object-fit:cover;
-    background:var(--bg2);flex:0 0 auto}
-  .pd-row .pd-thumb-wrap{position:relative;flex:0 0 auto}
-  .pd-row .pd-prog{position:absolute;left:4px;right:4px;bottom:4px;height:3px;border-radius:2px;
-    background:rgba(0,0,0,.5);overflow:hidden}
-  .pd-row .pd-prog > i{display:block;height:100%;background:var(--accent)}
-  .pd-row .pd-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-  .pd-row .pd-t{font-size:13px;font-weight:600;line-height:1.3;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .pd-row .pd-s{font-size:11.5px;color:var(--faint);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pd-row.now .pd-s{color:var(--accent)}
-  .pd-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--accent)}
-  .pd-empty{color:var(--faint);font-size:13px;padding:24px 8px;text-align:center}
-  #player.has-drawer .p-controls,#player.has-drawer .p-seek{padding-right:0}
+    border-top:1px solid var(--frost-border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow:0 -12px 40px rgba(0,0,0,.5)}
+  .p-sheet.show{transform:translateY(0)}
+  .p-sheet-grip{flex:0 0 auto;width:100%;display:flex;align-items:center;justify-content:center;
+    padding:10px 0 6px;cursor:grab;touch-action:none;background:none;border:none}
+  .p-sheet-grip::before{content:"";display:block;width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.28)}
+  .p-sheet-grip:hover::before{background:rgba(255,255,255,.4)}
+  .p-sheet-body{flex:1;min-height:0;overflow-y:auto;padding:0 0 22px;display:flex;flex-direction:column;gap:18px}
+  .ps-section{display:flex;flex-direction:column;gap:10px}
+  .ps-head{font-size:14px;font-weight:700;padding:0 24px}
+  .ps-rail{display:flex;gap:12px;overflow-x:auto;padding:0 24px 2px;scroll-snap-type:x proximity}
+  .ps-rail::-webkit-scrollbar{display:none}
+  .ps-card{flex:0 0 auto;width:172px;display:flex;flex-direction:column;gap:6px;background:none;border:none;
+    text-align:left;color:var(--text);font-family:var(--font);cursor:pointer;padding:0;scroll-snap-align:start}
+  .ps-card .ps-thumb-wrap{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;
+    background:var(--bg2)}
+  .ps-card .ps-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s var(--ease)}
+  .ps-card:hover .ps-thumb-wrap img{transform:scale(1.04)}
+  .ps-card.now .ps-thumb-wrap{outline:2px solid var(--accent);outline-offset:-2px}
+  .ps-card .ps-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.5)}
+  .ps-card .ps-prog>i{display:block;height:100%;background:var(--accent)}
+  .ps-card .ps-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    opacity:0;background:rgba(0,0,0,0);transition:opacity .15s,background-color .15s}
+  .ps-card:hover .ps-play{opacity:1;background:rgba(0,0,0,.25)}
+  .ps-card .ps-play .svgi{width:34px;height:34px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
+  .ps-card .ps-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .ps-card .ps-t{font-size:13px;font-weight:600;line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ps-card .ps-s{font-size:12px;color:var(--faint);font-weight:500;flex:0 0 auto;font-variant-numeric:tabular-nums}
+  .ps-card.now .ps-t,.ps-card.now .ps-s{color:var(--accent)}
+  .ps-empty{color:var(--faint);font-size:13px;padding:4px 0}
 
   /* ---- RESPONSIVE ---- */
   @media(max-width:900px){
@@ -975,7 +987,8 @@
     .p-time{font-size:12px;margin:0 4px}
     #pipBtn{display:none}
     .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
-    .p-drawer{width:100%}
+    .ps-card{width:148px}
+    .ps-head,.ps-rail{padding-left:12px;padding-right:12px}
   }
 </style>
 </head>
@@ -1085,12 +1098,10 @@
       <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
     </div>
   </div>
-  <div class="p-drawer" id="pDrawer" aria-hidden="true">
-    <div class="p-drawer-head">
-      <div class="pd-tabs" id="pdTabs" role="tablist"></div>
-      <button class="pbtn bare" id="pDrawerClose" aria-label="Close panel"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button>
-    </div>
-    <div class="pd-body" id="pdBody"></div>
+  <button class="p-sheet-handle" id="sheetHandle" aria-label="Show chapters and play queue" aria-haspopup="true" aria-expanded="false" aria-controls="pSheet"><span class="svgi" style="--i:url('assets/images/icons/ui/caret-down.svg')" aria-hidden="true"></span></button>
+  <div class="p-sheet" id="pSheet" aria-hidden="true">
+    <button class="p-sheet-grip" id="sheetGrip" aria-label="Hide chapters and play queue"></button>
+    <div class="p-sheet-body" id="pSheetBody"></div>
   </div>
   <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
   <div class="mini-bar" id="miniBar">
@@ -2604,7 +2615,7 @@ async function playItem(it,offsetMs){
   updatePauseInfo();
   buildPlayerMenu();
   renderChapterMarks();
-  buildDrawer();
+  if(sheetOpen()) renderSheet();
   startStream(offsetMs||0);
   bindActivity();
   setTimeout(()=>$("#playBtn").focus(),50);
@@ -2820,92 +2831,89 @@ function renderChapterMarks(){
     wrap.appendChild(mark);
   });
 }
-/* ---- IN-PLAYER DRAWER: chapters / episodes / related ----
-   A YouTube/Netflix-style side panel reachable while watching. The list-bullets
-   control toggles it; tabs are built from whatever the current item has. */
-let drawerTab="chapters", drawerRelated=null, drawerRelatedKey=null;
-function drawerTabs(){
-  const tabs=[];
-  if(((currentItem&&currentItem.Chapter)||[]).length) tabs.push({id:"chapters",label:"Chapters"});
-  if(currentItem&&currentItem.type==="episode") tabs.push({id:"episodes",label:"Episodes"});
-  tabs.push({id:"related",label:"Related"});
-  return tabs;
+/* ---- BOTTOM SHEET: chapters / play queue / related ----
+   A Plex-mobile-style sheet that slides up from the bottom (swipe up on the
+   handle, or tap the chapters control) revealing horizontal rails for
+   whatever the current item has: chapter scenes, the season's play queue,
+   and related titles. */
+function sheetOpen(){ return $("#pSheet").classList.contains("show"); }
+function openSheet(){
+  $("#pMenu").classList.remove("open"); $("#settingsBtn").setAttribute("aria-expanded","false");
+  $("#pSheet").classList.add("show"); $("#pSheet").setAttribute("aria-hidden","false");
+  $("#player").classList.add("sheet-open");
+  $("#chaptersBtn").setAttribute("aria-expanded","true");
+  $("#sheetHandle").setAttribute("aria-expanded","true");
+  renderSheet();
 }
-function buildDrawer(){
-  const tabs=drawerTabs();
-  const bar=$("#pdTabs"); bar.innerHTML="";
-  tabs.forEach(t=>{
-    const b=el("button","pd-tab"); b.textContent=t.label; b.dataset.tab=t.id;
-    b.setAttribute("role","tab"); b.onclick=()=>selectDrawerTab(t.id);
-    bar.appendChild(b);
-  });
-  if(!tabs.some(t=>t.id===drawerTab)) drawerTab=tabs[0].id;
-  if($("#pDrawer").classList.contains("show")) selectDrawerTab(drawerTab);
+function closeSheet(){
+  $("#pSheet").classList.remove("show"); $("#pSheet").setAttribute("aria-hidden","true");
+  $("#player").classList.remove("sheet-open");
+  $("#chaptersBtn").setAttribute("aria-expanded","false");
+  $("#sheetHandle").setAttribute("aria-expanded","false");
 }
-function selectDrawerTab(id){
-  drawerTab=id;
-  $("#pdTabs").querySelectorAll(".pd-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));
-  const body=$("#pdBody");
-  if(id==="chapters") renderDrawerChapters(body);
-  else if(id==="episodes") renderDrawerEpisodes(body);
-  else renderDrawerRelated(body);
+function toggleSheet(){ sheetOpen()?closeSheet():openSheet(); }
+function sheetCard(opts){
+  const b=el("button","ps-card"+(opts.now?" now":"")); b.setAttribute("role","menuitem");
+  b.innerHTML=`<div class="ps-thumb-wrap"><img loading="lazy" alt="" src="${img(opts.thumb,272,153)}">
+    <span class="ps-play">${svgIcon("play-fill")}</span>
+    ${opts.pct?`<div class="ps-prog"><i style="width:${opts.pct}%"></i></div>`:""}</div>
+    <div class="ps-row"><div class="ps-t">${esc(opts.title||"")}</div><div class="ps-s">${esc(opts.sub||"")}</div></div>`;
+  if(opts.onClick) b.onclick=opts.onClick;
+  return b;
 }
-function renderDrawerChapters(body){
+function sheetSection(label){
+  const sec=el("div","ps-section");
+  sec.innerHTML=`<div class="ps-head">${esc(label)}</div><div class="ps-rail" role="menu"></div>`;
+  return sec;
+}
+async function renderSheet(){
+  const body=$("#pSheetBody"); body.innerHTML="";
   const chapters=(currentItem&&currentItem.Chapter)||[];
-  body.innerHTML="";
-  if(!chapters.length){ body.innerHTML=`<div class="pd-empty">No chapters for this title.</div>`; return; }
-  const cur=video.currentTime||0;
-  chapters.forEach((ch,idx)=>{
-    const start=(ch.startTimeOffset||0)/1000;
-    const end=ch.endTimeOffset?ch.endTimeOffset/1000:(chapters[idx+1]?chapters[idx+1].startTimeOffset/1000:1e9);
-    const now=cur>=start&&cur<end;
-    const b=el("button","pd-row"+(now?" now":"")); b.setAttribute("role","menuitem");
-    b.innerHTML=`<div class="pd-thumb-wrap">${ch.thumb?`<img class="pd-thumb" loading="lazy" alt="" src="${img(ch.thumb,192,108)}">`:`<div class="pd-thumb"></div>`}</div>
-      <div class="pd-meta"><div class="pd-t">${esc(ch.tag||("Chapter "+(idx+1)))}</div>
-      <div class="pd-s">${fmtClock(start)}</div></div>`;
-    b.onclick=()=>{ if(video.duration) video.currentTime=start; video.play().catch(()=>{}); selectDrawerTab("chapters"); };
-    body.appendChild(b);
-  });
-}
-function renderDrawerEpisodes(body){
-  body.innerHTML="";
-  const eps=seasonEps||[];
-  if(!eps.length){ body.innerHTML=`<div class="pd-empty">Episode list unavailable.</div>`; return; }
-  eps.forEach(ep=>{
-    const now=String(ep.ratingKey)===String(currentItem.ratingKey);
-    const pct=ep.viewOffset&&ep.duration?(ep.viewOffset/ep.duration*100):0;
-    const b=el("button","pd-row"+(now?" now":""));
-    b.innerHTML=`<div class="pd-thumb-wrap"><img class="pd-thumb" loading="lazy" alt="" src="${img(ep.thumb||ep.parentThumb,192,108)}">${pct?`<div class="pd-prog"><i style="width:${pct}%"></i></div>`:""}</div>
-      <div class="pd-meta"><div class="pd-t">${esc(ep.title||("Episode "+ep.index))}</div>
-      <div class="pd-s">${now?"Now playing":("E"+(ep.index||"?"))}${ep.duration?" · "+fmtDur(ep.duration):""}</div></div>`;
-    if(!now) b.onclick=()=>playItem(ep,0);
-    body.appendChild(b);
-  });
-  body.querySelector(".pd-row.now")?.scrollIntoView({block:"center"});
-}
-async function renderDrawerRelated(body){
-  const key=String(currentItem&&currentItem.ratingKey);
-  if(drawerRelatedKey!==key){
-    body.innerHTML=`<div class="pd-empty">Loading…</div>`;
-    drawerRelatedKey=key;
-    drawerRelated=await fetchRelated(key).catch(()=>[]);
+  if(chapters.length){
+    const sec=sheetSection("Chapters"), rail=sec.querySelector(".ps-rail");
+    const cur=video.currentTime||0;
+    chapters.forEach((ch,idx)=>{
+      const start=(ch.startTimeOffset||0)/1000;
+      const end=ch.endTimeOffset?ch.endTimeOffset/1000:(chapters[idx+1]?chapters[idx+1].startTimeOffset/1000:1e9);
+      rail.appendChild(sheetCard({
+        thumb:ch.thumb, title:ch.tag||("Chapter "+(idx+1)), sub:fmtClock(start),
+        now:cur>=start&&cur<end,
+        onClick:()=>{ if(video.duration) video.currentTime=start; video.play().catch(()=>{}); }
+      }));
+    });
+    body.appendChild(sec);
   }
-  if(drawerTab!=="related"||String(currentItem&&currentItem.ratingKey)!==key) return;
+  if(currentItem&&currentItem.type==="episode"&&(seasonEps||[]).length){
+    const sec=sheetSection("Play Queue"), rail=sec.querySelector(".ps-rail");
+    seasonEps.forEach(ep=>{
+      const now=String(ep.ratingKey)===String(currentItem.ratingKey);
+      const pct=ep.viewOffset&&ep.duration?(ep.viewOffset/ep.duration*100):0;
+      rail.appendChild(sheetCard({
+        thumb:ep.thumb||ep.parentThumb, title:ep.title||("Episode "+ep.index),
+        sub:now?"Now playing":("E"+(ep.index||"?")), now, pct,
+        onClick:now?null:()=>playItem(ep,0)
+      }));
+    });
+    body.appendChild(sec);
+    requestAnimationFrame(()=>sec.querySelector(".ps-card.now")?.scrollIntoView({block:"nearest",inline:"center"}));
+  }
+  const relSec=sheetSection("Related"), relRail=relSec.querySelector(".ps-rail");
+  relRail.innerHTML=`<div class="ps-empty">Loading…</div>`;
+  body.appendChild(relSec);
+  const key=String(currentItem&&currentItem.ratingKey);
+  const hubs=await fetchRelated(key).catch(()=>[]);
+  if(!sheetOpen()||String(currentItem&&currentItem.ratingKey)!==key) return;
   const seen=new Set([key]), list=[];
-  (drawerRelated||[]).forEach(h=>h.items.forEach(it=>{ const k=String(it.ratingKey);
+  (hubs||[]).forEach(h=>h.items.forEach(it=>{ const k=String(it.ratingKey);
     if(!seen.has(k)){ seen.add(k); list.push(it); } }));
-  body.innerHTML="";
-  if(!list.length){ body.innerHTML=`<div class="pd-empty">Nothing related found.</div>`; return; }
+  relRail.innerHTML="";
+  if(!list.length){ relRail.innerHTML=`<div class="ps-empty">Nothing related found.</div>`; return; }
   list.slice(0,30).forEach(it=>{
     const ep=it.type==="episode";
     const title=ep?(it.grandparentTitle||it.title):it.title;
     const sub=ep?`S${it.parentIndex||0}E${it.index||0}`:[it.year,it.type==="show"?"Show":it.type==="collection"?"Collection":""].filter(Boolean).join(" · ");
     const thumb=ep?(it.thumb||it.grandparentThumb):(it.thumb||it.art);
-    const b=el("button","pd-row");
-    b.innerHTML=`<div class="pd-thumb-wrap"><img class="pd-thumb" loading="lazy" alt="" src="${img(thumb,192,108)}"></div>
-      <div class="pd-meta"><div class="pd-t">${esc(title||"")}</div><div class="pd-s">${esc(sub)}</div></div>`;
-    b.onclick=()=>openRelated(it);
-    body.appendChild(b);
+    relRail.appendChild(sheetCard({thumb,title,sub,onClick:()=>openRelated(it)}));
   });
 }
 function openRelated(it){
@@ -2913,23 +2921,24 @@ function openRelated(it){
   if(it.type==="movie"||it.type==="episode"){ playItem(it,it.viewOffset||0); }
   else { const r=pathForItem(it); closePlayer(); if(r) navigate(r); }
 }
-function openDrawer(){
-  buildDrawer();
-  $("#pMenu").classList.remove("open"); $("#settingsBtn").setAttribute("aria-expanded","false");
-  $("#pDrawer").classList.add("show"); $("#pDrawer").setAttribute("aria-hidden","false");
-  $("#player").classList.add("has-drawer");
-  $("#chaptersBtn").setAttribute("aria-expanded","true");
-  selectDrawerTab(drawerTab);
-  $("#pDrawer").querySelector(".pd-tab.active")?.focus();
+$("#chaptersBtn").onclick=e=>{ e.stopPropagation(); toggleSheet(); };
+$("#sheetHandle").onclick=()=>toggleSheet();
+$("#sheetGrip").onclick=closeSheet;
+/* swipe up on the handle to open, swipe down on the grip to close */
+function bindSheetSwipe(target,onUp,onDown){
+  let sx=0,sy=0,t0=0,active=false;
+  target.addEventListener("pointerdown",e=>{ active=true; sx=e.clientX; sy=e.clientY; t0=Date.now(); });
+  const end=e=>{
+    if(!active) return; active=false;
+    const dx=e.clientX-sx, dy=e.clientY-sy, dt=Date.now()-t0;
+    if(dt>700||Math.abs(dx)>Math.abs(dy)) return;
+    if(dy<-28) onUp&&onUp(); else if(dy>28) onDown&&onDown();
+  };
+  target.addEventListener("pointerup",end);
+  target.addEventListener("pointercancel",()=>{active=false;});
 }
-function closeDrawer(){
-  $("#pDrawer").classList.remove("show"); $("#pDrawer").setAttribute("aria-hidden","true");
-  $("#player").classList.remove("has-drawer");
-  $("#chaptersBtn").setAttribute("aria-expanded","false");
-}
-$("#chaptersBtn").onclick=e=>{ e.stopPropagation();
-  if($("#pDrawer").classList.contains("show")) closeDrawer(); else openDrawer(); };
-$("#pDrawerClose").onclick=closeDrawer;
+bindSheetSwipe($("#sheetHandle"),openSheet,null);
+bindSheetSwipe($("#sheetGrip"),null,closeSheet);
 
 /* ---- accessible menu keyboard navigation (arrows / escape / tab) ---- */
 function menuKeyHandler(menu,toggleBtn){
@@ -3071,9 +3080,9 @@ function closePlayer(){
   if(warmedNext){ stopSession(warmedNext.sessionId); warmedNext=null; }
   hideNextUp(); $("#skipIntro").hidden=true;
   video.pause(); video.removeAttribute("src"); video.load();
-  $("#player").classList.remove("show","min","idle","loading","paused","has-drawer");
+  $("#player").classList.remove("show","min","idle","loading","paused","sheet-open");
   currentItem=null;
-  closeSettingsMenu(); closeDrawer();
+  closeSettingsMenu(); closeSheet();
   if(playerOpener&&document.contains(playerOpener)) playerOpener.focus();
   playerOpener=null;
 }
@@ -3102,11 +3111,10 @@ document.addEventListener("keydown",e=>{
     case "f": toggleFull(); break;
     case "m": video.muted=!video.muted; updateVolIcon(); break;
     case "Escape":
-      if($("#pDrawer").classList.contains("show")){ closeDrawer(); $("#chaptersBtn").focus(); }
+      if(sheetOpen()){ closeSheet(); $("#chaptersBtn").focus(); }
       else if(!document.fullscreenElement) closePlayer();
       break;
-    case "c": if(((currentItem&&currentItem.Chapter)||[]).length||currentItem){
-      if($("#pDrawer").classList.contains("show")) closeDrawer(); else openDrawer(); } break;
+    case "c": if(currentItem) toggleSheet(); break;
   }
 });
 
@@ -3208,7 +3216,7 @@ async function loadAdjacentEpisodes(){
     if(currentItem!==item) return;
     const eps=mc.Metadata||[];
     seasonEps=eps;
-    if($("#pDrawer").classList.contains("show")&&drawerTab==="episodes") renderDrawerEpisodes($("#pdBody"));
+    if(sheetOpen()) renderSheet();
     const i=eps.findIndex(e=>String(e.ratingKey)===String(item.ratingKey));
     let p=i>0?eps[i-1]:null;
     let n=(i>-1&&eps[i+1])?eps[i+1]:null;
