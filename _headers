@@ -1,0 +1,10 @@
+# Security headers for static hosts that read a _headers file
+# (Cloudflare Pages, Netlify). Ignored by GitHub Pages — harmless there.
+# No CSP here: the in-page <meta> CSP handles that, and connect-src must stay
+# open for arbitrary Plex servers.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups

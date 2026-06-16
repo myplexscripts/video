@@ -3,8 +3,13 @@
    - Same-origin app shell: stale-while-revalidate (fonts, icons, manifest)
    - index.html navigation: network-first → offline fallback
    - HLS.js from CDN: cache-on-first-fetch, then serve forever from cache
+   - TMDB-proxy Worker (/tmdb): stale-while-revalidate for instant repeats
    - All other cross-origin traffic (Plex API, images, video): never cached */
-const CACHE = "hume-v2";
+const CACHE = "hume-v3";
+const RUNTIME = "hume-runtime-v3";
+// The settings/TMDB Worker. Its /tmdb responses are public and shared across
+// users, so we stale-while-revalidate them for instant repeat loads + offline.
+const TMDB_PROXY_HOST = "hume-settings.contactdavidbusch.workers.dev";
 const SHELL = [
   "./",
   "./index.html",
@@ -35,7 +40,7 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== RUNTIME).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -66,6 +71,22 @@ self.addEventListener("fetch", e => {
           .catch(() => cached);
         return cached || net;
       })
+    );
+    return;
+  }
+
+  // TMDB proxy (Worker /tmdb): stale-while-revalidate. Serve cached instantly,
+  // refresh in the background. Public data, so caching is safe and fast.
+  if (url.host === TMDB_PROXY_HOST && url.pathname === "/tmdb") {
+    e.respondWith(
+      caches.open(RUNTIME).then(ca =>
+        ca.match(req).then(cached => {
+          const net = fetch(req)
+            .then(res => { if (res && res.status === 200) ca.put(req, res.clone()); return res; })
+            .catch(() => cached);
+          return cached || net;
+        })
+      )
     );
     return;
   }

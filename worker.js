@@ -62,7 +62,11 @@ export default {
       return new Response(val || "{}", { headers: { ...cors, "Content-Type": "application/json" } });
     }
     if (request.method === "PUT") {
-      await env.HUME_SETTINGS.put(kvKey, await request.text());
+      const body = await request.text();
+      // Settings are tiny; cap the body so the endpoint can't be abused as
+      // free arbitrary storage.
+      if (body.length > 16384) return new Response("payload too large", { status: 413, headers: cors });
+      await env.HUME_SETTINGS.put(kvKey, body);
       return new Response("ok", { headers: cors });
     }
     return new Response("method not allowed", { status: 405, headers: cors });
