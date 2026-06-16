@@ -1387,6 +1387,15 @@ function img(thumb,w,h){
   return `${server.uri}/photo/:/transcode?width=${w}&height=${h}&minSize=1&upscale=1`
     +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
 }
+// Logos must keep their full shape. minSize=1 makes Plex scale-to-FILL the WxH
+// box and crop the overflow (cover) — that's what chopped "MORTAL KOMBAT" to
+// "RTAL KOMI". minSize=0 makes Plex scale-to-FIT inside the box (contain),
+// returning the whole logo letterboxed; CSS object-fit handles final placement.
+function imgLogo(thumb,w,h){
+  if(!thumb) return "";
+  return `${server.uri}/photo/:/transcode?width=${w}&height=${h}&minSize=0&upscale=0`
+    +`&url=${encodeURIComponent(thumb)}&X-Plex-Token=${server.token}`;
+}
 // Composite/playlist art is generated on demand from its OWN endpoint and must
 // carry explicit width/height — the photo transcoder can't size it, and the
 // composite endpoint returns nothing when dimensions are omitted.
@@ -1547,7 +1556,7 @@ function billboardCard(it,rank){
   // For episodes use grandparent (show) art; fallback: backdrop → poster
   const artSrc=img((squareImg&&squareImg.url)||it.art||it.grandparentArt||it.thumb,560,560);
   const logoImg=imgs.find(i=>i.type==="clearLogo");
-  const logoSrc=logoImg?img(logoImg.url,600,200):"";
+  const logoSrc=logoImg?imgLogo(logoImg.url,600,300):"";
   // For episodes display show title, not episode title
   const title=it.type==="episode"?(it.grandparentTitle||it.title||""):(it.title||"");
   // Genre only — no Movie/TV type prefix
@@ -2314,7 +2323,7 @@ function wireCollActions(c,items){
 function titleArtHTML(item,fallbackTitle){
   const title=fallbackTitle!=null?fallbackTitle:(item.title||"");
   const logo=(item.Image||[]).find(i=>i.type==="clearLogo");
-  return logo?`<img class="title-logo" src="${img(logo.url,800,300)}" alt="${esc(title)}">`:`<h2>${esc(title)}</h2>`;
+  return logo?`<img class="title-logo" src="${imgLogo(logo.url,800,300)}" alt="${esc(title)}">`:`<h2>${esc(title)}</h2>`;
 }
 function detailHero(m,isMovie,actionsHTML,extras){
   const art=m.art||m.thumb;
@@ -3714,7 +3723,7 @@ async function loadPauseLogo(m,title){
   if(currentItem!==m) return;        // item changed while awaiting
   const logoEl=$("#pPauseLogo"), titleEl=$("#pPauseTitle");
   if(url){
-    logoEl.src=img(url,800,300); logoEl.alt=title;
+    logoEl.src=imgLogo(url,800,300); logoEl.alt=title;
     logoEl.classList.remove("hidden"); titleEl.classList.add("hidden");
   }else{
     logoEl.classList.add("hidden"); titleEl.classList.remove("hidden");
