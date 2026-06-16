@@ -576,6 +576,19 @@
   .bio-toggle:hover{color:var(--text)}
   .tmdb-card .art{opacity:.65}
   .tmdb-card:hover .art{opacity:.9;transition:opacity .15s}
+  .bio-modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:24px}
+  .bio-modal{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--radius-lg);max-width:580px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden}
+  .bio-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--line);flex-shrink:0}
+  .bio-modal-head h2{font-size:16px;font-weight:700;letter-spacing:-.02em}
+  .bio-modal-close{background:none;border:none;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;width:30px;height:30px;padding:0;font-size:18px}
+  .bio-modal-close:hover{background:var(--surface);color:var(--text)}
+  .bio-modal-body{padding:20px 22px 24px;overflow-y:auto;line-height:1.72;font-size:14px;color:var(--dim)}
+  .bio-modal-body p{margin-bottom:12px}
+  .bio-modal-body p:last-child{margin-bottom:0}
+  .actor-vitals{display:flex;gap:0;padding:0 var(--edge) 28px;flex-wrap:wrap}
+  .vital-item{padding:0 48px 0 0}
+  .vital-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--faint);font-weight:700;margin-bottom:5px}
+  .vital-value{font-size:14px;color:var(--dim);font-weight:500}
   /* ---- FILMOGRAPHY LIST ---- */
   .filmog-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
   .filmog-tab{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15);
@@ -2363,11 +2376,38 @@ function filmogSection(acting,directing,producing){
   return wrap;
 }
 
+function showBioModal(actorName,bio){
+  const overlay=el("div","bio-modal-overlay");
+  const body=esc(bio).replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>");
+  overlay.innerHTML=`<div class="bio-modal">`
+    +`<div class="bio-modal-head"><h2>${esc(actorName)}</h2>`
+    +`<button class="bio-modal-close" aria-label="Close">&#x2715;</button></div>`
+    +`<div class="bio-modal-body"><p>${body}</p></div></div>`;
+  const close=()=>{overlay.remove();document.removeEventListener("keydown",onKey);};
+  const onKey=e=>{if(e.key==="Escape")close();};
+  overlay.querySelector(".bio-modal-close").onclick=close;
+  overlay.onclick=e=>{if(e.target===overlay)close();};
+  document.addEventListener("keydown",onKey);
+  document.body.appendChild(overlay);
+}
+
 function knownForSectionTmdb(tmdbCast,libByNorm,libByRk){
   if(!tmdbCast||!tmdbCast.length) return null;
   const normT=t=>t.toLowerCase().replace(/[^a-z0-9]/g,"");
-  const sorted=[...tmdbCast].sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+  // Deduplicate, filter talk/news/reality genres and self-appearances
+  const SKIP_GENRES=new Set([10767,10763,10764]);
+  const SELF_RE=/\b(self|herself|himself|guest)\b/i;
+  const seenId=new Set();
+  const filtered=tmdbCast.filter(cr=>{
+    const k=`${cr.media_type}-${cr.id}`;
+    if(seenId.has(k)) return false; seenId.add(k);
+    if((cr.genre_ids||[]).some(g=>SKIP_GENRES.has(g))) return false;
+    if(SELF_RE.test(cr.character||"")) return false;
+    return true;
+  });
+  const sorted=filtered.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
   const top=sorted.slice(0,8);
+  if(!top.length) return null;
   const sec=el("div","rail-section");
   const head=el("div","rail-head");
   head.innerHTML=`<div class="rail-head-text"><h3>Known For</h3></div><span class="count">${top.length}</span>`;
@@ -2498,13 +2538,25 @@ async function openActor(id){
     const moviesSorted=[...movies].sort((a,b)=>(b.year||0)-(a.year||0));
     const showsSorted=[...shows].sort((a,b)=>(b.year||0)-(a.year||0));
     c.innerHTML=`<div class="actor-head">
-      <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}\n      </div><div class="actor-info"><h1>${esc(name)}</h1>\n      ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}\n      ${bornAt?`<div class="actor-born">${fmtBornDied(bornAt,diedAt)}${birthPlace?` · ${esc(birthPlace)}`:""}</div>`:""}\n      <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"} on this server</div>\n      </div></div>`;
+      <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}\n      </div><div class="actor-info"><h1>${esc(name)}</h1>\n      ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}\n      <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"} on this server</div>\n      </div></div>`;
     const bioEl=c.querySelector(".actor-bio");
-    if(bioEl){
+    if(bioEl&&bio){
       const toggle=el("button","bio-toggle"); toggle.textContent="Read more";
-      toggle.onclick=()=>{const exp=bioEl.classList.toggle("expanded");toggle.textContent=exp?"Read less":"Read more";};
+      toggle.onclick=()=>showBioModal(name,bio);
       bioEl.insertAdjacentElement("afterend",toggle);
       requestAnimationFrame(()=>{if(bioEl.scrollHeight<=bioEl.clientHeight+4) toggle.remove();});
+    }
+    if(bornAt||birthPlace){
+      const vitals=el("div","actor-vitals");
+      const fmtV=v=>{
+        if(!v) return "";
+        if(typeof v==="string"){const[y,m,d]=v.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});}
+        return new Date(v*1000).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+      };
+      if(bornAt){const e=el("div","vital-item");e.innerHTML=`<div class="vital-label">Born</div><div class="vital-value">${fmtV(bornAt)}</div>`;vitals.appendChild(e);}
+      if(diedAt){const e=el("div","vital-item");e.innerHTML=`<div class="vital-label">Died</div><div class="vital-value">${fmtV(diedAt)}</div>`;vitals.appendChild(e);}
+      if(birthPlace){const e=el("div","vital-item");e.innerHTML=`<div class="vital-label">Birthplace</div><div class="vital-value">${esc(birthPlace)}</div>`;vitals.appendChild(e);}
+      c.querySelector(".actor-head").insertAdjacentElement("afterend",vitals);
     }
     if(moviesSorted.length) c.appendChild(railSection("Movies",moviesSorted,false,false));
     if(showsSorted.length) c.appendChild(railSection("TV Shows",showsSorted,false,false));
