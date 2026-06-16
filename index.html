@@ -489,16 +489,15 @@
      cards; width from --card-w-wide so it aligns with the token scale. */
   .carousel .card.billboard{width:var(--card-w-wide)}
   .card.billboard .art{aspect-ratio:1/1;border-radius:var(--radius)}
-  .card.billboard .art img{object-position:center 18%}
+  .card.billboard .art img{object-position:center top}
   /* gradient scrim so title text is always legible */
   .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.48) 38%,transparent 68%)}
   /* title rendered inside the art, above the scrim */
-  /* logo image and text-fallback share the same bottom anchor inside the art */
-  .bill-logo{position:absolute;bottom:13px;left:14px;right:14px;z-index:2;
-    max-height:56px;width:auto;max-width:calc(100% - 28px);
-    object-fit:contain;object-position:left bottom;
-    filter:drop-shadow(0 1px 6px rgba(0,0,0,.7)) drop-shadow(0 0 20px rgba(0,0,0,.45))}
+  /* logo image: natural scaling so it never overflows the card */
+  .bill-logo{position:absolute;bottom:12px;left:12px;z-index:2;display:block;
+    height:auto;width:auto;max-height:52px;max-width:calc(100% - 24px);
+    filter:drop-shadow(0 1px 6px rgba(0,0,0,.8)) drop-shadow(0 0 24px rgba(0,0,0,.5))}
   .bill-title{position:absolute;bottom:13px;left:14px;right:14px;z-index:2;
     font-size:20px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
     color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55);
@@ -1527,15 +1526,20 @@ window.addEventListener("hashchange", route);
 
 /* ============================================================ HOME */
 /* ---- BILLBOARD CARD + RAIL ----
-   Square-art showcase card. Uses it.art (backdrop) for the image;
-   falls back to it.thumb if no backdrop. Title is overlaid inside
-   the art; type and genres appear below as plain metadata text. */
+   Square-art showcase card. Image priority:
+   1. squareCover / squarePosterArt from it.Image (Plex square art types)
+   2. it.thumb (portrait poster) square-cropped from top — far better than
+      square-cropping a landscape backdrop because the subject is centred
+   Logo: clearLogo from it.Image; falls back to bold text title. */
 function billboardCard(it){
   const b=el("button","card billboard");
-  const squareImg=(it.Image||[]).find(i=>i.type==="squareCover");
-  const artSrc=img((squareImg&&squareImg.url)||it.art||it.thumb,560,560);
+  // Try every known Plex type name for the dedicated square art
+  const SQUARE_TYPES=["squareCover","squarePosterArt","coverSquare","squareThumb"];
+  const squareImg=(it.Image||[]).find(i=>SQUARE_TYPES.includes(i.type));
+  // Fallback order: dedicated square → portrait poster (crops from top) → backdrop
+  const artSrc=img((squareImg&&squareImg.url)||it.thumb||it.art,560,560);
   const logoImg=(it.Image||[]).find(i=>i.type==="clearLogo");
-  const logoSrc=logoImg?img(logoImg.url,480,160):"";
+  const logoSrc=logoImg?img(logoImg.url,600,200):"";
   const title=it.title||"";
   const type=it.type==="movie"?"Movie":it.type==="show"?"TV Show":(it.type||"");
   const genres=(it.Genre||[]).slice(0,2).map(g=>g.tag).join(" · ");
