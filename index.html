@@ -862,49 +862,39 @@
   .skip-marker:active{transform:scale(.97)}
   #player.idle .skip-marker{bottom:40px}
 
-  /* ---- BOTTOM SHEET: chapters / play queue / related (swipe up, Plex-style) ---- */
-  .p-sheet-handle{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:10;
-    width:60px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;
-    background:rgba(255,255,255,.12);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
-    -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
-    border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;touch-action:none;
-    transition:opacity .2s,background-color .15s}
-  .p-sheet-handle:hover{background:rgba(255,255,255,.2)}
-  .p-sheet-handle .svgi{width:16px;height:16px;transform:rotate(180deg)}
-  #player.idle .p-sheet-handle,#player.sheet-open .p-sheet-handle{opacity:0;pointer-events:none}
-
-  .p-sheet{position:absolute;left:0;right:0;bottom:0;z-index:15;max-height:64%;
-    display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s var(--ease);
-    background:rgba(14,14,18,.86);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+  /* ---- RIGHT PANEL: chapters / play queue ---- */
+  .p-panel{position:absolute;top:0;right:0;bottom:0;width:min(300px,85%);z-index:15;
+    display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s var(--ease);
+    background:rgba(10,10,14,.96);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    border-top:1px solid var(--frost-border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;
-    box-shadow:0 -12px 40px rgba(0,0,0,.5)}
-  .p-sheet.show{transform:translateY(0)}
-  .p-sheet-grip{flex:0 0 auto;width:100%;display:flex;align-items:center;justify-content:center;
-    padding:10px 0 6px;cursor:grab;touch-action:none;background:none;border:none}
-  .p-sheet-grip::before{content:"";display:block;width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.28)}
-  .p-sheet-grip:hover::before{background:rgba(255,255,255,.4)}
-  .p-sheet-body{flex:1;min-height:0;overflow-y:auto;padding:0 0 22px;display:flex;flex-direction:column;gap:18px}
-  .ps-section{display:flex;flex-direction:column;gap:10px}
-  .ps-head{font-size:14px;font-weight:700;padding:0 24px}
-  .ps-rail{display:flex;gap:12px;overflow-x:auto;padding:0 24px 2px;scroll-snap-type:x proximity}
-  .ps-rail::-webkit-scrollbar{display:none}
-  .ps-card{flex:0 0 auto;width:172px;display:flex;flex-direction:column;gap:6px;background:none;border:none;
-    text-align:left;color:var(--text);font-family:var(--font);cursor:pointer;padding:0;scroll-snap-align:start}
-  .ps-card .ps-thumb-wrap{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;
-    background:var(--bg2)}
-  .ps-card .ps-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s var(--ease)}
-  .ps-card:hover .ps-thumb-wrap img{transform:scale(1.04)}
-  .ps-card.now .ps-thumb-wrap{outline:2px solid var(--accent);outline-offset:-2px}
-  .ps-card .ps-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.5)}
-  .ps-card .ps-prog>i{display:block;height:100%;background:var(--accent)}
-  .ps-card .play-hover{position:absolute;inset:0;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s var(--ease)}
-  .ps-card:hover .play-hover,.ps-card:focus-visible .play-hover{opacity:1}
-  .ps-card .play-hover .svgi{width:36px;height:36px;font-size:36px;color:#fff;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
-  .ps-card .ps-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-  .ps-card .ps-t{font-size:13px;font-weight:600;line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ps-card .ps-s{font-size:12px;color:var(--faint);font-weight:500;flex:0 0 auto;font-variant-numeric:tabular-nums}
-  .ps-card.now .ps-t,.ps-card.now .ps-s{color:var(--accent)}
+    border-left:1px solid var(--frost-border)}
+  .p-panel.show{transform:translateX(0)}
+  #player.panel-open.idle .p-top{opacity:1;transform:none;pointer-events:auto}
+  .p-panel-head{display:flex;align-items:center;justify-content:flex-end;padding:10px 12px;
+    flex:0 0 auto;border-bottom:1px solid rgba(255,255,255,.08)}
+  .p-panel-close{width:32px;height:32px;border-radius:8px;border:none;background:none;
+    color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:color .15s,background-color .15s}
+  .p-panel-close:hover{color:var(--text);background:rgba(255,255,255,.08)}
+  .p-panel-close .svgi{width:16px;height:16px}
+  .p-panel-body{flex:1;overflow-y:auto;padding-bottom:16px}
+  .pp-section{padding:4px 0}
+  .pp-head{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);padding:12px 16px 6px}
+  .pp-item{display:flex;align-items:center;gap:10px;width:100%;border:none;background:none;
+    text-align:left;color:var(--text);font-family:var(--font);cursor:pointer;
+    padding:6px 16px;transition:background-color .12s}
+  .pp-item:hover{background:rgba(255,255,255,.07)}
+  .pp-item.now .pp-thumb{outline:2px solid var(--accent);outline-offset:-2px}
+  .pp-thumb{flex:0 0 72px;width:72px;height:40px;border-radius:4px;
+    overflow:hidden;background:var(--bg2);position:relative}
+  .pp-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .pp-prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(0,0,0,.5)}
+  .pp-prog>i{display:block;height:100%;background:var(--accent)}
+  .pp-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .pp-t{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pp-s{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .pp-item.now .pp-t,.pp-item.now .pp-s{color:var(--accent)}
 
   /* ---- RESPONSIVE ---- */
   @media(max-width:900px){
@@ -984,8 +974,6 @@
     .p-time{font-size:12px;margin:0 4px}
     #pipBtn{display:none}
     .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
-    .ps-card{width:148px}
-    .ps-head,.ps-rail{padding-left:12px;padding-right:12px}
   }
 </style>
 </head>
@@ -1090,15 +1078,14 @@
         <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume"></div>
       <div class="spacer"></div>
       <div class="p-status hidden" id="pStatus" role="status"><span class="dot" aria-hidden="true"></span><span id="pStatusText"></span></div>
-      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters & related" title="Chapters & related" aria-haspopup="true" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
+      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters & play queue" title="Chapters & play queue" aria-haspopup="true" aria-expanded="false" aria-controls="pPanel"><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
       <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><span class="svgi" style="--i:url('assets/images/icons/ui/frame-corners.svg')" aria-hidden="true"></span></button>
       <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
     </div>
   </div>
-  <button class="p-sheet-handle" id="sheetHandle" aria-label="Show chapters and play queue" aria-haspopup="true" aria-expanded="false" aria-controls="pSheet"><span class="svgi" style="--i:url('assets/images/icons/ui/caret-down.svg')" aria-hidden="true"></span></button>
-  <div class="p-sheet" id="pSheet" aria-hidden="true">
-    <button class="p-sheet-grip" id="sheetGrip" aria-label="Hide chapters and play queue"></button>
-    <div class="p-sheet-body" id="pSheetBody"></div>
+  <div class="p-panel" id="pPanel" aria-hidden="true">
+    <div class="p-panel-head"><button class="p-panel-close" id="pPanelClose" aria-label="Close"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button></div>
+    <div class="p-panel-body" id="pPanelBody"></div>
   </div>
   <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
   <div class="mini-bar" id="miniBar">
@@ -2612,7 +2599,7 @@ async function playItem(it,offsetMs){
   updatePauseInfo();
   buildPlayerMenu();
   renderChapterMarks();
-  if(sheetOpen()) renderSheet();
+  if(panelOpen()) renderPanel();
   startStream(offsetMs||0);
   bindActivity();
   setTimeout(()=>$("#playBtn").focus(),50);
@@ -2828,60 +2815,46 @@ function renderChapterMarks(){
     wrap.appendChild(mark);
   });
 }
-/* ---- BOTTOM SHEET: chapters / play queue / related ----
-   A Plex-mobile-style sheet that slides up from the bottom (swipe up on the
-   handle, or tap the chapters control) revealing horizontal rails for
-   whatever the current item has: chapter scenes, the season's play queue,
-   and related titles. */
-function sheetOpen(){ return $("#pSheet").classList.contains("show"); }
-function openSheet(){
+/* ---- RIGHT PANEL: chapters / play queue ---- */
+function panelOpen(){ return $("#pPanel").classList.contains("show"); }
+function openPanel(){
   $("#pMenu").classList.remove("open"); $("#settingsBtn").setAttribute("aria-expanded","false");
-  $("#pSheet").classList.add("show"); $("#pSheet").setAttribute("aria-hidden","false");
-  $("#player").classList.add("sheet-open");
+  $("#pPanel").classList.add("show"); $("#pPanel").setAttribute("aria-hidden","false");
+  $("#player").classList.add("panel-open");
   $("#chaptersBtn").setAttribute("aria-expanded","true");
-  $("#sheetHandle").setAttribute("aria-expanded","true");
-  renderSheet();
+  renderPanel();
 }
-function closeSheet(){
-  $("#pSheet").classList.remove("show"); $("#pSheet").setAttribute("aria-hidden","true");
-  $("#player").classList.remove("sheet-open");
+function closePanel(){
+  $("#pPanel").classList.remove("show"); $("#pPanel").setAttribute("aria-hidden","true");
+  $("#player").classList.remove("panel-open");
   $("#chaptersBtn").setAttribute("aria-expanded","false");
-  $("#sheetHandle").setAttribute("aria-expanded","false");
 }
-function toggleSheet(){ sheetOpen()?closeSheet():openSheet(); }
-function sheetCard(opts){
-  const b=el("button","ps-card"+(opts.now?" now":"")); b.setAttribute("role","menuitem");
-  b.innerHTML=`<div class="ps-thumb-wrap"><img loading="lazy" alt="" src="${img(opts.thumb,272,153)}">
-    <div class="play-hover">${svgIcon("play-circle-fill")}</div>
-    ${opts.pct?`<div class="ps-prog"><i style="width:${opts.pct}%"></i></div>`:""}</div>
-    <div class="ps-row"><div class="ps-t">${esc(opts.title||"")}</div><div class="ps-s">${esc(opts.sub||"")}</div></div>`;
+function togglePanel(){ panelOpen()?closePanel():openPanel(); }
+function panelItem(opts){
+  const b=el("button","pp-item"+(opts.now?" now":""));
+  b.innerHTML=`<div class="pp-thumb"><img loading="lazy" alt="" src="${img(opts.thumb,144,81)}">
+    ${opts.pct?`<div class="pp-prog"><i style="width:${opts.pct}%"></i></div>`:""}</div>
+    <div class="pp-text"><div class="pp-t">${esc(opts.title||"")}</div><div class="pp-s">${esc(opts.sub||"")}</div></div>`;
   if(opts.onClick) b.onclick=opts.onClick;
   return b;
 }
-function sheetSection(label){
-  const sec=el("div","ps-section");
-  const head=el("div","ps-head"); head.textContent=label;
-  const viewport=el("div","rail-viewport");
-  const rail=el("div","ps-rail"); rail.setAttribute("role","menu");
-  const prev=el("button","rail-arrow prev edge"); prev.type="button"; prev.setAttribute("aria-label","Scroll left");
-  prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
-  const next=el("button","rail-arrow next"); next.type="button"; next.setAttribute("aria-label","Scroll right");
-  next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
-  viewport.appendChild(prev); viewport.appendChild(rail); viewport.appendChild(next);
-  wireRailArrows(viewport,rail,prev,next);
-  sec.appendChild(head); sec.appendChild(viewport);
+function panelSection(label){
+  const sec=el("div","pp-section");
+  const head=el("div","pp-head"); head.textContent=label;
+  const list=el("div","pp-list");
+  sec.appendChild(head); sec.appendChild(list);
   return sec;
 }
-function renderSheet(){
-  const body=$("#pSheetBody"); body.innerHTML="";
+function renderPanel(){
+  const body=$("#pPanelBody"); body.innerHTML="";
   const chapters=(currentItem&&currentItem.Chapter)||[];
   if(chapters.length){
-    const sec=sheetSection("Chapters"), rail=sec.querySelector(".ps-rail");
+    const sec=panelSection("Chapters"), list=sec.querySelector(".pp-list");
     const cur=video.currentTime||0;
     chapters.forEach((ch,idx)=>{
       const start=(ch.startTimeOffset||0)/1000;
       const end=ch.endTimeOffset?ch.endTimeOffset/1000:(chapters[idx+1]?chapters[idx+1].startTimeOffset/1000:1e9);
-      rail.appendChild(sheetCard({
+      list.appendChild(panelItem({
         thumb:ch.thumb, title:ch.tag||("Chapter "+(idx+1)), sub:fmtClock(start),
         now:cur>=start&&cur<end,
         onClick:()=>{ if(video.duration) video.currentTime=start; video.play().catch(()=>{}); }
@@ -2890,38 +2863,22 @@ function renderSheet(){
     body.appendChild(sec);
   }
   if(currentItem&&currentItem.type==="episode"&&(seasonEps||[]).length){
-    const sec=sheetSection("Play Queue"), rail=sec.querySelector(".ps-rail");
+    const sec=panelSection("Play Queue"), list=sec.querySelector(".pp-list");
     seasonEps.forEach(ep=>{
       const now=String(ep.ratingKey)===String(currentItem.ratingKey);
       const pct=ep.viewOffset&&ep.duration?(ep.viewOffset/ep.duration*100):0;
-      rail.appendChild(sheetCard({
+      list.appendChild(panelItem({
         thumb:ep.thumb||ep.parentThumb, title:ep.title||("Episode "+ep.index),
         sub:now?"Now playing":("E"+(ep.index||"?")), now, pct,
         onClick:now?null:()=>playItem(ep,0)
       }));
     });
     body.appendChild(sec);
-    requestAnimationFrame(()=>sec.querySelector(".ps-card.now")?.scrollIntoView({block:"nearest",inline:"center"}));
+    requestAnimationFrame(()=>sec.querySelector(".pp-item.now")?.scrollIntoView({block:"nearest"}));
   }
 }
-$("#chaptersBtn").onclick=e=>{ e.stopPropagation(); toggleSheet(); };
-$("#sheetHandle").onclick=()=>toggleSheet();
-$("#sheetGrip").onclick=closeSheet;
-/* swipe up on the handle to open, swipe down on the grip to close */
-function bindSheetSwipe(target,onUp,onDown){
-  let sx=0,sy=0,t0=0,active=false;
-  target.addEventListener("pointerdown",e=>{ active=true; sx=e.clientX; sy=e.clientY; t0=Date.now(); });
-  const end=e=>{
-    if(!active) return; active=false;
-    const dx=e.clientX-sx, dy=e.clientY-sy, dt=Date.now()-t0;
-    if(dt>700||Math.abs(dx)>Math.abs(dy)) return;
-    if(dy<-28) onUp&&onUp(); else if(dy>28) onDown&&onDown();
-  };
-  target.addEventListener("pointerup",end);
-  target.addEventListener("pointercancel",()=>{active=false;});
-}
-bindSheetSwipe($("#sheetHandle"),openSheet,null);
-bindSheetSwipe($("#sheetGrip"),null,closeSheet);
+$("#chaptersBtn").onclick=e=>{ e.stopPropagation(); togglePanel(); };
+$("#pPanelClose").onclick=closePanel;
 
 /* ---- accessible menu keyboard navigation (arrows / escape / tab) ---- */
 function menuKeyHandler(menu,toggleBtn){
@@ -3063,9 +3020,9 @@ function closePlayer(){
   if(warmedNext){ stopSession(warmedNext.sessionId); warmedNext=null; }
   hideNextUp(); $("#skipIntro").hidden=true;
   video.pause(); video.removeAttribute("src"); video.load();
-  $("#player").classList.remove("show","min","idle","loading","paused","sheet-open");
+  $("#player").classList.remove("show","min","idle","loading","paused","panel-open");
   currentItem=null;
-  closeSettingsMenu(); closeSheet();
+  closeSettingsMenu(); closePanel();
   if(playerOpener&&document.contains(playerOpener)) playerOpener.focus();
   playerOpener=null;
 }
@@ -3094,7 +3051,7 @@ document.addEventListener("keydown",e=>{
     case "f": toggleFull(); break;
     case "m": video.muted=!video.muted; updateVolIcon(); break;
     case "Escape":
-      if(sheetOpen()){ closeSheet(); $("#chaptersBtn").focus(); }
+      if(panelOpen()){ closePanel(); $("#chaptersBtn").focus(); }
       else if(!document.fullscreenElement) closePlayer();
       break;
     case "c": if(currentItem) toggleSheet(); break;
@@ -3199,7 +3156,7 @@ async function loadAdjacentEpisodes(){
     if(currentItem!==item) return;
     const eps=mc.Metadata||[];
     seasonEps=eps;
-    if(sheetOpen()) renderSheet();
+    if(panelOpen()) renderPanel();
     const i=eps.findIndex(e=>String(e.ratingKey)===String(item.ratingKey));
     let p=i>0?eps[i-1]:null;
     let n=(i>-1&&eps[i+1])?eps[i+1]:null;
