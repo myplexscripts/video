@@ -481,6 +481,31 @@
   .featured .art img{aspect-ratio:2/3}
   .featured .art img.wide{aspect-ratio:16/9}
 
+  /* ---- BILLBOARD CARD ----
+     Secondary showcase card: square-cropped backdrop art with the title
+     text overlaid at the bottom, and type/genre metadata below.
+     Plex "art" (landscape backdrop) is used instead of the portrait thumb.
+     Rules: only appears in explicit billboard rails, never replaces normal
+     cards; width from --card-w-wide so it aligns with the token scale. */
+  .carousel .card.billboard{width:var(--card-w-wide)}
+  .card.billboard .art{aspect-ratio:1/1;border-radius:var(--radius)}
+  .card.billboard .art img{object-position:center 18%}
+  /* gradient scrim so title text is always legible */
+  .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.48) 38%,transparent 68%)}
+  /* title rendered inside the art, above the scrim */
+  .bill-title{position:absolute;bottom:13px;left:14px;right:14px;z-index:2;
+    font-size:20px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
+    color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card.billboard .ct{display:none}
+  .card.billboard .cs{font-size:var(--t-sm);color:var(--dim);margin-top:8px;
+    white-space:normal;line-height:1.4}
+  .bill-desc{font-size:var(--t-sm);color:var(--faint);line-height:1.45;margin-top:3px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* mobile: slightly narrower */
+  @media(max-width:680px){.carousel .card.billboard{width:220px}}
+
   .loading,.empty{color:var(--dim);font-size:14px;padding:48px var(--edge)}
   .empty i,.empty .svgi{font-size:38px;color:var(--faint);display:block;margin-bottom:12px}
   .err{color:#ff8585;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.15);
@@ -1496,6 +1521,49 @@ async function route(){
 window.addEventListener("hashchange", route);
 
 /* ============================================================ HOME */
+/* ---- BILLBOARD CARD + RAIL ----
+   Square-art showcase card. Uses it.art (backdrop) for the image;
+   falls back to it.thumb if no backdrop. Title is overlaid inside
+   the art; type and genres appear below as plain metadata text. */
+function billboardCard(it){
+  const b=el("button","card billboard");
+  const artSrc=img(it.art||it.thumb,560,560);
+  const title=it.title||"";
+  const type=it.type==="movie"?"Movie":it.type==="show"?"TV Show":(it.type||"");
+  const genres=(it.Genre||[]).slice(0,2).map(g=>g.tag).join(" · ");
+  const meta=[type,genres].filter(Boolean).join(" · ");
+  const summary=(it.summary||"").slice(0,130);
+  b.innerHTML=`
+    <div class="art${artSrc?"":" broken"}">
+      ${artSrc?`<img loading="lazy" alt="${esc(title)}" src="${artSrc}" onerror="this.closest('.art').classList.add('broken')">`
+              :`<span class="art-fallback">${svgIcon(it.type==="show"?"television":"movies")}</span>`}
+      <div class="play-hover">${svgIcon("play-circle-fill")}</div>
+      <div class="bill-title">${esc(title)}</div>
+    </div>
+    <div class="cs">${esc(meta)}</div>
+    ${summary?`<div class="bill-desc">${esc(summary)}</div>`:""}`;
+  b.onclick=()=>{const r=pathForItem(it);if(r)navigate(r);else openItem(it);};
+  return b;
+}
+function billboardRailSection(title,items,libLabel){
+  const sec=el("div","rail-section");
+  const firstArt=items[0]&&(items[0].art||items[0].thumb);
+  if(firstArt){const amb=el("div","rail-ambient");amb.style.backgroundImage=`url('${imgAmbient(firstArt)}')`;sec.appendChild(amb);}
+  const head=el("div","rail-head");
+  head.innerHTML=`<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div>`;
+  const viewport=el("div","rail-viewport");
+  const row=el("div","carousel");
+  items.forEach(it=>row.appendChild(billboardCard(it)));
+  const prev=el("button","rail-arrow prev edge");prev.type="button";prev.setAttribute("aria-label","Scroll left");
+  prev.innerHTML=svgIcon("caret-down");prev.firstChild.style.transform="rotate(90deg)";
+  const next=el("button","rail-arrow next");next.type="button";next.setAttribute("aria-label","Scroll right");
+  next.innerHTML=svgIcon("caret-down");next.firstChild.style.transform="rotate(-90deg)";
+  viewport.appendChild(prev);viewport.appendChild(row);viewport.appendChild(next);
+  wireRailArrows(viewport,row,prev,next);
+  sec.appendChild(head);sec.appendChild(viewport);
+  return sec;
+}
+
 async function showHome(){
   setTitle("Home"); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
@@ -1518,6 +1586,13 @@ async function showHome(){
     const hero=cw[0]||(videoHubs[0]&&videoHubs[0].items[0]);
     if(hero) c.appendChild(await heroEl(hero));
     if(cw.length) c.appendChild(railSection("Continue Watching", cw, true, true));
+
+    // Billboard showcase: prefer a hub with "trending" in its title,
+    // fall back to the first hub that contains movie/show items with backdrop art.
+    const billHub=videoHubs.find(h=>/trending/i.test(h.title))
+      ||videoHubs.find(h=>h.items.some(x=>x.art));
+    if(billHub) c.appendChild(billboardRailSection(billHub.title,billHub.items,billHub.lib));
+
     videoHubs.forEach((h,i)=>{
       const wide = h.items.every(x=>x.type==="episode");
       const seeAll=!wide;
