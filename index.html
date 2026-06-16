@@ -490,14 +490,12 @@
   /* Gradient scrim — heavier at bottom for logo legibility */
   .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.5) 40%,transparent 70%)}
-  /* Logo wrapper: explicit left/right anchors so max-width:100% on the img
-     is bounded to the wrapper width, not the intrinsic image size */
+  /* Logo wrapper: 14px inset on each side — logo fills this width, height scales */
   .bill-logo-wrap{position:absolute;bottom:14px;left:14px;right:14px;z-index:2;
     display:flex;justify-content:center;align-items:flex-end}
-  /* max-width:100% constrains to the wrapper (art minus 28px padding);
-     max-height caps tall logos — both together give true proportional fit */
-  .bill-logo{display:block;width:auto;height:auto;
-    max-width:100%;max-height:52px;
+  /* Logo fills wrapper width, height is unconstrained (aspect-ratio preserved).
+     width:100% on a block img inside a positioned wrapper always fits exactly. */
+  .bill-logo{display:block;width:100%;height:auto;
     filter:drop-shadow(0 1px 8px rgba(0,0,0,.9)) drop-shadow(0 0 24px rgba(0,0,0,.6))}
   /* Text fallback when no clearLogo is available */
   .bill-title{font-size:22px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
@@ -1564,7 +1562,9 @@ function billboardCard(it){
     <div class="bill-meta" style="--bill-bg:url('${artSrc.replace(/'/g,"\\'")}')">
       <span class="cs">${esc(meta)}</span>
     </div>`;
-  b.onclick=()=>{const r=pathForItem(it);if(r)navigate(r);else openItem(it);};
+  // Episodes: link to the show page, not the individual episode
+  const dest=it.type==="episode"?`/show/${it.grandparentRatingKey||it.ratingKey}`:pathForItem(it);
+  b.onclick=()=>{if(dest)navigate(dest);else openItem(it);};
   return b;
 }
 function squareBoardRailSection(title,items,libLabel){
@@ -1611,12 +1611,14 @@ async function showHome(){
     if(hero) c.appendChild(await heroEl(hero));
     if(cw.length) c.appendChild(railSection("Continue Watching", cw, true, true));
 
-    // Square-board showcase: prefer a hub with "trending" in its title
-    // (works for both movies and TV), fall back to the first hub with any art.
-    // Episodes use grandparent (show) art so the rail looks good for TV too.
-    const boardHub=videoHubs.find(h=>/trending/i.test(h.title))
-      ||videoHubs.find(h=>h.items.some(x=>x.art||x.grandparentArt));
-    if(boardHub) c.appendChild(squareBoardRailSection(boardHub.title,boardHub.items,boardHub.lib));
+    // Square-board rails: one for EACH trending hub (movies + TV get their own).
+    // Falls back to first hub with any art if no hub has "trending" in its title.
+    let boardHubs=videoHubs.filter(h=>/trending/i.test(h.title));
+    if(!boardHubs.length){
+      const fb=videoHubs.find(h=>h.items.some(x=>x.art||x.grandparentArt));
+      if(fb) boardHubs=[fb];
+    }
+    boardHubs.forEach(h=>c.appendChild(squareBoardRailSection(h.title,h.items,h.lib)));
 
     videoHubs.forEach((h,i)=>{
       const wide = h.items.every(x=>x.type==="episode");
