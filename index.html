@@ -570,6 +570,7 @@
   .actor-bio{font-size:13.5px;line-height:1.65;color:var(--dim);margin:8px 0 4px;max-width:640px;
     display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
   .actor-info .actor-sub{font-size:13px;color:var(--faint);margin-top:6px}
+  .actor-born{font-size:13px;color:var(--faint);margin-top:3px}
   /* ---- FILMOGRAPHY LIST ---- */
   .filmog-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
   .filmog-tab{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15);
@@ -2276,21 +2277,34 @@ function castRailHTML(m){
   const cast=(m.Role||[]).slice(0,12);
   if(!cast.length) return "";
   return `<div class="rail-section"><div class="rail-head"><h3>Cast</h3><span class="count">${cast.length}</span></div>
-    <div class="cast-row" id="castRow">`+cast.map(r=>`<button class="cast"${r.id?` data-actor-id="${r.id}" data-actor-name="${esc(r.tag)}" data-actor-thumb="${esc(r.thumb||"")}"`:""}>
-    <div class="art"><img loading="lazy" alt="" src="${r.thumb?img(r.thumb,224,224):""}" onerror="this.style.visibility='hidden'"></div>
-    <div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></button>`).join("")+`</div></div>`;
+    <div class="cast-row" id="castRow">`+cast.map(r=>{
+      // In real Plex the actor thumb URL encodes the person ratingKey: /library/metadata/{rk}/thumb/...
+      // Extract it so openActor can fetch bio/filmography from the correct endpoint.
+      const rkm=r.thumb?r.thumb.match(/^\/library\/metadata\/(\d+)\/thumb\//):null;
+      const personRk=rkm?rkm[1]:"";
+      return `<button class="cast"${r.id?` data-actor-id="${r.id}"`:""} data-actor-name="${esc(r.tag)}" data-actor-thumb="${esc(r.thumb||"")}"${personRk?` data-actor-rk="${personRk}"`:""}>`
+        +`<div class="art"><img loading="lazy" alt="" src="${r.thumb?img(r.thumb,224,224):""}" onerror="this.style.visibility='hidden'"></div>`
+        +`<div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></button>`;
+    }).join("")+`</div></div>`;
 }
 function wireCastRail(c){
   c.querySelectorAll(".cast[data-actor-id]").forEach(btn=>{
-    btn.onclick=()=>goToActor(btn.dataset.actorId,btn.dataset.actorName,btn.dataset.actorThumb);
+    btn.onclick=()=>goToActor(btn.dataset.actorId,btn.dataset.actorName,btn.dataset.actorThumb,btn.dataset.actorRk);
   });
 }
 
 /* ---- ACTOR PAGES ---- */
 const actorCache={};
-function goToActor(id,name,thumb){
-  if(name) actorCache[id]={name,thumb};
+function goToActor(id,name,thumb,personRk){
+  if(name) actorCache[id]={name,thumb,personRk:personRk||""};
   navigate(`/actor/${id}`);
+}
+function fmtBornDied(bornTs,diedTs){
+  const fmt=ts=>{
+    const d=new Date(ts*1000);
+    return d.toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  };
+  return diedTs?`Born ${fmt(bornTs)} · Died ${fmt(diedTs)}`:`Born ${fmt(bornTs)}`;
 }
 
 /* Filmography list section: acting/directing/producing tabs with full credit list.
@@ -2342,21 +2356,24 @@ function filmogSection(acting,directing,producing){
 async function openActor(id){
   const cached=actorCache[id]||{};
   const name=cached.name||"Actor", thumb=cached.thumb||"";
+  // In real Plex the tag ID (used for ?actor= queries) ≠ person ratingKey (used for metadata).
+  // The person ratingKey is extracted from their thumb URL in castRailHTML and stored in cache.
+  const personRk=cached.personRk||id;
   setTitle(name); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
     // Plex type numbers: 1=movie, 2=show, 4=episode
     const movieSections=sections.filter(s=>s.type==="movie");
     const showSections=sections.filter(s=>s.type==="show");
     const [bioMc,moviesResults,showsResults,episodeResults]=await Promise.all([
-      api(`/library/metadata/${id}`).catch(()=>null),
+      api(`/library/metadata/${personRk}`).catch(()=>null),
       Promise.all(movieSections.map(s=>api(`/library/sections/${s.key}/all?type=1&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=2&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=4&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
     ]);
-    // Accept as person if: explicit type="person", OR has `tag` (person name field) but no
-    // `duration` or `leafCount` (which content items always have).
+    // Reject known content types so music/movies don't masquerade as person metadata.
+    const CONTENT_TYPES=new Set(["movie","show","episode","season","clip","artist","album","track","collection","playlist"]);
     const personMeta=(bioMc?.Metadata||[])[0];
-    const isPerson=personMeta&&(personMeta.type==="person"||(personMeta.tag&&!personMeta.duration&&!personMeta.leafCount));
+    const isPerson=personMeta&&!CONTENT_TYPES.has(personMeta.type);
     const bio=isPerson?personMeta.summary||"":"";
     // Full filmography from person metadata arrays
     const actingCredits=isPerson?(personMeta.Role||[]):[];
@@ -2388,11 +2405,14 @@ async function openActor(id){
     // You've Seen Them In: watched titles
     const seenTitles=allTitles.filter(t=>t.type==="movie"?t.viewCount>0:t.viewedLeafCount>0);
     const totalItems=movies.length+shows.length+guestEps.length;
+    const bornAt=isPerson&&personMeta.bornAt?personMeta.bornAt:null;
+    const diedAt=isPerson&&personMeta.diedAt?personMeta.diedAt:null;
     const photoSrc=thumb?img(thumb,280,280):"";
     c.innerHTML=`<div class="actor-head">
       <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}
       </div><div class="actor-info"><h1>${esc(name)}</h1>
       ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}
+      ${bornAt?`<div class="actor-born">${fmtBornDied(bornAt,diedAt)}</div>`:""}
       <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"} on this server</div>
       </div></div>`;
     if(knownFor.length) c.appendChild(railSection("Known For",knownFor,false,false));
