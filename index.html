@@ -4,11 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#09090b">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hume">
+<meta name="application-name" content="Hume">
 <title>Hume</title>
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<script>
+  // Register the service worker for installability + offline app shell.
+  if("serviceWorker" in navigator){
+    addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <style>
   @font-face{font-family:'Circular';font-weight:400;font-style:normal;font-display:swap;
@@ -2499,13 +2509,15 @@ function wireExtras(c,extras,trailerBtnId){
 /* ---- TRAILER WINDOW ----
    Small floating player for trailer extras (Trailers rail / ratings-row
    Trailer badge), separate from the full-screen player. */
-let trailerModalEl=null;
+let trailerModalEl=null, trailerHls=null, trailerSession=null;
 function closeTrailerModal(){
   if(!trailerModalEl) return;
   const modal=trailerModalEl; trailerModalEl=null;
   modal.classList.remove("show");
   const video=modal.querySelector("video");
-  if(video){ video.pause(); video.removeAttribute("src"); video.load(); }
+  if(trailerHls){ trailerHls.destroy(); trailerHls=null; }
+  if(trailerSession){ stopSession(trailerSession); trailerSession=null; }
+  if(video){ video.onerror=null; video.pause(); video.removeAttribute("src"); video.load(); }
   setTimeout(()=>modal.remove(),250);
 }
 async function openTrailerModal(item){
@@ -2524,17 +2536,63 @@ async function openTrailerModal(item){
   requestAnimationFrame(()=>modal.classList.add("show"));
   const video=modal.querySelector("#trailerVideo");
   const loading=modal.querySelector("#trailerLoading"), error=modal.querySelector("#trailerError");
-  const fail=()=>{ loading.classList.add("hidden"); error.classList.remove("hidden"); };
-  video.addEventListener("canplay",()=>{ loading.classList.add("hidden"); video.classList.add("show"); video.play().catch(()=>{}); });
-  video.addEventListener("error",fail);
+  const fail=()=>{ if(trailerModalEl!==modal) return; loading.classList.add("hidden"); error.classList.remove("hidden"); };
+  video.addEventListener("canplay",()=>{ if(trailerModalEl!==modal) return;
+    loading.classList.add("hidden"); error.classList.add("hidden"); video.classList.add("show"); video.play().catch(()=>{}); });
   try{
     let full=item;
     if(!partOf(full)){ const mc=await api(`/library/metadata/${item.ratingKey}`); full=(mc.Metadata||[])[0]||item; }
     if(trailerModalEl!==modal) return;
     const part=partOf(full);
     if(!part||!part.key){ fail(); return; }
+    // Try direct play first; if the browser can't decode the file (HEVC, MKV,
+    // AC3...) fall back to an HLS transcode — the same path Plex itself uses —
+    // instead of showing "unavailable". A watchdog covers silent stalls.
+    let settled=false;
+    const toTranscode=()=>{ if(settled||trailerModalEl!==modal) return; settled=true;
+      clearTimeout(wd); transcodeTrailer(video,full.ratingKey,fail); };
+    video.addEventListener("canplay",()=>{ settled=true; clearTimeout(wd); },{once:true});
+    video.onerror=toTranscode;
+    const wd=setTimeout(toTranscode,7000);
     video.src=`${server.uri}${part.key}?X-Plex-Token=${server.token}`;
-  }catch(_){ if(trailerModalEl===modal) fail(); }
+  }catch(_){ fail(); }
+}
+// HLS transcode fallback for the trailer modal (self-contained: own Hls instance
+// and session so it never collides with the main player's state).
+function transcodeTrailer(video,ratingKey,fail){
+  const session="hume-"+crypto.randomUUID();
+  trailerSession=session;
+  const params=new URLSearchParams({
+    path:`/library/metadata/${ratingKey}`,
+    mediaIndex:0, partIndex:0, protocol:"hls", fastSeek:1,
+    directPlay:0, directStream:1, directStreamAudio:1,
+    subtitles:"burn", subtitleSize:100, audioBoost:100, mediaBufferSize:102400,
+    location:server.local?"lan":"wan", autoAdjustQuality:0,
+    maxVideoBitrate:40000, videoQuality:100, offset:0,
+    "X-Plex-Client-Identifier":clientId(), "X-Plex-Session-Identifier":session,
+    "X-Plex-Platform":"Web", session:session, "X-Plex-Token":server.token
+  });
+  const m3u8=`${server.uri}/video/:/transcode/universal/start.m3u8?${params.toString()}`;
+  video.onerror=null; video.removeAttribute("src"); video.load();
+  if(window.Hls&&Hls.isSupported()){
+    if(trailerHls) trailerHls.destroy();
+    const h=new Hls({ xhrSetup:(xhr,url)=>{
+      const u=url.indexOf("X-Plex-Token")===-1
+        ? url+(url.indexOf("?")===-1?"?":"&")+"X-Plex-Token="+encodeURIComponent(server.token) : url;
+      xhr.open("GET",u,true);
+    }});
+    trailerHls=h;
+    h.attachMedia(video);
+    h.on(Hls.Events.MEDIA_ATTACHED,()=>h.loadSource(m3u8));
+    h.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));
+    h.on(Hls.Events.ERROR,(_,d)=>{ if(!d.fatal) return;
+      if(d.type===Hls.ErrorTypes.NETWORK_ERROR){ h.startLoad(); }
+      else if(d.type===Hls.ErrorTypes.MEDIA_ERROR){ h.recoverMediaError(); }
+      else fail(); });
+  }else{
+    video.src=m3u8; video.onerror=fail;
+    video.onloadedmetadata=()=>video.play().catch(()=>{});
+  }
 }
 function crewHTML(m){
   const dirs=(m.Director||[]).map(d=>esc(d.tag));
