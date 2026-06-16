@@ -13,8 +13,12 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<!-- Preload the two font weights that render above the fold -->
+<link rel="preload" href="assets/fonts/Circular/Circular-Book.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="assets/fonts/Circular/Circular-Bold.ttf" as="font" type="font/ttf" crossorigin>
+<!-- Preload HLS.js so the first video play never waits for the CDN -->
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js" as="script" crossorigin>
 <script>
-  // Register the service worker for installability + offline app shell.
   if("serviceWorker" in navigator){
     addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
   }
@@ -876,6 +880,22 @@
   .p-spinner .ring{width:52px;height:52px;border-radius:50%;
     border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+  /* ---- SKELETON SCREENS ---- */
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  .sk{background:linear-gradient(90deg,var(--bg2) 25%,var(--surface) 50%,var(--bg2) 75%);
+    background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;border-radius:var(--radius)}
+  .sk-hero{height:min(64vh,600px);min-height:420px;border-radius:0;flex-shrink:0}
+  .sk-detail{height:min(72vh,704px);min-height:420px;border-radius:0;flex-shrink:0}
+  .sk-rail{padding:12px var(--edge) 8px}
+  .sk-title{height:18px;width:140px;border-radius:5px;margin-bottom:20px}
+  .sk-cards{display:flex;gap:var(--rail-gap);overflow:hidden}
+  .sk-card{flex:0 0 auto;width:var(--card-w)}
+  .sk-card.wide{width:var(--card-w-wide)}
+  .sk-art{border-radius:var(--radius);margin-bottom:8px}
+  .sk-card:not(.wide) .sk-art{aspect-ratio:2/3}
+  .sk-card.wide .sk-art{aspect-ratio:16/9}
+  .sk-line{height:12px;border-radius:4px;margin-bottom:5px}
+  .sk-line.short{width:60%}
   .p-spinner span{font-size:13px;color:#cfcfd6;letter-spacing:.3px;font-weight:500}
 
   /* ---- PAUSE SCREEN ----
@@ -1379,16 +1399,31 @@ async function showServerPicker(servers){
 function selectServer(c){ server=c; localStorage.setItem(LS.server,JSON.stringify(c));
   $("#servers").style.display="none"; bootApp(); }
 
-/* ============================================================ API */
+/* ============================================================ API
+   Stale-while-revalidate: return cached data immediately (zero flicker on
+   revisit) then silently revalidate in the background so fresh data is ready
+   for the next interaction. Cache TTL is 5 minutes for stale tolerance,
+   but revalidation fires after 60s so data is never more than 60s stale
+   for the subsequent render. */
 const _apiCache=new Map();
-async function api(path){
+const _apiBg=new Set();
+async function api(path,{_bg=false}={}){
   const hit=_apiCache.get(path);
-  if(hit&&Date.now()-hit.ts<60000) return hit.data;
+  const age=hit?Date.now()-hit.ts:Infinity;
+  if(hit&&!_bg){
+    // Serve stale immediately; kick off silent revalidation if stale > 60s
+    if(age>60000&&!_apiBg.has(path)){
+      _apiBg.add(path);
+      api(path,{_bg:true}).catch(()=>{}).finally(()=>_apiBg.delete(path));
+    }
+    return hit.data;
+  }
   const sep=path.includes("?")?"&":"?";
   let r;
   try{
     r=await fetch(`${server.uri}${path}${sep}X-Plex-Token=${server.token}`,{headers:plexHeaders(server.token)});
   }catch(_){
+    if(hit) return hit.data; // offline: serve stale indefinitely
     const err=new Error(`Can't reach ${(server&&server.name)||"your Plex server"}. Check that it's online and try again.`);
     err.offline=true; throw err;
   }
@@ -1396,6 +1431,22 @@ async function api(path){
   const data=(await r.json()).MediaContainer||{};
   _apiCache.set(path,{data,ts:Date.now()});
   return data;
+}
+/* Skeleton helpers — shown instantly before data arrives so the screen
+   never flashes blank during navigation. */
+function skCards(n,wide){
+  return Array.from({length:n},()=>`<div class="sk-card${wide?" wide":""}">
+    <div class="sk sk-art"></div><div class="sk sk-line"></div><div class="sk sk-line short"></div></div>`).join("");
+}
+function skeletonHome(){
+  return `<div class="sk sk-hero"></div>
+    <div class="sk-rail"><div class="sk sk-title"></div><div class="sk-cards">${skCards(8,false)}</div></div>
+    <div class="sk-rail"><div class="sk sk-title"></div><div class="sk-cards">${skCards(6,true)}</div></div>
+    <div class="sk-rail"><div class="sk sk-title"></div><div class="sk-cards">${skCards(8,false)}</div></div>`;
+}
+function skeletonDetail(){
+  return `<div class="sk sk-detail"></div>
+    <div class="sk-rail"><div class="sk sk-title"></div><div class="sk-cards">${skCards(8,false)}</div></div>`;
 }
 // Playlist/collection composite art is server-generated and isn't a valid
 // photo-transcoder resource — serve it directly instead.
@@ -1466,6 +1517,11 @@ async function afterLogin(){
 }
 async function bootApp(){
   $("#login").style.display="none"; $("#servers").style.display="none"; $("#app").style.display="block";
+  // Preconnect to the Plex server so the first API call skips TCP+TLS setup
+  if(server&&server.uri){
+    const pc=document.createElement("link"); pc.rel="preconnect"; pc.href=server.uri;
+    document.head.appendChild(pc);
+  }
   try{
     const mc=await api("/library/sections");
     sections=(mc.Directory||[]).filter(s=>s.type==="movie"||s.type==="show");
@@ -1623,7 +1679,7 @@ function squareBoardRailSection(title,items,libLabel,numbered){
 }
 
 async function showHome(){
-  setTitle("Home"); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  setTitle("Home"); clearUltraBlur(); const c=$("#content"); c.innerHTML=skeletonHome();
   try{
     let cw=[];
     try{ cw=collectItems(await api("/hubs/continueWatching?count=24")); }catch(_){}
@@ -2943,7 +2999,7 @@ function wireDetailBg(c,art){
   if(bgImg){ bgImg.onload=()=>bgImg.classList.add("loaded"); bgImg.src=img(art,1600,900); }
 }
 async function openMovie(it){
-  setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  setTitle(it.title); const c=$("#content"); c.innerHTML=skeletonDetail();
   try{
     const [mc,extras,related]=await Promise.all([api(`/library/metadata/${it.ratingKey}`),fetchExtras(it.ratingKey),fetchRelated(it.ratingKey)]);
     const m=(mc.Metadata||[])[0]||it;
@@ -2972,7 +3028,7 @@ function seasonCard(s,active){
   return b;
 }
 async function openShow(it,jumpSeasonKey){
-  setTitle(it.title); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  setTitle(it.title); const c=$("#content"); c.innerHTML=skeletonDetail();
   try{
     const [meta,seasonsMc,extras,related]=await Promise.all([
       api(`/library/metadata/${it.ratingKey}`),
