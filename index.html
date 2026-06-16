@@ -2280,7 +2280,7 @@ function castRailHTML(m){
     <div class="cast-row" id="castRow">`+cast.map(r=>{
       // In real Plex the actor thumb URL encodes the person ratingKey: /library/metadata/{rk}/thumb/...
       // Extract it so openActor can fetch bio/filmography from the correct endpoint.
-      const rkm=r.thumb?r.thumb.match(/^\/library\/metadata\/(\d+)\/thumb\//):null;
+      const rkm=r.thumb?r.thumb.match(/^\/library\/metadata\/(\d+)\/thumb/):null;
       const personRk=rkm?rkm[1]:"";
       return `<button class="cast"${r.id?` data-actor-id="${r.id}"`:""} data-actor-name="${esc(r.tag)}" data-actor-thumb="${esc(r.thumb||"")}"${personRk?` data-actor-rk="${personRk}"`:""}>`
         +`<div class="art"><img loading="lazy" alt="" src="${r.thumb?img(r.thumb,224,224):""}" onerror="this.style.visibility='hidden'"></div>`
@@ -2356,16 +2356,22 @@ function filmogSection(acting,directing,producing){
 async function openActor(id){
   const cached=actorCache[id]||{};
   const name=cached.name||"Actor", thumb=cached.thumb||"";
-  // In real Plex the tag ID (used for ?actor= queries) ≠ person ratingKey (used for metadata).
-  // The person ratingKey is extracted from their thumb URL in castRailHTML and stored in cache.
-  const personRk=cached.personRk||id;
+  // In real Plex: tag ID (used for ?actor= content queries) ≠ person ratingKey
+  // (used to fetch bio / filmography from /library/metadata/).
+  // Priority: (1) explicit personRk stored by castRailHTML from thumb URL extraction,
+  // (2) extract from the stored thumb URL directly (covers search→person-card),
+  // (3) fall back to id — works when id IS the personRk (search results, direct URL); the
+  //     CONTENT_TYPES guard below rejects any non-person result, so wrong content never shows.
+  let personRk=cached.personRk;
+  if(!personRk&&thumb){const rkm=thumb.match(/^\/library\/metadata\/(\d+)\/thumb/);personRk=rkm?rkm[1]:"";}
+  const metaRk=personRk||id;
   setTitle(name); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
     // Plex type numbers: 1=movie, 2=show, 4=episode
     const movieSections=sections.filter(s=>s.type==="movie");
     const showSections=sections.filter(s=>s.type==="show");
     const [bioMc,moviesResults,showsResults,episodeResults]=await Promise.all([
-      api(`/library/metadata/${personRk}`).catch(()=>null),
+      api(`/library/metadata/${metaRk}`).catch(()=>null),
       Promise.all(movieSections.map(s=>api(`/library/sections/${s.key}/all?type=1&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=2&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=4&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
