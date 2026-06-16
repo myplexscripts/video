@@ -482,35 +482,40 @@
   .featured .art img.wide{aspect-ratio:16/9}
 
   /* ---- BILLBOARD CARD ----
-     Secondary showcase card: square-cropped backdrop art with the title
-     text overlaid at the bottom, and type/genre metadata below.
-     Plex "art" (landscape backdrop) is used instead of the portrait thumb.
-     Rules: only appears in explicit billboard rails, never replaces normal
-     cards; width from --card-w-wide so it aligns with the token scale. */
-  .carousel .card.billboard{width:var(--card-w-wide)}
-  .card.billboard .art{aspect-ratio:1/1;border-radius:var(--radius)}
-  .card.billboard .art img{object-position:center top}
-  /* gradient scrim so title text is always legible */
+     Secondary showcase card: square art + centered logo + blurred-art
+     metadata panel beneath. Rules: only in billboard rails. */
+  .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column}
+  /* Art: square, rounded only at top — bottom edge merges into bill-meta */
+  .card.billboard .art{aspect-ratio:1/1;border-radius:var(--radius) var(--radius) 0 0;flex:0 0 auto}
+  /* Gradient scrim — heavier at bottom for logo legibility */
   .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.48) 38%,transparent 68%)}
-  /* title rendered inside the art, above the scrim */
-  /* logo image: natural scaling so it never overflows the card */
-  /* Logo: natural proportional scaling. max-width caps wide logos,
-     max-height caps tall ones — whichever is hit first, the other
-     axis scales automatically. No object-fit needed on a raw <img>. */
-  .bill-logo{position:absolute;bottom:12px;left:12px;z-index:2;display:block;
-    max-width:calc(100% - 24px);max-height:50px;
-    filter:drop-shadow(0 1px 6px rgba(0,0,0,.8)) drop-shadow(0 0 24px rgba(0,0,0,.5))}
-  .bill-title{position:absolute;bottom:13px;left:14px;right:14px;z-index:2;
-    font-size:20px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
-    color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55);
+    background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.5) 40%,transparent 70%)}
+  /* Centered logo container sitting in the bottom 40% of the art */
+  .bill-logo-wrap{position:absolute;bottom:0;left:0;right:0;z-index:2;
+    display:flex;align-items:flex-end;justify-content:center;
+    padding:0 16px 16px;min-height:40%}
+  /* Logo: max-width so it never overflows the card; max-height caps tall logos */
+  .bill-logo{display:block;width:auto;height:auto;
+    max-width:min(220px,calc(100% - 16px));max-height:54px;
+    filter:drop-shadow(0 1px 8px rgba(0,0,0,.9)) drop-shadow(0 0 24px rgba(0,0,0,.6))}
+  /* Text fallback when no clearLogo is available */
+  .bill-title{font-size:22px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
+    color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.7);text-align:center;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .card.billboard .ct{display:none}
-  .card.billboard .cs{font-size:var(--t-sm);color:var(--dim);margin-top:8px;
-    white-space:normal;line-height:1.4}
-  .bill-desc{font-size:var(--t-sm);color:var(--faint);line-height:1.45;margin-top:3px;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  /* mobile: slightly narrower */
+  /* Metadata panel: blurred continuation of the art behind it */
+  .bill-meta{position:relative;overflow:hidden;flex:0 0 auto;
+    border-radius:0 0 var(--radius) var(--radius);
+    padding:11px 12px 13px;text-align:center}
+  .bill-meta::before{content:'';position:absolute;inset:-30%;z-index:0;
+    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
+    filter:blur(28px) saturate(1.7) brightness(.28)}
+  /* Dark tint over the blur so text stays readable */
+  .bill-meta::after{content:'';position:absolute;inset:0;z-index:0;
+    background:rgba(0,0,0,.25)}
+  .bill-meta .cs{position:relative;z-index:1;font-size:var(--t-sm);font-weight:500;
+    color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
+  /* Suppress legacy card text rows — all metadata lives in .bill-meta */
+  .card.billboard .ct,.card.billboard > .cs,.bill-desc{display:none}
   @media(max-width:680px){.carousel .card.billboard{width:220px}}
 
   .loading,.empty{color:var(--dim);font-size:14px;padding:48px var(--edge)}
@@ -1529,35 +1534,35 @@ window.addEventListener("hashchange", route);
 
 /* ============================================================ HOME */
 /* ---- BILLBOARD CARD + RAIL ----
-   Square-art showcase card. Image priority:
-   1. squareCover / squarePosterArt from it.Image (Plex square art types)
-   2. it.thumb (portrait poster) square-cropped from top — far better than
-      square-cropping a landscape backdrop because the subject is centred
-   Logo: clearLogo from it.Image; falls back to bold text title. */
+   Plex image types: backgroundSquare=1:1 art, background=backdrop,
+   coverPoster=portrait, clearLogo=transparent title logo.
+   Art fallback: backgroundSquare → backdrop (it.art) → poster (it.thumb).
+   Logo centered inside art; metadata in blurred-art panel below. */
 function billboardCard(it){
   const b=el("button","card billboard");
-  // Plex image types: backgroundSquare=1:1 art, background=backdrop,
-  // coverPoster=portrait poster, clearLogo=transparent title logo
   const imgs=it.Image||[];
   const squareImg=imgs.find(i=>i.type==="backgroundSquare");
-  const artSrc=img((squareImg&&squareImg.url)||it.thumb||it.art,560,560);
+  // Fallback: backdrop art (landscape) → portrait poster
+  const artSrc=img((squareImg&&squareImg.url)||it.art||it.thumb,560,560);
   const logoImg=imgs.find(i=>i.type==="clearLogo");
   const logoSrc=logoImg?img(logoImg.url,600,200):"";
   const title=it.title||"";
   const type=it.type==="movie"?"Movie":it.type==="show"?"TV Show":(it.type||"");
   const genres=(it.Genre||[]).slice(0,2).map(g=>g.tag).join(" · ");
   const meta=[type,genres].filter(Boolean).join(" · ");
-  const summary=(it.summary||"").slice(0,130);
   b.innerHTML=`
     <div class="art${artSrc?"":" broken"}">
       ${artSrc?`<img loading="lazy" alt="${esc(title)}" src="${artSrc}" onerror="this.closest('.art').classList.add('broken')">`
               :`<span class="art-fallback">${svgIcon(it.type==="show"?"television":"movies")}</span>`}
       <div class="play-hover">${svgIcon("play-circle-fill")}</div>
-      ${logoSrc?`<img class="bill-logo" src="${logoSrc}" alt="${esc(title)}" onerror="this.nextElementSibling.style.display='block';this.remove()">`:""}
-      <div class="bill-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
+      <div class="bill-logo-wrap">
+        ${logoSrc?`<img class="bill-logo" src="${logoSrc}" alt="${esc(title)}" onerror="this.nextElementSibling.style.display='block';this.remove()">`:""}
+        <div class="bill-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
+      </div>
     </div>
-    <div class="cs">${esc(meta)}</div>
-    ${summary?`<div class="bill-desc">${esc(summary)}</div>`:""}`;
+    <div class="bill-meta" style="--bill-bg:url('${artSrc.replace(/'/g,"\\'")}')">
+      <span class="cs">${esc(meta)}</span>
+    </div>`;
   b.onclick=()=>{const r=pathForItem(it);if(r)navigate(r);else openItem(it);};
   return b;
 }
