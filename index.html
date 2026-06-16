@@ -52,7 +52,7 @@
     /* Backdrop images are scaled to the hero's full height and pinned right;
        this mask fades their left side into the blurred echo behind them with
        soft, rounded (vignette-like) edges rather than a hard vertical line. */
-    --bg-vignette:radial-gradient(ellipse 78% 90% at 100% 50%,#000 48%,transparent 100%);
+    --bg-vignette:radial-gradient(ellipse 86% 95% at 100% 50%,#000 48%,transparent 100%);
     /* ---- VIDEO FROST ----
        The shared "Liquid Glass" recipe for every translucent surface in the
        app — search bar, buttons, controls, nav, the rating panel, menus and
@@ -280,8 +280,8 @@
     -webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
   .hero-bg-img.loaded,.hero-video.show{opacity:1}
   .hero-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.55) 35%,rgba(10,10,12,.15) 80%),
-    linear-gradient(to right,rgba(10,10,12,.8) 0%,rgba(10,10,12,.35) 42%,rgba(10,10,12,.1) 65%,transparent 85%)}
+    background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.45) 35%,rgba(10,10,12,.08) 80%),
+    linear-gradient(to right,rgba(10,10,12,.65) 0%,rgba(10,10,12,.22) 42%,rgba(10,10,12,.05) 65%,transparent 85%)}
   .hero-top,.hero-bottom{position:relative;max-width:700px}
   .hero-kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:1px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
@@ -575,12 +575,12 @@
     -webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
   .detail-bg-img.loaded{opacity:1}
   .detail-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,rgba(10,10,12,.68) 2%,rgba(10,10,12,.55) 40%,rgba(10,10,12,.2) 100%),
-    linear-gradient(to right,rgba(10,10,12,.85),transparent 55%)}
+    background:linear-gradient(to top,rgba(10,10,12,.55) 2%,rgba(10,10,12,.38) 40%,rgba(10,10,12,.1) 100%),
+    linear-gradient(to right,rgba(10,10,12,.7),transparent 55%)}
   .detail-hero.full .detail-scrim{
-    background:linear-gradient(to right,rgba(10,10,12,.7) 0%,rgba(10,10,12,.5) 35%,rgba(10,10,12,.18) 60%,transparent 80%),
-    linear-gradient(to top,rgba(10,10,12,.85) 0%,rgba(10,10,12,.4) 26%,transparent 52%),
-    linear-gradient(to bottom,rgba(10,10,12,.45) 0%,transparent 24%)}
+    background:linear-gradient(to right,rgba(10,10,12,.55) 0%,rgba(10,10,12,.35) 35%,rgba(10,10,12,.1) 60%,transparent 82%),
+    linear-gradient(to top,rgba(10,10,12,.72) 0%,rgba(10,10,12,.28) 26%,transparent 52%),
+    linear-gradient(to bottom,rgba(10,10,12,.3) 0%,transparent 24%)}
   .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
     align-items:flex-start;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
