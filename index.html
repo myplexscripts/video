@@ -567,7 +567,9 @@
   .actor-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .actor-info{flex:1;min-width:0}
   .actor-info h1{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:6px}
-  .actor-info .actor-sub{font-size:14px;color:var(--dim)}
+  .actor-bio{font-size:13.5px;line-height:1.65;color:var(--dim);margin:8px 0 4px;max-width:600px;
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .actor-info .actor-sub{font-size:14px;color:var(--faint)}
 
   /* ---- EXTRAS (trailers, deleted scenes, featurettes...) ---- */
   .extra-badge{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
@@ -2273,21 +2275,23 @@ async function openActor(id){
   const name=cached.name||"Actor", thumb=cached.thumb||"";
   setTitle(name); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    // Fetch content from all library sections in parallel
+    // Plex type numbers: 1=movie, 2=show, 4=episode
     const movieSections=sections.filter(s=>s.type==="movie");
     const showSections=sections.filter(s=>s.type==="show");
-    const [moviesResults,showsResults,episodeResults]=await Promise.all([
+    const [bioMc,moviesResults,showsResults,episodeResults]=await Promise.all([
+      api(`/library/metadata/${id}`).catch(()=>null),
       Promise.all(movieSections.map(s=>api(`/library/sections/${s.key}/all?type=1&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
+      Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=2&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=4&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
-      Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=10&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
     ]);
+    // Only use bio if Plex returns a genuine person record (not content sharing the same numeric ID)
+    const personMeta=(bioMc?.Metadata||[])[0];
+    const bio=(personMeta?.type==="person") ? personMeta.summary||"" : "";
     const movies=[].concat(...moviesResults);
     const shows=[].concat(...showsResults);
     const allEpisodes=[].concat(...episodeResults);
-    // Guest appearances = episodes from shows where actor is NOT regular cast.
-    // Primary: shows returned by type=4 query.
-    // Fallback: if type=4 returns nothing (Plex sometimes omits show-level credits),
-    // treat any show where the actor has 3+ episodes as a regular role, not a guest spot.
+    // Guest appearances = episodes from shows NOT returned by type=2 query.
+    // Fallback: if type=2 returns nothing, shows with 3+ episodes are treated as regular cast.
     const mainShowKeys=new Set(shows.map(s=>String(s.ratingKey)));
     if(mainShowKeys.size===0 && allEpisodes.length>0){
       const epCount={};
@@ -2295,12 +2299,20 @@ async function openActor(id){
       Object.entries(epCount).forEach(([k,n])=>{ if(n>=3) mainShowKeys.add(k); });
     }
     const guestEps=allEpisodes.filter(ep=>!mainShowKeys.has(String(ep.grandparentRatingKey)));
+    // Known For: top 8 titles by audience rating (skip if only 1 title)
+    const allTitles=[...movies,...shows];
+    const knownFor=allTitles.length>1?[...allTitles].sort((a,b)=>(b.audienceRating||b.rating||0)-(a.audienceRating||a.rating||0)).slice(0,8):[];
+    // You Know Them From: titles the user has watched
+    const watchedTitles=allTitles.filter(t=>t.type==="movie"?t.viewCount>0:t.viewedLeafCount>0);
     const totalItems=movies.length+shows.length+guestEps.length;
     const photoSrc=thumb?img(thumb,280,280):"";
     c.innerHTML=`<div class="actor-head">
       <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}
       </div><div class="actor-info"><h1>${esc(name)}</h1>
+      ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}
       <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"}</div></div></div>`;
+    if(knownFor.length) c.appendChild(railSection("Known For",knownFor,false,false));
+    if(watchedTitles.length) c.appendChild(railSection("You Know Them From",watchedTitles,false,false));
     if(movies.length) c.appendChild(railSection("Movies",movies,false,false));
     if(shows.length) c.appendChild(railSection("TV Shows",shows,false,false));
     if(guestEps.length) c.appendChild(railSection("Guest Appearances",guestEps,true,false));
