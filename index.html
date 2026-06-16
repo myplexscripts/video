@@ -2278,10 +2278,14 @@ function castRailHTML(m){
   if(!cast.length) return "";
   return `<div class="rail-section"><div class="rail-head"><h3>Cast</h3><span class="count">${cast.length}</span></div>
     <div class="cast-row" id="castRow">`+cast.map(r=>{
-      // In real Plex the actor thumb URL encodes the person ratingKey: /library/metadata/{rk}/thumb/...
-      // Extract it so openActor can fetch bio/filmography from the correct endpoint.
-      const rkm=r.thumb?r.thumb.match(/^\/library\/metadata\/(\d+)\/thumb/):null;
-      const personRk=rkm?rkm[1]:"";
+      // Extract person ratingKey from multiple possible sources in priority order:
+      // (1) r.ratingKey — direct field (some Plex versions)
+      // (2) r.key      — e.g. /library/metadata/{personRk} (newer Plex)
+      // (3) r.thumb    — e.g. /library/metadata/{personRk}/thumb/{ts} (people-hub Plex)
+      let personRk="";
+      if(r.ratingKey) personRk=String(r.ratingKey);
+      else if(r.key){const km=r.key.match(/^\/library\/metadata\/(\d+)/);if(km) personRk=km[1];}
+      else if(r.thumb){const tm=r.thumb.match(/^\/library\/metadata\/(\d+)\/thumb/);if(tm) personRk=tm[1];}
       return `<button class="cast"${r.id?` data-actor-id="${r.id}"`:""} data-actor-name="${esc(r.tag)}" data-actor-thumb="${esc(r.thumb||"")}"${personRk?` data-actor-rk="${personRk}"`:""}>`
         +`<div class="art"><img loading="lazy" alt="" src="${r.thumb?img(r.thumb,224,224):""}" onerror="this.style.visibility='hidden'"></div>`
         +`<div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></button>`;
@@ -2365,6 +2369,7 @@ async function openActor(id){
   let personRk=cached.personRk;
   if(!personRk&&thumb){const rkm=thumb.match(/^\/library\/metadata\/(\d+)\/thumb/);personRk=rkm?rkm[1]:"";}
   const metaRk=personRk||id;
+  console.info("[hume] openActor id=%s metaRk=%s thumb=%s",id,metaRk,thumb);
   setTitle(name); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
     // Plex type numbers: 1=movie, 2=show, 4=episode
@@ -2379,31 +2384,56 @@ async function openActor(id){
     ]);
     let personMeta=(bioMc?.Metadata||[])[0];
     let isPerson=personMeta&&!CONTENT_TYPES.has(personMeta.type);
-    // If the metadata endpoint returned non-person content (tagId resolved to the wrong item),
-    // search by actor name to find the correct person ratingKey and retry.
-    if(!isPerson&&name&&name!=="Actor"){
+    console.info("[hume] primary meta type=%s summary=%s roles=%d isPerson=%s",
+      personMeta?.type,!!personMeta?.summary,(personMeta?.Role||[]).length,isPerson);
+    // Trigger search fallback when: (a) no person record at all, OR (b) person record exists
+    // but has neither a summary nor filmography credits — the metadata endpoint may have returned
+    // the wrong item (tagId→unrelated content that happened to pass the type check), or returned
+    // a stub person record before Plex has fully downloaded TMDB credits.
+    const hasUsefulData=isPerson&&(personMeta.summary||(personMeta.Role||[]).length);
+    if(!hasUsefulData&&name&&name!=="Actor"){
       try{
-        const sr=await api(`/hubs/search?query=${encodeURIComponent(name)}`).catch(()=>null);
-        const found=(sr?.Hub||[]).flatMap(h=>h.Metadata||[])
-          .find(m=>!CONTENT_TYPES.has(m.type)&&(m.tag||m.title||"").toLowerCase()===name.toLowerCase());
+        const sr=await api(`/hubs/search?query=${encodeURIComponent(name)}&limit=15`).catch(()=>null);
+        console.info("[hume] search hubs=%d",sr?.Hub?.length||0,sr?.Hub?.map(h=>h.title));
+        const allMeta=(sr?.Hub||[]).flatMap(h=>h.Metadata||[]);
+        console.info("[hume] search allMeta=%d types=%s",allMeta.length,allMeta.map(m=>m.type).join(","));
+        // Exact name match first, then partial (handles middle names / extra spaces)
+        let found=allMeta.find(m=>!CONTENT_TYPES.has(m.type)
+          &&(m.tag||m.title||"").toLowerCase()===name.toLowerCase());
+        if(!found) found=allMeta.find(m=>!CONTENT_TYPES.has(m.type)
+          &&(m.tag||m.title||"").toLowerCase().includes(name.split(" ")[0].toLowerCase()));
+        console.info("[hume] search found=%s rk=%s",found?.tag||found?.title,found?.ratingKey);
         if(found){
-          const fm=await api(`/library/metadata/${found.ratingKey}`).catch(()=>null);
-          const fp=(fm?.Metadata||[])[0];
-          if(fp&&!CONTENT_TYPES.has(fp.type)){
-            personMeta=fp; isPerson=true;
-            if(actorCache[id]) actorCache[id].personRk=found.ratingKey;
+          // Extract ratingKey from found item or its key field
+          const foundRk=found.ratingKey||(found.key&&found.key.match(/\/(\d+)(?:\/|$)/)?.[1]);
+          if(foundRk){
+            const fm=await api(`/library/metadata/${foundRk}`).catch(()=>null);
+            const fp=(fm?.Metadata||[])[0];
+            // Use the richer of: full metadata response or the search result itself
+            const candidate=fp&&!CONTENT_TYPES.has(fp.type)?fp:(!CONTENT_TYPES.has(found.type||"")?found:null);
+            if(candidate){personMeta=candidate;isPerson=true;if(actorCache[id])actorCache[id].personRk=String(foundRk);}
+          } else if(!CONTENT_TYPES.has(found.type||"")){
+            personMeta=found; isPerson=true;
           }
         }
       }catch(_){}
     }
     const bio=isPerson?personMeta.summary||"":"";
     // Full filmography from person metadata arrays
-    const actingCredits=isPerson?(personMeta.Role||[]):[];
+    let actingCredits=isPerson?(personMeta.Role||[]):[];
     const directingCredits=isPerson?(personMeta.Director||[]):[];
     const producingCredits=isPerson?(personMeta.Producer||[]):[];
     const movies=[].concat(...moviesResults);
     const shows=[].concat(...showsResults);
     const allEpisodes=[].concat(...episodeResults);
+    // If person metadata has no Role[] credits (Plex hasn't downloaded TMDB filmography yet),
+    // build acting credits from library items so the Filmography section still appears.
+    if(!actingCredits.length&&(movies.length||shows.length)){
+      actingCredits=[
+        ...movies.map(m=>({tag:m.title,year:m.year,ratingKey:m.ratingKey,type:"movie"})),
+        ...shows.map(s=>({tag:s.title,year:s.year,ratingKey:s.ratingKey,type:"show"})),
+      ].sort((a,b)=>(b.year||0)-(a.year||0));
+    }
     // Guest appearances: episodes from shows NOT in type=2 results.
     // Fallback: shows with 3+ episodes treated as regular cast if type=2 returned nothing.
     const mainShowKeys=new Set(shows.map(s=>String(s.ratingKey)));
