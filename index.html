@@ -2303,12 +2303,13 @@ function goToActor(id,name,thumb,personRk){
   if(name) actorCache[id]={name,thumb,personRk:personRk||""};
   navigate(`/actor/${id}`);
 }
-function fmtBornDied(bornTs,diedTs){
-  const fmt=ts=>{
-    const d=new Date(ts*1000);
-    return d.toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+function fmtBornDied(born,died){
+  const fmt=v=>{
+    if(!v) return "";
+    if(typeof v==="string"){const[y,m,d]=v.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});}
+    return new Date(v*1000).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
   };
-  return diedTs?`Born ${fmt(bornTs)} · Died ${fmt(diedTs)}`:`Born ${fmt(bornTs)}`;
+  return died?`Born ${fmt(born)} · Died ${fmt(died)}`:`Born ${fmt(born)}`;
 }
 
 /* Filmography list section: acting/directing/producing tabs with full credit list.
@@ -2357,85 +2358,88 @@ function filmogSection(acting,directing,producing){
   return wrap;
 }
 
+const TMDB_KEY="a9263943cdfdc2dd3d836e06a2cdb10b";
+const TMDB_BASE="https://api.themoviedb.org/3";
+async function tmdbFetch(path){
+  const sep=path.includes("?")?"&":"?";
+  const r=await fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_KEY}`);
+  if(!r.ok) throw new Error(`TMDB ${r.status}`);
+  return r.json();
+}
+
 async function openActor(id){
   const cached=actorCache[id]||{};
   const name=cached.name||"Actor", thumb=cached.thumb||"";
-  // In real Plex: tag ID (used for ?actor= content queries) ≠ person ratingKey
-  // (used to fetch bio / filmography from /library/metadata/).
-  // Priority: (1) explicit personRk stored by castRailHTML from thumb URL extraction,
-  // (2) extract from the stored thumb URL directly (covers search→person-card),
-  // (3) fall back to id — works when id IS the personRk (search results, direct URL); the
-  //     CONTENT_TYPES guard below rejects any non-person result, so wrong content never shows.
-  let personRk=cached.personRk;
-  if(!personRk&&thumb){const rkm=thumb.match(/^\/library\/metadata\/(\d+)\/thumb/);personRk=rkm?rkm[1]:"";}
-  const metaRk=personRk||id;
-  console.info("[hume] openActor id=%s metaRk=%s thumb=%s",id,metaRk,thumb);
   setTitle(name); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    // Plex type numbers: 1=movie, 2=show, 4=episode
     const movieSections=sections.filter(s=>s.type==="movie");
     const showSections=sections.filter(s=>s.type==="show");
     const CONTENT_TYPES=new Set(["movie","show","episode","season","clip","artist","album","track","collection","playlist"]);
-    const [bioMc,moviesResults,showsResults,episodeResults]=await Promise.all([
-      api(`/library/metadata/${metaRk}`).catch(()=>null),
+    // Round 1: TMDB search + Plex content queries, all in parallel
+    const [tmdbSearch,bioMc,moviesResults,showsResults,episodeResults]=await Promise.all([
+      name&&name!=="Actor"?tmdbFetch(`/search/person?query=${encodeURIComponent(name)}&limit=5`).catch(()=>null):Promise.resolve(null),
+      api(`/library/metadata/${id}`).catch(()=>null),
       Promise.all(movieSections.map(s=>api(`/library/sections/${s.key}/all?type=1&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=2&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=4&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
     ]);
-    let personMeta=(bioMc?.Metadata||[])[0];
-    let isPerson=personMeta&&!CONTENT_TYPES.has(personMeta.type);
-    console.info("[hume] primary meta type=%s summary=%s roles=%d isPerson=%s",
-      personMeta?.type,!!personMeta?.summary,(personMeta?.Role||[]).length,isPerson);
-    // Trigger search fallback when: (a) no person record at all, OR (b) person record exists
-    // but has neither a summary nor filmography credits — the metadata endpoint may have returned
-    // the wrong item (tagId→unrelated content that happened to pass the type check), or returned
-    // a stub person record before Plex has fully downloaded TMDB credits.
-    const hasUsefulData=isPerson&&(personMeta.summary||(personMeta.Role||[]).length);
-    if(!hasUsefulData&&name&&name!=="Actor"){
-      try{
-        const sr=await api(`/hubs/search?query=${encodeURIComponent(name)}&limit=15`).catch(()=>null);
-        console.info("[hume] search hubs=%d",sr?.Hub?.length||0,sr?.Hub?.map(h=>h.title));
-        const allMeta=(sr?.Hub||[]).flatMap(h=>h.Metadata||[]);
-        console.info("[hume] search allMeta=%d types=%s",allMeta.length,allMeta.map(m=>m.type).join(","));
-        // Exact name match first, then partial (handles middle names / extra spaces)
-        let found=allMeta.find(m=>!CONTENT_TYPES.has(m.type)
-          &&(m.tag||m.title||"").toLowerCase()===name.toLowerCase());
-        if(!found) found=allMeta.find(m=>!CONTENT_TYPES.has(m.type)
-          &&(m.tag||m.title||"").toLowerCase().includes(name.split(" ")[0].toLowerCase()));
-        console.info("[hume] search found=%s rk=%s",found?.tag||found?.title,found?.ratingKey);
-        if(found){
-          // Extract ratingKey from found item or its key field
-          const foundRk=found.ratingKey||(found.key&&found.key.match(/\/(\d+)(?:\/|$)/)?.[1]);
-          if(foundRk){
-            const fm=await api(`/library/metadata/${foundRk}`).catch(()=>null);
-            const fp=(fm?.Metadata||[])[0];
-            // Use the richer of: full metadata response or the search result itself
-            const candidate=fp&&!CONTENT_TYPES.has(fp.type)?fp:(!CONTENT_TYPES.has(found.type||"")?found:null);
-            if(candidate){personMeta=candidate;isPerson=true;if(actorCache[id])actorCache[id].personRk=String(foundRk);}
-          } else if(!CONTENT_TYPES.has(found.type||"")){
-            personMeta=found; isPerson=true;
-          }
-        }
-      }catch(_){}
+    // Round 2: TMDB person detail + credits (if search found a result)
+    const tmdbId=(tmdbSearch?.results||[])[0]?.id;
+    let tmdbPerson=null, tmdbCredits=null;
+    if(tmdbId){
+      [tmdbPerson,tmdbCredits]=await Promise.all([
+        tmdbFetch(`/person/${tmdbId}`).catch(()=>null),
+        tmdbFetch(`/person/${tmdbId}/combined_credits`).catch(()=>null),
+      ]);
     }
-    const bio=isPerson?personMeta.summary||"":"";
-    // Full filmography from person metadata arrays
-    let actingCredits=isPerson?(personMeta.Role||[]):[];
-    const directingCredits=isPerson?(personMeta.Director||[]):[];
-    const producingCredits=isPerson?(personMeta.Producer||[]):[];
+    // Plex person metadata as fallback
+    const plexMeta=(bioMc?.Metadata||[])[0];
+    const isPlexPerson=plexMeta&&!CONTENT_TYPES.has(plexMeta.type);
+    // Flatten Plex library results
     const movies=[].concat(...moviesResults);
     const shows=[].concat(...showsResults);
     const allEpisodes=[].concat(...episodeResults);
-    // If person metadata has no Role[] credits (Plex hasn't downloaded TMDB filmography yet),
-    // build acting credits from library items so the Filmography section still appears.
-    if(!actingCredits.length&&(movies.length||shows.length)){
-      actingCredits=[
-        ...movies.map(m=>({tag:m.title,year:m.year,ratingKey:m.ratingKey,type:"movie"})),
-        ...shows.map(s=>({tag:s.title,year:s.year,ratingKey:s.ratingKey,type:"show"})),
-      ].sort((a,b)=>(b.year||0)-(a.year||0));
+    const allTitles=[...movies,...shows];
+    // Build normalized-title → library item map for "On Hume" badge matching
+    const normTitle=t=>t.toLowerCase().replace(/[^a-z0-9]/g,"");
+    const libByNorm=new Map(allTitles.map(t=>[normTitle(t.title),t]));
+    const libByRk=new Map(allTitles.map(t=>[String(t.ratingKey),t]));
+    // Biography and birth info: TMDB primary, Plex fallback
+    const bio=tmdbPerson?.biography||(isPlexPerson?plexMeta.summary||"":"");
+    const bornAt=tmdbPerson?.birthday||(isPlexPerson&&plexMeta.bornAt?plexMeta.bornAt:null);
+    const diedAt=tmdbPerson?.deathday||(isPlexPerson&&plexMeta.diedAt?plexMeta.diedAt:null);
+    const birthPlace=tmdbPerson?.place_of_birth||null;
+    // Filmography: TMDB primary, Plex fallback
+    let actingCredits=[], directingCredits=[], producingCredits=[];
+    if(tmdbCredits){
+      const seen=new Set();
+      const castItems=(tmdbCredits.cast||[]).filter(cr=>{
+        const k=`${cr.media_type}-${cr.id}`;
+        if(seen.has(k)) return false; seen.add(k); return true;
+      });
+      const mkCredit=cr=>{
+        const title=cr.title||cr.name||"";
+        const year=cr.release_date?+cr.release_date.slice(0,4):cr.first_air_date?+cr.first_air_date.slice(0,4):0;
+        const libItem=libByNorm.get(normTitle(title));
+        return {tag:title,year,role:cr.character||cr.job||"",ratingKey:libItem?String(libItem.ratingKey):"",type:cr.media_type==="tv"?"show":"movie"};
+      };
+      actingCredits=castItems.map(mkCredit).sort((a,b)=>(b.year||0)-(a.year||0));
+      const crew=tmdbCredits.crew||[];
+      directingCredits=crew.filter(cr=>cr.department==="Directing").map(mkCredit).sort((a,b)=>(b.year||0)-(a.year||0));
+      producingCredits=crew.filter(cr=>cr.job==="Producer"||cr.job==="Executive Producer").map(mkCredit).sort((a,b)=>(b.year||0)-(a.year||0));
+    } else {
+      // TMDB unavailable — use Plex person metadata or library items
+      actingCredits=isPlexPerson?(plexMeta.Role||[]):[];
+      directingCredits=isPlexPerson?(plexMeta.Director||[]):[];
+      producingCredits=isPlexPerson?(plexMeta.Producer||[]):[];
+      if(!actingCredits.length&&(movies.length||shows.length)){
+        actingCredits=[
+          ...movies.map(m=>({tag:m.title,year:m.year,ratingKey:m.ratingKey,type:"movie"})),
+          ...shows.map(s=>({tag:s.title,year:s.year,ratingKey:s.ratingKey,type:"show"})),
+        ].sort((a,b)=>(b.year||0)-(a.year||0));
+      }
     }
-    // Guest appearances: episodes from shows NOT in type=2 results.
-    // Fallback: shows with 3+ episodes treated as regular cast if type=2 returned nothing.
+    // Guest appearances: episodes from shows not in type=2 results
     const mainShowKeys=new Set(shows.map(s=>String(s.ratingKey)));
     if(mainShowKeys.size===0&&allEpisodes.length>0){
       const epCount={};
@@ -2443,10 +2447,7 @@ async function openActor(id){
       Object.entries(epCount).forEach(([k,n])=>{if(n>=3)mainShowKeys.add(k);});
     }
     const guestEps=allEpisodes.filter(ep=>!mainShowKeys.has(String(ep.grandparentRatingKey)));
-    // Known For: use filmography order (Plex orders by TMDB popularity) for library items;
-    // fall back to rating sort if no filmography.
-    const allTitles=[...movies,...shows];
-    const libByRk=new Map(allTitles.map(t=>[String(t.ratingKey),t]));
+    // Known For: filmography order (TMDB popularity) limited to library items
     let knownFor;
     if(actingCredits.length){
       knownFor=actingCredits.filter(cr=>cr.ratingKey&&libByRk.has(String(cr.ratingKey)))
@@ -2454,17 +2455,14 @@ async function openActor(id){
     } else {
       knownFor=allTitles.length>1?[...allTitles].sort((a,b)=>(b.audienceRating||b.rating||0)-(a.audienceRating||a.rating||0)).slice(0,8):[];
     }
-    // You've Seen Them In: watched titles
     const seenTitles=allTitles.filter(t=>t.type==="movie"?t.viewCount>0:t.viewedLeafCount>0);
     const totalItems=movies.length+shows.length+guestEps.length;
-    const bornAt=isPerson&&personMeta.bornAt?personMeta.bornAt:null;
-    const diedAt=isPerson&&personMeta.diedAt?personMeta.diedAt:null;
     const photoSrc=thumb?img(thumb,280,280):"";
     c.innerHTML=`<div class="actor-head">
       <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}
       </div><div class="actor-info"><h1>${esc(name)}</h1>
       ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}
-      ${bornAt?`<div class="actor-born">${fmtBornDied(bornAt,diedAt)}</div>`:""}
+      ${bornAt?`<div class="actor-born">${fmtBornDied(bornAt,diedAt)}${birthPlace?` · ${esc(birthPlace)}`:""}</div>`:""}
       <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"} on this server</div>
       </div></div>`;
     if(knownFor.length) c.appendChild(railSection("Known For",knownFor,false,false));
