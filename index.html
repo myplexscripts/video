@@ -1347,6 +1347,42 @@ console.log("Hume v0.4");
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
 const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed"};
+const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
+
+/* ---- CROSS-DEVICE SETTINGS SYNC (Cloudflare Worker + KV) ----
+   Uses a SHA-256 hash of the Plex token as the per-user key so no
+   credentials are ever sent to or stored on the Worker. Fire-and-forget
+   on writes; reads happen once at boot before the first render. */
+async function _workerKey(){
+  if(!server||!server.token) return null;
+  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(server.token));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,32);
+}
+async function loadRemoteSettings(){
+  try{
+    const key=await _workerKey(); if(!key) return;
+    const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`);
+    if(!r.ok) return;
+    const remote=await r.json();
+    // Merge: remote wins for any key it has, local kept for the rest
+    if(remote[LS.railStyles]) localStorage.setItem(LS.railStyles,JSON.stringify(remote[LS.railStyles]));
+    if(remote[LS.navCollapsed]!=null) localStorage.setItem(LS.navCollapsed,remote[LS.navCollapsed]);
+  }catch(_){}  // always falls back to localStorage silently
+}
+let _pushTimer=null;
+function pushRemoteSettings(){
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(async()=>{
+    try{
+      const key=await _workerKey(); if(!key) return;
+      const payload={
+        [LS.railStyles]:getRailStyles(),
+        [LS.navCollapsed]:localStorage.getItem(LS.navCollapsed)||"0",
+      };
+      fetch(`${SETTINGS_WORKER}/?token=${key}`,{method:"PUT",body:JSON.stringify(payload)});
+    }catch(_){}
+  },800);  // debounce: batch rapid changes into one write
+}
 const VIDEO_TYPES=["movie","show","season","episode","clip"];
 
 function clientId(){
@@ -1573,9 +1609,10 @@ async function bootApp(){
     document.head.appendChild(pc);
   }
   try{
+    await loadRemoteSettings();   // pull synced settings before first render
     const mc=await api("/library/sections");
     sections=(mc.Directory||[]).filter(s=>s.type==="movie"||s.type==="show");
-    buildNav(); route();
+    buildNav(); initNavCollapse(); route();
   }catch(e){ $("#content").innerHTML=errHTML(e,"bootApp"); }
 }
 function buildNav(){
@@ -1752,6 +1789,7 @@ function getRailStyle(key){
 }
 function setRailStyle(key,style){
   const s=getRailStyles(); s[key]=style; localStorage.setItem(LS.railStyles,JSON.stringify(s));
+  pushRemoteSettings();
 }
 function renderHubSection(hub,style){
   if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false);
@@ -4225,9 +4263,9 @@ function initNavCollapse(){
     const next=!shell.classList.contains("nav-collapsed");
     applyNavCollapsed(next);
     localStorage.setItem(LS.navCollapsed,next?"1":"0");
+    pushRemoteSettings();
   };
 }
-initNavCollapse();
 $("#searchBox").addEventListener("click",()=>$("#search").focus());
 // Dismiss any open library dropdown when clicking elsewhere or pressing Escape.
 document.addEventListener("click",()=>{ closeLibMenus(); closeEpMenus(); });
