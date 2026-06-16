@@ -321,7 +321,7 @@
   .lib-tab:hover{background:var(--surface3);color:var(--text)}
   .lib-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .lib-tab.active:hover{background:var(--accent-glass-hover)}
-  #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));z-index:15;align-items:center;gap:8px;flex-wrap:nowrap}
+  #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:calc(240px + 16px);z-index:25;align-items:center;gap:8px;flex-wrap:nowrap}
   #libNav.visible{display:flex}
   #libNavName{background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:100px;height:44px;padding:0 18px;font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;white-space:nowrap;box-shadow:var(--frost-shadow);letter-spacing:-.01em}
   .lib-nav-tabs{display:flex;gap:6px}
@@ -329,6 +329,9 @@
   .lib-nav-tab:hover{background:var(--surface3);color:var(--text)}
   .lib-nav-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .lib-nav-tab.active:hover{background:var(--accent-glass-hover)}
+  /* Adaptive text inside frost pills — same difference-blend trick as the search box */
+  .frost-text{color:#fff;mix-blend-mode:difference;display:inline-block}
+  .lib-nav-tab.active .frost-text{color:#141005;mix-blend-mode:normal}
   .lib-filter-note{font-size:12px;color:var(--faint);padding:0 var(--edge) 12px;margin-top:calc(var(--pill-clear) + 8px)}
 
   /* ---- LIBRARY TOOLBAR ----
@@ -997,6 +1000,8 @@
     .scrim-nav{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:19;display:none}
     .scrim-nav.show{display:block}
     .menu-toggle{display:flex}
+    /* On mobile the sidebar is off-canvas; start libNav after the menu-toggle (44px + 8px gap) */
+    #libNav{left:max(68px,calc(env(safe-area-inset-left) + 60px))}
   }
   @media(max-width:560px){
     .p-vol{display:none}.p-status{display:none}
@@ -1735,12 +1740,11 @@ function libTabsHTML(section,active){
 function wireLibTabs(c){ c.querySelectorAll(".lib-tab[data-href]").forEach(b=>{ b.onclick=()=>navigate(b.dataset.href); }); }
 function showLibNav(section,active){
   const nav=$("#libNav"); if(!nav) return;
-  nav.innerHTML=`<span id="libNavName">${esc(section.title)}</span><div class="lib-nav-tabs">`
+  nav.innerHTML=`<span id="libNavName"><span class="frost-text">${esc(section.title)}</span></span><div class="lib-nav-tabs">`
     +[{k:"recommended",l:"Recommended",h:`/library/${section.key}`},
       {k:"all",l:"Library",h:`/library/${section.key}/all`},
       {k:"collections",l:"Collections",h:`/library/${section.key}/collections`},
-      {k:"playlists",l:"Playlists",h:`/library/${section.key}/playlists`},
-    ].map(t=>`<button class="lib-nav-tab${active===t.k?" active":""}" data-href="${t.h}">${t.l}</button>`).join("")
+    ].map(t=>`<button class="lib-nav-tab${active===t.k?" active":""}" data-href="${t.h}"><span class="frost-text">${t.l}</span></button>`).join("")
     +"</div>";
   nav.querySelectorAll(".lib-nav-tab").forEach(b=>b.onclick=()=>navigate(b.dataset.href));
   nav.classList.add("visible");
