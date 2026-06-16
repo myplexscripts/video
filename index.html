@@ -543,14 +543,31 @@
   .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
   .cast-row::-webkit-scrollbar{height:0}
-  .cast{flex:0 0 auto;width:112px;text-align:center}
+  .cast{flex:0 0 auto;width:112px;text-align:center;background:none;border:none;
+    padding:0;cursor:default;font-family:var(--font);color:var(--text)}
+  .cast[data-actor-id]{cursor:pointer}
+  .cast[data-actor-id]:hover .art{border-color:var(--accent)}
+  .cast[data-actor-id]:hover .nm{color:var(--accent)}
   .cast .art{width:112px;height:112px;border-radius:50%;overflow:hidden;
-    background:var(--bg2);border:1px solid var(--line);margin:0 auto}
+    background:var(--bg2);border:1px solid var(--line);margin:0 auto;
+    transition:border-color .15s}
   .cast .art img{width:100%;height:100%;object-fit:cover;display:block}
-  .cast .nm{font-size:12.5px;font-weight:600;line-height:1.3;margin-top:9px}
+  .cast .nm{font-size:12.5px;font-weight:600;line-height:1.3;margin-top:9px;
+    transition:color .15s}
   .cast .rl{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.25}
   .crew{display:flex;gap:28px;flex-wrap:wrap;color:var(--dim);font-size:13px;margin-top:4px}
   .crew b{color:var(--text);font-weight:600}
+  .person-card .person-art{border-radius:50%;overflow:hidden;background:var(--bg2);border:1px solid var(--line)}
+  .person-card .person-art img{border-radius:50%}
+  /* ---- ACTOR DETAIL PAGE ---- */
+  .actor-head{display:flex;align-items:flex-end;gap:28px;padding:120px var(--edge) 32px;
+    background:linear-gradient(to bottom,transparent 0%,var(--bg) 100%);position:relative}
+  .actor-photo{width:140px;height:140px;border-radius:50%;overflow:hidden;flex:0 0 140px;
+    background:var(--bg2);border:2px solid var(--line)}
+  .actor-photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .actor-info{flex:1;min-width:0}
+  .actor-info h1{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:6px}
+  .actor-info .actor-sub{font-size:14px;color:var(--dim)}
 
   /* ---- EXTRAS (trailers, deleted scenes, featurettes...) ---- */
   .extra-badge{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
@@ -1313,6 +1330,7 @@ function pathForItem(it){
   if(it.type==="show") return `/show/${it.ratingKey}`;
   if(it.type==="season") return `/show/${it.parentRatingKey}/season/${it.ratingKey}`;
   if(it.type==="episode") return `/episode/${it.ratingKey}`;
+  if(it.type==="person") return `/actor/${it.ratingKey}`;
   return null;
 }
 function navigate(path){
@@ -1357,6 +1375,7 @@ async function route(){
       case "collection": return openCollection({...(await metaItem(parts[1])),_collection:true});
       case "playlist": return openPlaylist(await playlistMeta(parts[1]));
       case "playlists": return showPlaylists();
+      case "actor": return openActor(parts[1]);
       case "see-all": return showSeeAll();
       case "search": {
         const q=params.get("q")||"";
@@ -1552,6 +1571,15 @@ function wireRailArrows(viewport,carousel,prev,next){
   requestAnimationFrame(update);
 }
 function card(it,wide,square){
+  if(it.type==="person"){
+    const b=el("button","card person-card");
+    const src=it.thumb?img(it.thumb,220,220):"";
+    b.innerHTML=`<div class="art person-art">${src?`<img loading="lazy" alt="${esc(it.title||it.tag||"")}" src="${src}" onerror="this.closest('.art').classList.add('broken')">`:""}
+      <span class="art-fallback">${svgIcon("user-switch")}</span></div>
+      <div class="ct">${esc(it.title||it.tag||"")}</div><div class="cs">Person</div>`;
+    b.onclick=()=>goToActor(it.ratingKey,it.tag||it.title,it.thumb);
+    return b;
+  }
   const b=el("button","card"+(wide?" wide":"")+(square?" square":""));
   const ep=it.type==="episode";
   const useWide = wide || ep;
@@ -1599,7 +1627,10 @@ function card(it,wide,square){
       im.insertAdjacentHTML("beforebegin",mo); im.remove();
     },{once:true});
   }
-  b.onclick=()=>{ const r=pathForItem(it); if(r) navigate(r); else openItem(it); };
+  b.onclick=()=>{
+    if(it.type==="person"){ goToActor(it.ratingKey,it.tag||it.title,it.thumb); return; }
+    const r=pathForItem(it); if(r) navigate(r); else openItem(it);
+  };
   return b;
 }
 
@@ -2221,10 +2252,57 @@ function castRailHTML(m){
   const cast=(m.Role||[]).slice(0,12);
   if(!cast.length) return "";
   return `<div class="rail-section"><div class="rail-head"><h3>Cast</h3><span class="count">${cast.length}</span></div>
-    <div class="cast-row">`+cast.map(r=>`<div class="cast">
+    <div class="cast-row" id="castRow">`+cast.map(r=>`<button class="cast"${r.id?` data-actor-id="${r.id}" data-actor-name="${esc(r.tag)}" data-actor-thumb="${esc(r.thumb||"")}"`:""}>
     <div class="art"><img loading="lazy" alt="" src="${r.thumb?img(r.thumb,224,224):""}" onerror="this.style.visibility='hidden'"></div>
-    <div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></div>`).join("")+`</div></div>`;
+    <div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></button>`).join("")+`</div></div>`;
 }
+function wireCastRail(c){
+  c.querySelectorAll(".cast[data-actor-id]").forEach(btn=>{
+    btn.onclick=()=>goToActor(btn.dataset.actorId,btn.dataset.actorName,btn.dataset.actorThumb);
+  });
+}
+
+/* ---- ACTOR PAGES ---- */
+const actorCache={};
+function goToActor(id,name,thumb){
+  if(name) actorCache[id]={name,thumb};
+  navigate(`/actor/${id}`);
+}
+async function openActor(id){
+  const cached=actorCache[id]||{};
+  let name=cached.name||"Actor", thumb=cached.thumb||"";
+  setTitle(name); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  try{
+    // Try to load person metadata (name/thumb) from Plex
+    try{ const mc=await api(`/library/metadata/${id}`); const p=(mc.Metadata||[])[0]; if(p){name=p.tag||p.title||name;thumb=p.thumb||thumb;actorCache[id]={name,thumb};} }catch(_){}
+    setTitle(name);
+    // Fetch content from all library sections in parallel
+    const movieSections=sections.filter(s=>s.type==="movie");
+    const showSections=sections.filter(s=>s.type==="show");
+    const [moviesResults,showsResults,episodeResults]=await Promise.all([
+      Promise.all(movieSections.map(s=>api(`/library/sections/${s.key}/all?type=1&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
+      Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=4&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
+      Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=10&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
+    ]);
+    const movies=[].concat(...moviesResults);
+    const shows=[].concat(...showsResults);
+    const allEpisodes=[].concat(...episodeResults);
+    // Guest appearances = episodes from shows where actor is NOT main cast
+    const mainShowKeys=new Set(shows.map(s=>String(s.ratingKey)));
+    const guestEps=allEpisodes.filter(ep=>!mainShowKeys.has(String(ep.grandparentRatingKey)));
+    const totalItems=movies.length+shows.length+guestEps.length;
+    const photoSrc=thumb?img(thumb,280,280):"";
+    c.innerHTML=`<div class="actor-head">
+      <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}
+      </div><div class="actor-info"><h1>${esc(name)}</h1>
+      <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"}</div></div></div>`;
+    if(movies.length) c.appendChild(railSection("Movies",movies,false,false));
+    if(shows.length) c.appendChild(railSection("TV Shows",shows,false,false));
+    if(guestEps.length) c.appendChild(railSection("Guest Appearances",guestEps,true,false));
+    if(!totalItems) c.insertAdjacentHTML("beforeend","<div class='empty'>No titles found for this person.</div>");
+  }catch(e){ c.innerHTML=errHTML(e); }
+}
+
 /* ---- RATE FLOAT ----
    Floating glass widget in the hero's bottom-right corner: a 5-star personal
    rating control that writes to Plex via PUT /:/rate, plus previous/shuffle/
@@ -2293,6 +2371,7 @@ async function openMovie(it){
     appendRelatedRails(c,related,m);
     wireBackdrop(c,m.art||m.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
+    wireCastRail(c);
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
     else $("#playBtnD").onclick=()=>playItem(m,0);
     wireWatchedToggle(c,m,true);
@@ -2332,6 +2411,7 @@ async function openShow(it,jumpSeasonKey){
     appendRelatedRails(c,related,show);
     wireBackdrop(c,show.art||show.thumb);
     wireExtras(c,extras,"ratingsTrailerBtn");
+    wireCastRail(c);
     injectFirstWatched(show.ratingKey,true);
     wireRateFloat(c,show);
 
@@ -2495,6 +2575,7 @@ async function openEpisode(it){
       });
     }
     wireBackdrop(c,m.art||m.grandparentArt||m.thumb);
+    wireCastRail(c);
     const back=$("#epBackBtn");
     if(back) back.onclick=()=>navigate(`/show/${m.grandparentRatingKey}/season/${m.parentRatingKey}`);
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
@@ -2523,7 +2604,9 @@ async function runSearch(q){
   try{
     const mc=await api(`/hubs/search?query=${encodeURIComponent(q)}&limit=40`);
     const hubs=(mc.Hub||[]).map(h=>({title:h.title,
-      items:(h.Metadata||[]).filter(x=>["movie","show","episode","season"].includes(x.type))}))
+      items:(h.Metadata||[])
+        .map(x=>x.type==="person"?{...x,title:x.tag||x.title}:x)
+        .filter(x=>["movie","show","episode","season","person"].includes(x.type))}))
       .filter(h=>h.items.length);
     const total=hubs.reduce((a,h)=>a+h.items.length,0);
     const head=`<div class="search-head"><h2>"${esc(q)}"</h2>${total?`<span class="count">${total} result${total===1?"":"s"}</span>`:""}</div>`;
