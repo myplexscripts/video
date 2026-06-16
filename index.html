@@ -567,9 +567,31 @@
   .actor-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .actor-info{flex:1;min-width:0}
   .actor-info h1{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:6px}
-  .actor-bio{font-size:13.5px;line-height:1.65;color:var(--dim);margin:8px 0 4px;max-width:600px;
-    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-  .actor-info .actor-sub{font-size:14px;color:var(--faint)}
+  .actor-bio{font-size:13.5px;line-height:1.65;color:var(--dim);margin:8px 0 4px;max-width:640px;
+    display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+  .actor-info .actor-sub{font-size:13px;color:var(--faint);margin-top:6px}
+  /* ---- FILMOGRAPHY LIST ---- */
+  .filmog-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .filmog-tab{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15);
+    background:none;color:var(--dim);font-size:13px;font-weight:600;font-family:var(--font);
+    cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+  .filmog-tab:hover{color:var(--text);border-color:rgba(255,255,255,.3)}
+  .filmog-tab.active{background:var(--accent);border-color:transparent;color:#fff}
+  .filmog-list{display:flex;flex-direction:column}
+  .filmog-item{display:flex;align-items:flex-start;gap:16px;padding:10px 0;
+    border-bottom:1px solid rgba(255,255,255,.06);border-top:none;border-left:none;border-right:none;
+    background:none;text-align:left;font-family:var(--font);color:var(--text);
+    cursor:default;width:100%;transition:color .12s}
+  .filmog-item.in-lib{cursor:pointer}
+  .filmog-item.in-lib:hover{color:var(--accent)}
+  .filmog-item.in-lib:hover .filmog-as{color:inherit}
+  .filmog-year{flex:0 0 44px;font-size:13px;color:var(--faint);
+    font-variant-numeric:tabular-nums;padding-top:2px;text-align:right}
+  .filmog-info{flex:1;min-width:0}
+  .filmog-title{font-size:14px;font-weight:600;line-height:1.45}
+  .filmog-as{font-weight:400;color:var(--dim);transition:color .12s}
+  .filmog-badge{font-size:10.5px;font-weight:700;color:var(--accent);
+    letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
 
   /* ---- EXTRAS (trailers, deleted scenes, featurettes...) ---- */
   .extra-badge{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
@@ -2270,6 +2292,53 @@ function goToActor(id,name,thumb){
   if(name) actorCache[id]={name,thumb};
   navigate(`/actor/${id}`);
 }
+
+/* Filmography list section: acting/directing/producing tabs with full credit list.
+   Credits come from /library/metadata/{personId} Role[]/Director[]/Producer[] arrays.
+   Items without ratingKey are not in the library (shown dimmed, not clickable).
+   Items with ratingKey get an "On Hume" badge and navigate on click. */
+function filmogSection(acting,directing,producing){
+  const tabs=[
+    {label:"Actor",  items:acting},
+    {label:"Director",items:directing},
+    {label:"Producer",items:producing},
+  ].filter(t=>t.items.length);
+  if(!tabs.length) return null;
+  const wrap=el("div","section filmog-section");
+  const h=document.createElement("h3"); h.textContent="Filmography"; wrap.appendChild(h);
+  const tabBar=el("div","filmog-tabs");
+  const listEl=el("div","filmog-list");
+  const render=items=>{
+    listEl.innerHTML=items.map(cr=>{
+      const inLib=!!cr.ratingKey;
+      const rk=inLib?` data-rk="${esc(String(cr.ratingKey))}" data-ctype="${esc(cr.type||"")}"` :"";
+      return `<button class="filmog-item${inLib?" in-lib":""}"${rk}${!inLib?" disabled":""}>
+        <span class="filmog-year">${cr.year||"—"}</span>
+        <div class="filmog-info">
+          <div class="filmog-title">${esc(cr.tag||"Untitled")}${cr.role?` <span class="filmog-as">as ${esc(cr.role)}</span>`:""}
+          </div>${inLib?`<div class="filmog-badge">On Hume</div>`:""}
+        </div></button>`;
+    }).join("");
+  };
+  tabs.forEach((t,i)=>{
+    const b=el("button","filmog-tab"+(i===0?" active":""));
+    b.textContent=`${t.label} (${t.items.length})`;
+    b.onclick=()=>{ tabBar.querySelectorAll(".filmog-tab").forEach(x=>x.classList.remove("active")); b.classList.add("active"); render(t.items); };
+    tabBar.appendChild(b);
+  });
+  render(tabs[0].items);
+  wrap.appendChild(tabBar);
+  wrap.appendChild(listEl);
+  listEl.addEventListener("click",e=>{
+    const item=e.target.closest(".filmog-item.in-lib[data-rk]");
+    if(!item) return;
+    const rk=item.dataset.rk, ctype=item.dataset.ctype;
+    if(ctype==="show") navigate(`/show/${rk}`);
+    else navigate(`/movie/${rk}`);
+  });
+  return wrap;
+}
+
 async function openActor(id){
   const cached=actorCache[id]||{};
   const name=cached.name||"Actor", thumb=cached.thumb||"";
@@ -2284,39 +2353,56 @@ async function openActor(id){
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=2&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=4&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
     ]);
-    // Only use bio if Plex returns a genuine person record (not content sharing the same numeric ID)
+    // Accept as person if: explicit type="person", OR has `tag` (person name field) but no
+    // `duration` or `leafCount` (which content items always have).
     const personMeta=(bioMc?.Metadata||[])[0];
-    const bio=(personMeta?.type==="person") ? personMeta.summary||"" : "";
+    const isPerson=personMeta&&(personMeta.type==="person"||(personMeta.tag&&!personMeta.duration&&!personMeta.leafCount));
+    const bio=isPerson?personMeta.summary||"":"";
+    // Full filmography from person metadata arrays
+    const actingCredits=isPerson?(personMeta.Role||[]):[];
+    const directingCredits=isPerson?(personMeta.Director||[]):[];
+    const producingCredits=isPerson?(personMeta.Producer||[]):[];
     const movies=[].concat(...moviesResults);
     const shows=[].concat(...showsResults);
     const allEpisodes=[].concat(...episodeResults);
-    // Guest appearances = episodes from shows NOT returned by type=2 query.
-    // Fallback: if type=2 returns nothing, shows with 3+ episodes are treated as regular cast.
+    // Guest appearances: episodes from shows NOT in type=2 results.
+    // Fallback: shows with 3+ episodes treated as regular cast if type=2 returned nothing.
     const mainShowKeys=new Set(shows.map(s=>String(s.ratingKey)));
-    if(mainShowKeys.size===0 && allEpisodes.length>0){
+    if(mainShowKeys.size===0&&allEpisodes.length>0){
       const epCount={};
-      allEpisodes.forEach(ep=>{ const k=String(ep.grandparentRatingKey); epCount[k]=(epCount[k]||0)+1; });
-      Object.entries(epCount).forEach(([k,n])=>{ if(n>=3) mainShowKeys.add(k); });
+      allEpisodes.forEach(ep=>{const k=String(ep.grandparentRatingKey);epCount[k]=(epCount[k]||0)+1;});
+      Object.entries(epCount).forEach(([k,n])=>{if(n>=3)mainShowKeys.add(k);});
     }
     const guestEps=allEpisodes.filter(ep=>!mainShowKeys.has(String(ep.grandparentRatingKey)));
-    // Known For: top 8 titles by audience rating (skip if only 1 title)
+    // Known For: use filmography order (Plex orders by TMDB popularity) for library items;
+    // fall back to rating sort if no filmography.
     const allTitles=[...movies,...shows];
-    const knownFor=allTitles.length>1?[...allTitles].sort((a,b)=>(b.audienceRating||b.rating||0)-(a.audienceRating||a.rating||0)).slice(0,8):[];
-    // You Know Them From: titles the user has watched
-    const watchedTitles=allTitles.filter(t=>t.type==="movie"?t.viewCount>0:t.viewedLeafCount>0);
+    const libByRk=new Map(allTitles.map(t=>[String(t.ratingKey),t]));
+    let knownFor;
+    if(actingCredits.length){
+      knownFor=actingCredits.filter(cr=>cr.ratingKey&&libByRk.has(String(cr.ratingKey)))
+        .map(cr=>libByRk.get(String(cr.ratingKey))).filter(Boolean).slice(0,8);
+    } else {
+      knownFor=allTitles.length>1?[...allTitles].sort((a,b)=>(b.audienceRating||b.rating||0)-(a.audienceRating||a.rating||0)).slice(0,8):[];
+    }
+    // You've Seen Them In: watched titles
+    const seenTitles=allTitles.filter(t=>t.type==="movie"?t.viewCount>0:t.viewedLeafCount>0);
     const totalItems=movies.length+shows.length+guestEps.length;
     const photoSrc=thumb?img(thumb,280,280):"";
     c.innerHTML=`<div class="actor-head">
       <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}
       </div><div class="actor-info"><h1>${esc(name)}</h1>
       ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}
-      <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"}</div></div></div>`;
+      <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"} on this server</div>
+      </div></div>`;
     if(knownFor.length) c.appendChild(railSection("Known For",knownFor,false,false));
-    if(watchedTitles.length) c.appendChild(railSection("You Know Them From",watchedTitles,false,false));
+    if(seenTitles.length) c.appendChild(railSection("You've Seen Them In",seenTitles,false,false));
     if(movies.length) c.appendChild(railSection("Movies",movies,false,false));
     if(shows.length) c.appendChild(railSection("TV Shows",shows,false,false));
     if(guestEps.length) c.appendChild(railSection("Guest Appearances",guestEps,true,false));
-    if(!totalItems) c.insertAdjacentHTML("beforeend","<div class='empty'>No titles found for this person.</div>");
+    const filmog=filmogSection(actingCredits,directingCredits,producingCredits);
+    if(filmog) c.appendChild(filmog);
+    if(!totalItems&&!actingCredits.length) c.insertAdjacentHTML("beforeend","<div class='empty'>No titles found for this person.</div>");
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
