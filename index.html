@@ -2270,12 +2270,9 @@ function goToActor(id,name,thumb){
 }
 async function openActor(id){
   const cached=actorCache[id]||{};
-  let name=cached.name||"Actor", thumb=cached.thumb||"";
+  const name=cached.name||"Actor", thumb=cached.thumb||"";
   setTitle(name); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    // Try to load person metadata (name/thumb) from Plex
-    try{ const mc=await api(`/library/metadata/${id}`); const p=(mc.Metadata||[])[0]; if(p){name=p.tag||p.title||name;thumb=p.thumb||thumb;actorCache[id]={name,thumb};} }catch(_){}
-    setTitle(name);
     // Fetch content from all library sections in parallel
     const movieSections=sections.filter(s=>s.type==="movie");
     const showSections=sections.filter(s=>s.type==="show");
@@ -2287,8 +2284,16 @@ async function openActor(id){
     const movies=[].concat(...moviesResults);
     const shows=[].concat(...showsResults);
     const allEpisodes=[].concat(...episodeResults);
-    // Guest appearances = episodes from shows where actor is NOT main cast
+    // Guest appearances = episodes from shows where actor is NOT regular cast.
+    // Primary: shows returned by type=4 query.
+    // Fallback: if type=4 returns nothing (Plex sometimes omits show-level credits),
+    // treat any show where the actor has 3+ episodes as a regular role, not a guest spot.
     const mainShowKeys=new Set(shows.map(s=>String(s.ratingKey)));
+    if(mainShowKeys.size===0 && allEpisodes.length>0){
+      const epCount={};
+      allEpisodes.forEach(ep=>{ const k=String(ep.grandparentRatingKey); epCount[k]=(epCount[k]||0)+1; });
+      Object.entries(epCount).forEach(([k,n])=>{ if(n>=3) mainShowKeys.add(k); });
+    }
     const guestEps=allEpisodes.filter(ep=>!mainShowKeys.has(String(ep.grandparentRatingKey)));
     const totalItems=movies.length+shows.length+guestEps.length;
     const photoSrc=thumb?img(thumb,280,280):"";
