@@ -2370,16 +2370,32 @@ async function openActor(id){
     // Plex type numbers: 1=movie, 2=show, 4=episode
     const movieSections=sections.filter(s=>s.type==="movie");
     const showSections=sections.filter(s=>s.type==="show");
+    const CONTENT_TYPES=new Set(["movie","show","episode","season","clip","artist","album","track","collection","playlist"]);
     const [bioMc,moviesResults,showsResults,episodeResults]=await Promise.all([
       api(`/library/metadata/${metaRk}`).catch(()=>null),
       Promise.all(movieSections.map(s=>api(`/library/sections/${s.key}/all?type=1&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=2&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
       Promise.all(showSections.map(s=>api(`/library/sections/${s.key}/all?type=4&actor=${id}`).then(r=>r.Metadata||[]).catch(()=>[]))),
     ]);
-    // Reject known content types so music/movies don't masquerade as person metadata.
-    const CONTENT_TYPES=new Set(["movie","show","episode","season","clip","artist","album","track","collection","playlist"]);
-    const personMeta=(bioMc?.Metadata||[])[0];
-    const isPerson=personMeta&&!CONTENT_TYPES.has(personMeta.type);
+    let personMeta=(bioMc?.Metadata||[])[0];
+    let isPerson=personMeta&&!CONTENT_TYPES.has(personMeta.type);
+    // If the metadata endpoint returned non-person content (tagId resolved to the wrong item),
+    // search by actor name to find the correct person ratingKey and retry.
+    if(!isPerson&&name&&name!=="Actor"){
+      try{
+        const sr=await api(`/hubs/search?query=${encodeURIComponent(name)}`).catch(()=>null);
+        const found=(sr?.Hub||[]).flatMap(h=>h.Metadata||[])
+          .find(m=>!CONTENT_TYPES.has(m.type)&&(m.tag||m.title||"").toLowerCase()===name.toLowerCase());
+        if(found){
+          const fm=await api(`/library/metadata/${found.ratingKey}`).catch(()=>null);
+          const fp=(fm?.Metadata||[])[0];
+          if(fp&&!CONTENT_TYPES.has(fp.type)){
+            personMeta=fp; isPerson=true;
+            if(actorCache[id]) actorCache[id].personRk=found.ratingKey;
+          }
+        }
+      }catch(_){}
+    }
     const bio=isPerson?personMeta.summary||"":"";
     // Full filmography from person metadata arrays
     const actingCredits=isPerson?(personMeta.Role||[]):[];
