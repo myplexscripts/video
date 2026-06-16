@@ -702,6 +702,9 @@
     transition:background .15s,color .15s,border-color .15s;white-space:nowrap}
   .rail-style-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
   .rail-style-btn:hover:not(.active){background:var(--surface2);color:var(--text)}
+  .sync-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--faint)}
+  .sync-dot.ok{background:#3ecf6b;box-shadow:0 0 0 3px rgba(62,207,107,.18)}
+  .sync-dot.bad{background:#e0556b;box-shadow:0 0 0 3px rgba(224,85,107,.18)}
   .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
   .cast-row::-webkit-scrollbar{height:0}
@@ -1350,38 +1353,70 @@ const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- CROSS-DEVICE SETTINGS SYNC (Cloudflare Worker + KV) ----
-   Uses a SHA-256 hash of the Plex token as the per-user key so no
-   credentials are ever sent to or stored on the Worker. Fire-and-forget
-   on writes; reads happen once at boot before the first render. */
-async function _workerKey(){
-  if(!server||!server.token) return null;
-  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(server.token));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,32);
+   Keyed by a stable, opaque hash of the Plex ACCOUNT id (same on every
+   device for a given account) — NOT the server token, which can differ
+   per device/login. FNV-1a is used instead of crypto.subtle so it works
+   in any context (http/https/file); the key only needs to be deterministic
+   and opaque, not cryptographically strong. No credentials ever leave the
+   client. */
+let _syncState="idle";          // idle | ok | unavailable
+function _fnv1a(str){
+  let h=0x811c9dc5;
+  for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,0x01000193); }
+  return (h>>>0).toString(16).padStart(8,"0");
+}
+// Resolve (and cache) a per-account sync key. Prefers the Plex account uuid/id
+// from plex.tv; falls back to the server token only if that lookup fails.
+async function accountKey(){
+  let cached=localStorage.getItem("hume_synckey");
+  if(cached) return cached;
+  let id="";
+  try{
+    const r=await fetch(`${PLEX_TV}/api/v2/user`,{headers:plexHeaders(accountToken)});
+    if(r.ok){ const u=await r.json(); id=String(u.uuid||u.id||""); }
+  }catch(_){}
+  if(!id && server&&server.token) id=server.token;   // fallback identity
+  if(!id) return null;
+  const key=_fnv1a("hume:"+id);
+  localStorage.setItem("hume_synckey",key);
+  return key;
 }
 async function loadRemoteSettings(){
   try{
-    const key=await _workerKey(); if(!key) return;
+    const key=await accountKey(); if(!key){ _syncState="unavailable"; return; }
     const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`);
-    if(!r.ok) return;
+    if(!r.ok) throw new Error("HTTP "+r.status);
     const remote=await r.json();
-    // Merge: remote wins for any key it has, local kept for the rest
-    if(remote[LS.railStyles]) localStorage.setItem(LS.railStyles,JSON.stringify(remote[LS.railStyles]));
-    if(remote[LS.navCollapsed]!=null) localStorage.setItem(LS.navCollapsed,remote[LS.navCollapsed]);
-  }catch(_){}  // always falls back to localStorage silently
+    if(remote && typeof remote==="object"){
+      if(remote[LS.railStyles]) localStorage.setItem(LS.railStyles,JSON.stringify(remote[LS.railStyles]));
+      if(remote[LS.navCollapsed]!=null) localStorage.setItem(LS.navCollapsed,String(remote[LS.navCollapsed]));
+    }
+    _syncState="ok";
+  }catch(e){ _syncState="unavailable"; console.warn("[sync] load failed:",e.message); }
 }
 let _pushTimer=null;
 function pushRemoteSettings(){
   clearTimeout(_pushTimer);
   _pushTimer=setTimeout(async()=>{
     try{
-      const key=await _workerKey(); if(!key) return;
+      const key=await accountKey(); if(!key){ _syncState="unavailable"; return; }
       const payload={
         [LS.railStyles]:getRailStyles(),
         [LS.navCollapsed]:localStorage.getItem(LS.navCollapsed)||"0",
       };
-      fetch(`${SETTINGS_WORKER}/?token=${key}`,{method:"PUT",body:JSON.stringify(payload)});
-    }catch(_){}
+      const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`,{method:"PUT",body:JSON.stringify(payload)});
+      _syncState=r.ok?"ok":"unavailable";
+      if(!r.ok) console.warn("[sync] save failed: HTTP",r.status);
+    }catch(e){ _syncState="unavailable"; console.warn("[sync] save failed:",e.message); }
   },800);  // debounce: batch rapid changes into one write
+}
+// Lightweight status probe (read-only, no localStorage mutation) for the UI.
+async function pingSync(){
+  try{
+    const key=await accountKey(); if(!key) return "unavailable";
+    const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`);
+    return (_syncState=r.ok?"ok":"unavailable");
+  }catch(_){ return (_syncState="unavailable"); }
 }
 const VIDEO_TYPES=["movie","show","season","episode","clip"];
 
@@ -1438,6 +1473,7 @@ function pollPin(id){
 }
 function loginErr(m){ const e=$("#loginErr"); e.textContent=m; e.classList.remove("hidden"); }
 function logout(){ localStorage.removeItem(LS.token); localStorage.removeItem(LS.server);
+  localStorage.removeItem("hume_synckey");
   accountToken=null; server=null; location.reload(); }
 
 /* ============================================================ SERVER */
@@ -2316,7 +2352,23 @@ async function showSettings(){
         Choose how each row looks on the home screen.
       </div>
       <div id="settingsRailRows"><div class="loading" style="padding:32px 0">Loading…</div></div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-group-head">Sync</div>
+      <div class="settings-row">
+        <div class="settings-label">Cross-device settings
+          <small id="syncStatusText">Checking…</small>
+        </div>
+        <span class="sync-dot" id="syncDot"></span>
+      </div>
     </div></div>`;
+  // Reflect live sync status so failures are visible, not silent.
+  (async()=>{
+    const txt=$("#syncStatusText"), dot=$("#syncDot"); if(!txt) return;
+    const state=await pingSync();
+    if(state==="ok"){ txt.textContent="Active — your settings follow you across devices."; dot.className="sync-dot ok"; }
+    else{ txt.textContent="Unavailable — settings are saved on this device only."; dot.className="sync-dot bad"; }
+  })();
 
   // Load hubs to know what rails exist
   try{
@@ -3032,7 +3084,15 @@ function knownForSectionTmdb(tmdbCast,libByNorm,libByRk){
 
 const TMDB_KEY="a9263943cdfdc2dd3d836e06a2cdb10b";
 const TMDB_BASE="https://api.themoviedb.org/3";
+// TMDB responses are public and identical for every user, so we route them
+// through the Cloudflare Worker which edge-caches them — popular actors load
+// from Cloudflare's cache instead of a fresh TMDB round-trip. Falls back to
+// calling TMDB directly if the Worker is unreachable or not yet updated.
 async function tmdbFetch(path){
+  try{
+    const r=await fetch(`${SETTINGS_WORKER}/tmdb?path=${encodeURIComponent(path)}`);
+    if(r.ok) return await r.json();
+  }catch(_){}
   const sep=path.includes("?")?"&":"?";
   const r=await fetch(`${TMDB_BASE}${path}${sep}api_key=${TMDB_KEY}`);
   if(!r.ok) throw new Error(`TMDB ${r.status}`);
