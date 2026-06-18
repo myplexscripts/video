@@ -1428,12 +1428,18 @@
     .content{padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px)}
     /* Collapse toggle is desktop-only */
     .nav-collapse-btn{display:none}
-    /* libNav stays usable when tab bar is present */
-    /* libNav: full-width scrollable pill row, no title (sticky head provides it) */
-    #libNav{left:0;right:0;padding:0 var(--edge);overflow-x:auto;-webkit-overflow-scrolling:touch;
+    /* libNav: full-width frosted bar starting at safe-area top, pills scroll if needed */
+    #libNav{left:0;right:0;top:0;padding:env(safe-area-inset-top) var(--edge) 10px;
+      background:rgba(10,10,14,.84);
+      backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+      -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+      border-bottom:1px solid rgba(255,255,255,.07);
+      overflow-x:auto;-webkit-overflow-scrolling:touch;
       scrollbar-width:none;justify-content:flex-start}
     #libNav::-webkit-scrollbar{display:none}
     #libNavName{display:none}
+    /* Back button disappears when the library pill bar is showing */
+    body:has(#libNav.visible) #mobileBack{display:none !important}
     /* Sticky head: full width on mobile (no sidebar) */
     #stickyHead{left:0}
   }
@@ -3500,6 +3506,7 @@ async function showPlaylists(gen){
     pls.forEach(p=>frag.appendChild(card(p,false,true)));
     grid.appendChild(frag);
     c.innerHTML=pageHeadHTML("Playlists"); c.appendChild(grid);
+    watchPageHead();
   }catch(e){ if(gen===undefined||gen===_routeGen) c.innerHTML=errHTML(e); }
 }
 async function openPlaylist(p){
@@ -3522,6 +3529,7 @@ async function openPlaylist(p){
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
     wireDetailBg(c,collBackdrop(pl));
+    watchPageHead();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
@@ -4286,6 +4294,7 @@ async function openActor(id){
     const filmog=filmogSection(actingCredits,directingCredits,producingCredits);
     if(filmog) c.appendChild(filmog);
     if(!totalItems&&!actingCredits.length) c.insertAdjacentHTML("beforeend","<div class='empty'>No titles found for this person.</div>");
+    watchPageHead();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
@@ -4617,10 +4626,11 @@ async function runSearch(q){
     if(!hubs.length){
       c.innerHTML=head+`<div class="empty">${svgIcon("magnifying-glass")}No results for "${esc(q)}"
         <div style="margin-top:6px;font-size:13px">Try a different title, cast member, or genre.</div></div>`;
-      return;
+      watchPageHead(); return;
     }
     c.innerHTML=head;
     hubs.forEach(h=>c.appendChild(railSection(h.title,h.items,h.items.every(i=>i.type==="episode"),false)));
+    watchPageHead();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
