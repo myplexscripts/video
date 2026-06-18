@@ -23,6 +23,8 @@
 <link rel="preconnect" href="https://hume-settings.contactdavidbusch.workers.dev" crossorigin>
 <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
 <link rel="dns-prefetch" href="https://api.themoviedb.org">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Preload the two font weights that render above the fold -->
 <link rel="preload" href="assets/fonts/Circular/Circular-Book.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="assets/fonts/Circular/Circular-Bold.ttf" as="font" type="font/ttf" crossorigin>
@@ -1359,8 +1361,30 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
+
+/* ---- FONT THEMING ---- */
+const FONT_STACKS={
+  circular:"'Circular','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif",
+  inter:"'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif",
+  outfit:"'Outfit','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif",
+};
+function _loadGFont(family){
+  const id="gf-"+family.toLowerCase(); if(document.getElementById(id)) return;
+  const l=document.createElement("link"); l.id=id; l.rel="stylesheet";
+  l.href=`https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700;900&display=swap`;
+  document.head.appendChild(l);
+}
+function applyFont(name,save=true){
+  const stack=FONT_STACKS[name]||FONT_STACKS.circular;
+  document.documentElement.style.setProperty("--font",stack);
+  if(name==="inter") _loadGFont("Inter");
+  else if(name==="outfit") _loadGFont("Outfit");
+  if(save){ localStorage.setItem(LS.font,name); pushRemoteSettings(); toast("Settings saved"); }
+}
+// Set font before first content render so there's no flash of wrong typeface
+applyFont(localStorage.getItem(LS.font)||"circular",false);
 
 /* ---- CROSS-DEVICE SETTINGS SYNC (Cloudflare Worker + KV) ----
    Keyed by a stable, opaque hash of the Plex ACCOUNT id (same on every
@@ -1407,6 +1431,10 @@ async function loadRemoteSettings(){
         const next=String(remote[LS.navCollapsed]);
         if(next!==localStorage.getItem(LS.navCollapsed)){ localStorage.setItem(LS.navCollapsed,next); changed=true; }
       }
+      if(remote[LS.font]&&FONT_STACKS[remote[LS.font]]){
+        const next=remote[LS.font];
+        if(next!==localStorage.getItem(LS.font)){ localStorage.setItem(LS.font,next); applyFont(next,false); changed=true; }
+      }
     }
     _syncState="ok";
     return changed;
@@ -1421,6 +1449,7 @@ function pushRemoteSettings(){
       const payload={
         [LS.railStyles]:getRailStyles(),
         [LS.navCollapsed]:localStorage.getItem(LS.navCollapsed)||"0",
+        [LS.font]:localStorage.getItem(LS.font)||"circular",
       };
       const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`,{method:"PUT",body:JSON.stringify(payload)});
       _syncState=r.ok?"ok":"unavailable";
@@ -1851,7 +1880,7 @@ function getRailStyle(key){
 }
 function setRailStyle(key,style){
   const s=getRailStyles(); s[key]=style; localStorage.setItem(LS.railStyles,JSON.stringify(s));
-  pushRemoteSettings();
+  pushRemoteSettings(); toast("Settings saved");
 }
 function renderHubSection(hub,style){
   if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false);
@@ -2390,8 +2419,22 @@ function renderLibGrid(){
 async function showSettings(){
   setTitle("Settings"); clearUltraBlur(); hideLibNav();
   const c=$("#content");
+  const cf=localStorage.getItem(LS.font)||"circular";
+  const fBtn=(id,label)=>`<button class="rail-style-btn${cf===id?" active":""}" data-font="${id}">${label}</button>`;
   c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>Settings</h2></div></div>
-    <div class="settings-wrap"><div class="settings-group">
+    <div class="settings-wrap">
+    <div class="settings-group">
+      <div class="settings-group-head">Appearance</div>
+      <div class="settings-row">
+        <div class="settings-label">Font
+          <small>Applies to the entire app interface.</small>
+        </div>
+        <div class="rail-style-btns" id="settingsFontBtns">
+          ${fBtn("circular","Circular")}${fBtn("inter","Inter")}${fBtn("outfit","Outfit")}
+        </div>
+      </div>
+    </div>
+    <div class="settings-group">
       <div class="settings-group-head">Rail Styles</div>
       <div class="settings-group-head" style="font-size:12px;text-transform:none;letter-spacing:0;color:var(--dim);padding-top:0;font-weight:400">
         Choose how each row looks on the home screen.
@@ -2407,6 +2450,13 @@ async function showSettings(){
         <span class="sync-dot" id="syncDot"></span>
       </div>
     </div></div>`;
+  // Wire font picker
+  c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(btn=>{
+    btn.onclick=()=>{
+      applyFont(btn.dataset.font);
+      c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
+    };
+  });
   // Reflect live sync status so failures are visible, not silent.
   (async()=>{
     const txt=$("#syncStatusText"), dot=$("#syncDot"); if(!txt) return;
@@ -4368,7 +4418,7 @@ function initNavCollapse(){
     const next=!shell.classList.contains("nav-collapsed");
     applyNavCollapsed(next);
     localStorage.setItem(LS.navCollapsed,next?"1":"0");
-    pushRemoteSettings();
+    pushRemoteSettings(); toast("Settings saved");
   };
 }
 $("#searchBox").addEventListener("click",()=>$("#search").focus());
