@@ -2742,11 +2742,11 @@ function carouselHubSection(hub){
 function renderHubSection(hub,style){
   const sum=hub.summary||"";
   if(style==="carousel") return carouselHubSection(hub);
-  if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false,sum);
+  if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,true,sum);
   const wide=style==="billboard"||hub.items.every(x=>x.type==="episode");
   const cm=hub.plexKey&&hub.plexKey.match(/\/library\/collections\/(\d+)/);
   const collId=cm?cm[1]:null;
-  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum,collId);
+  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum,collId,style==="billboard");
 }
 
 async function showHome(gen){
@@ -2951,7 +2951,7 @@ async function setupHeroTrailer(wrap,it){
 /* ---- RAIL SECTION ----
    Each rail gets its own subtle UltraBlur color wash, derived from its
    first item's art, plus an optional small "library" kicker label. */
-function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summary,collId){
+function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summary,collId,numbered){
   const sec=el("div","rail-section"+(featured?" featured":""));
   const firstArt=items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb||items[0].parentThumb);
   if(firstArt){
@@ -2971,7 +2971,7 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summar
   const viewport=el("div","rail-viewport");
   const row=el("div","carousel");
   const rfrag=document.createDocumentFragment();
-  items.forEach(it=>rfrag.appendChild(card(it,wide)));
+  items.forEach((it,i)=>{const c=card(it,wide);if(numbered){const r=el("div","bill-rank");r.textContent=i+1;const a=c.querySelector(".art");if(a)a.appendChild(r);}rfrag.appendChild(c);});
   row.appendChild(rfrag);
   const prev=el("button","rail-arrow prev edge"); prev.type="button"; prev.setAttribute("aria-label","Scroll left");
   prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
