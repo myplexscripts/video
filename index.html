@@ -1399,6 +1399,7 @@
      off-canvas drawer over a scrim instead. */
   @media(max-width:680px){
     :root{--edge:24px}
+    .rail-arrow,.hub-ca{display:none}
     /* ── DOCUMENT SCROLL (not inner-container scroll) ──────────────────────
        The desktop layout scrolls .main (an inner overflow:auto element) inside
        a fixed-height shell. iOS Safari only shrinks its address bar when the
@@ -2670,6 +2671,8 @@ function carouselHubSection(hub){
     // Each slide is a full hero (no kicker — the hub title sits above instead).
     slide.innerHTML=heroInnerHTML(it,{kicker:false,priority:false});
     wireHero(slide,it,{square:true});
+    const rankEl=el("div","bill-rank"); rankEl.textContent=i+1;
+    slide.appendChild(rankEl);
     car.appendChild(slide);
   });
   // Dots
