@@ -491,12 +491,6 @@
     background:none;border:none;color:var(--text);cursor:pointer;
     opacity:.8;border-radius:50%;transition:opacity .15s}
   #stickyBack:hover,#stickySearch:hover{opacity:1}
-  #statusBarFrost{display:none;position:fixed;top:0;left:0;right:0;
-    height:env(safe-area-inset-top);
-    background:rgba(10,10,14,.72);
-    backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    z-index:200;pointer-events:none}
   /* Library title: pure typography — not a glass pill. Glass is for actions;
      a section label is identity text and should read as a heading. */
   #libNavName{font-size:var(--nav-title-size);font-weight:var(--fw-xbold);letter-spacing:-.025em;
@@ -1453,9 +1447,8 @@
     body:has(#libNav.visible) #mobileBack{display:none !important}
     /* Sticky head: full width on mobile (no sidebar) */
     #stickyHead{left:0}
-    /* iOS nav bar buttons + status bar frost — mobile only */
+    /* iOS nav bar buttons — mobile only */
     #stickyBack,#stickySearch{display:flex}
-    #statusBarFrost{display:block}
     /* Standalone back pill hides when the sticky bar shows its own back button */
     body:has(#stickyHead.visible) #mobileBack{display:none !important}
   }
@@ -1616,7 +1609,6 @@
     <span id="stickyHeadTitle"></span>
     <button id="stickySearch" aria-label="Search"><span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span></button>
   </div>
-  <div id="statusBarFrost" aria-hidden="true"></div>
   <div id="installHint" role="status" aria-live="polite">
     <div class="ih-arrow"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-right.svg')" aria-hidden="true"></span></div>
     <span class="ih-text">Tap <b>Share</b> then <b>Add to Home Screen</b> for a full-screen experience</span>
