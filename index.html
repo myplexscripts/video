@@ -494,6 +494,11 @@
   .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.48) 38%,transparent 68%)}
   /* title rendered inside the art, above the scrim */
+  /* logo image and text-fallback share the same bottom anchor inside the art */
+  .bill-logo{position:absolute;bottom:13px;left:14px;right:14px;z-index:2;
+    max-height:56px;width:auto;max-width:calc(100% - 28px);
+    object-fit:contain;object-position:left bottom;
+    filter:drop-shadow(0 1px 6px rgba(0,0,0,.7)) drop-shadow(0 0 20px rgba(0,0,0,.45))}
   .bill-title{position:absolute;bottom:13px;left:14px;right:14px;z-index:2;
     font-size:20px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
     color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.55);
@@ -1527,7 +1532,10 @@ window.addEventListener("hashchange", route);
    the art; type and genres appear below as plain metadata text. */
 function billboardCard(it){
   const b=el("button","card billboard");
-  const artSrc=img(it.art||it.thumb,560,560);
+  const squareImg=(it.Image||[]).find(i=>i.type==="squareCover");
+  const artSrc=img((squareImg&&squareImg.url)||it.art||it.thumb,560,560);
+  const logoImg=(it.Image||[]).find(i=>i.type==="clearLogo");
+  const logoSrc=logoImg?img(logoImg.url,480,160):"";
   const title=it.title||"";
   const type=it.type==="movie"?"Movie":it.type==="show"?"TV Show":(it.type||"");
   const genres=(it.Genre||[]).slice(0,2).map(g=>g.tag).join(" · ");
@@ -1538,7 +1546,8 @@ function billboardCard(it){
       ${artSrc?`<img loading="lazy" alt="${esc(title)}" src="${artSrc}" onerror="this.closest('.art').classList.add('broken')">`
               :`<span class="art-fallback">${svgIcon(it.type==="show"?"television":"movies")}</span>`}
       <div class="play-hover">${svgIcon("play-circle-fill")}</div>
-      <div class="bill-title">${esc(title)}</div>
+      ${logoSrc?`<img class="bill-logo" src="${logoSrc}" alt="${esc(title)}" onerror="this.nextElementSibling.style.display='block';this.remove()">`:""}
+      <div class="bill-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
     </div>
     <div class="cs">${esc(meta)}</div>
     ${summary?`<div class="bill-desc">${esc(summary)}</div>`:""}`;
