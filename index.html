@@ -472,6 +472,20 @@
   .lib-tab.active:hover{background:var(--accent-glass-hover)}
   #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:calc(var(--nav-w,240px) + 16px);z-index:25;align-items:center;gap:8px;flex-wrap:nowrap;transition:left .22s var(--ease)}
   #libNav.visible{display:flex}
+  /* Scroll-triggered compact title bar */
+  #stickyHead{position:fixed;top:0;left:var(--nav-w,240px);right:0;z-index:24;
+    height:calc(max(env(safe-area-inset-top),16px) + 44px);
+    padding:max(env(safe-area-inset-top),16px) var(--edge) 0;
+    display:flex;align-items:center;
+    background:rgba(10,10,14,.84);
+    backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    border-bottom:1px solid rgba(255,255,255,.07);
+    opacity:0;pointer-events:none;transform:translateY(-100%);
+    transition:opacity .18s var(--ease),transform .18s var(--ease)}
+  #stickyHead.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+  #stickyHeadTitle{font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Library title: pure typography — not a glass pill. Glass is for actions;
      a section label is identity text and should read as a heading. */
   #libNavName{font-size:var(--nav-title-size);font-weight:var(--fw-xbold);letter-spacing:-.025em;
@@ -1415,7 +1429,13 @@
     /* Collapse toggle is desktop-only */
     .nav-collapse-btn{display:none}
     /* libNav stays usable when tab bar is present */
-    #libNav{left:max(16px,env(safe-area-inset-left))}
+    /* libNav: full-width scrollable pill row, no title (sticky head provides it) */
+    #libNav{left:0;right:0;padding:0 var(--edge);overflow-x:auto;-webkit-overflow-scrolling:touch;
+      scrollbar-width:none;justify-content:flex-start}
+    #libNav::-webkit-scrollbar{display:none}
+    #libNavName{display:none}
+    /* Sticky head: full width on mobile (no sidebar) */
+    #stickyHead{left:0}
   }
   @media(max-width:560px){
     .p-vol{display:none}.p-status{display:none}
@@ -1569,6 +1589,7 @@
     <button class="tab-btn" id="tabSettings" role="tab" aria-label="Settings"></button>
   </div>
   <div id="tabLibPicker" role="dialog" aria-label="Choose library"></div>
+  <div id="stickyHead" aria-hidden="true"><span id="stickyHeadTitle"></span></div>
   <div id="installHint" role="status" aria-live="polite">
     <div class="ih-arrow"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-right.svg')" aria-hidden="true"></span></div>
     <span class="ih-text">Tap <b>Share</b> then <b>Add to Home Screen</b> for a full-screen experience</span>
@@ -2355,6 +2376,30 @@ let _routeGen=0;
 const _scrollPos=new Map();
 const _carouselCleanups=new Set();
 function cleanupCarousels(){ _carouselCleanups.forEach(fn=>fn()); _carouselCleanups.clear(); }
+/* ---- STICKY TITLE HEAD ---- */
+let _stickyObserver=null;
+function hideStickyHead(){
+  const el=$("#stickyHead"); if(!el) return;
+  el.classList.remove("visible"); el.setAttribute("aria-hidden","true");
+  if(_stickyObserver){ _stickyObserver.disconnect(); _stickyObserver=null; }
+}
+function observeStickyHead(headingEl){
+  const bar=$("#stickyHead"); if(!bar||!headingEl) return;
+  if(_stickyObserver) _stickyObserver.disconnect();
+  bar.setAttribute("aria-hidden","true");
+  _stickyObserver=new IntersectionObserver(([e])=>{
+    bar.classList.toggle("visible",!e.isIntersecting);
+    bar.setAttribute("aria-hidden",e.isIntersecting?"true":"false");
+  },{threshold:0,rootMargin:"-56px 0px 0px 0px"});
+  _stickyObserver.observe(headingEl);
+}
+function watchPageHead(){
+  const t=$("#stickyHeadTitle"); if(!t) return;
+  const h=document.querySelector("#content .page-head h2")||document.querySelector("#content h2")||document.querySelector("#content .title-logo");
+  if(!h) return;
+  t.textContent=h.tagName==="IMG"?(h.alt||document.title):h.textContent;
+  observeStickyHead(h);
+}
 /* On mobile the document scrolls (so iOS collapses its toolbar); on desktop the
    inner .main element scrolls. These helpers read/write whichever is active so
    scroll save/restore works in both modes. */
@@ -2370,7 +2415,7 @@ function setScrollY(y){
 async function route(){
   const gen=++_routeGen;
   setScrollY(0);   // fresh navigation starts at top; pages that restore a saved position override this in their render
-  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
+  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker(); hideStickyHead();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
   const parts=pathPart.split("/").filter(Boolean).map(p=>{ try{return decodeURIComponent(p);}catch(_){return p;} });
@@ -2570,6 +2615,7 @@ async function showGenrePage(){
     items.forEach(it=>frag.appendChild(card(it,false)));
     grid.appendChild(frag);
     c.appendChild(grid);
+    watchPageHead();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
@@ -3032,6 +3078,7 @@ function showSeeAll(){
   if(cache.summary){ const p=el("p","rail-summary"); p.textContent=cache.summary; c.appendChild(p); }
   const grid=el("div","grid-view"); c.appendChild(grid);
   cache.items.forEach(it=>grid.appendChild(card(it,cache.wide)));
+  watchPageHead();
 }
 
 /* ============================================================ LIBRARY */
@@ -3430,6 +3477,7 @@ async function showSettings(){
     });
     if(!hubs.length) container.innerHTML=`<div style="color:var(--dim);padding:16px 0">No hubs found.</div>`;
   }catch(e){ $("#settingsRailRows").innerHTML=errHTML(e); }
+  watchPageHead();
 }
 
 async function showPlaylists(gen){
@@ -3511,6 +3559,7 @@ async function openCollection(it){
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
     wireDetailBg(c,collBackdrop(m));
+    watchPageHead();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 function metaBits(m,isMovie){
@@ -4324,6 +4373,7 @@ async function openMovie(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+    watchPageHead();
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -4384,6 +4434,7 @@ async function openShow(it,jumpSeasonKey){
       const eps=mc2.Metadata||[]; if(eps.length) playItem(eps[Math.floor(Math.random()*eps.length)],0);
     };
     wireWatchedToggle(c,show,false,()=>{ if(activeSeason) loadEpisodes(activeSeason); });
+    watchPageHead();
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -4534,6 +4585,7 @@ async function openEpisode(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+    watchPageHead();
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
