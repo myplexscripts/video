@@ -2671,8 +2671,7 @@ function carouselHubSection(hub){
     // Each slide is a full hero (no kicker — the hub title sits above instead).
     slide.innerHTML=heroInnerHTML(it,{kicker:false,priority:false});
     wireHero(slide,it,{square:true});
-    const rankEl=el("div","bill-rank"); rankEl.textContent=i+1;
-    slide.appendChild(rankEl);
+    if(/trending/i.test(hub.key)){const rankEl=el("div","bill-rank");rankEl.textContent=i+1;slide.appendChild(rankEl);}
     car.appendChild(slide);
   });
   // Dots
@@ -2741,12 +2740,13 @@ function carouselHubSection(hub){
 }
 function renderHubSection(hub,style){
   const sum=hub.summary||"";
+  const isTrending=/trending/i.test(hub.key);
   if(style==="carousel") return carouselHubSection(hub);
-  if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,true,sum);
+  if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,isTrending,sum);
   const wide=style==="billboard"||hub.items.every(x=>x.type==="episode");
   const cm=hub.plexKey&&hub.plexKey.match(/\/library\/collections\/(\d+)/);
   const collId=cm?cm[1]:null;
-  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum,collId,style==="billboard");
+  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum,collId,isTrending&&style==="billboard");
 }
 
 async function showHome(gen){
