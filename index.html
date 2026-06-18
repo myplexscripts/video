@@ -727,14 +727,23 @@
      Dark image areas → near-black; light areas → pure genre color. */
   .genre-art{position:relative;overflow:hidden;flex-shrink:0;background:var(--gc,#333)}
   .genre-art img{width:100%;height:100%;object-fit:cover;display:block;
-    filter:grayscale(1) contrast(1.15) brightness(1.05);mix-blend-mode:multiply}
+    filter:grayscale(1) contrast(1.1) brightness(1.15);mix-blend-mode:multiply}
   .genre-fade{position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(to bottom,transparent 30%,var(--gc,#333) 96%)}
   .genre-label{background:var(--gc,#333);color:#FFFBF8;font-size:13.5px;font-weight:700;
     text-align:center;padding:10px 14px 13px;letter-spacing:.01em;line-height:1.2;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .genre-card--billboard{width:252px}
+  /* Billboard: label floats centered over the image, no solid bottom strip */
+  .genre-card--billboard{width:252px;position:relative}
   .genre-card--billboard .genre-art{aspect-ratio:16/9}
+  .genre-card--billboard .genre-fade{
+    background:linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(0,0,0,.5) 100%)}
+  .genre-card--billboard .genre-label{
+    position:absolute;inset:0;background:transparent;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;letter-spacing:.03em;
+    text-shadow:0 2px 20px rgba(0,0,0,.7),0 1px 4px rgba(0,0,0,.4);
+    padding:0 16px}
   .genre-card--square{width:160px}
   .genre-card--square .genre-art{aspect-ratio:1/1}
   .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
@@ -1407,20 +1416,24 @@ function applyFont(name,save=true){
 applyFont(localStorage.getItem(LS.font)||"circular",false);
 
 /* ---- GENRE COLOURS ---- */
-// Gold (#F7C600) and Sea Green (#69DD58) darkened so all palette entries pass
-// white-text contrast — no need for per-card text-color calculation.
+// All palette entries calibrated for:
+//  (a) white text contrast — luminance kept below 155
+//  (b) duotone visibility — mid-range luminance (90-145) so multiply-blending
+//      a grayscale image produces visible highlights, not a near-black wash.
+//  Dark originals (deep-purple, forest, maroon, black) replaced with
+//  vivid mid-luminance equivalents.
 const GENRE_COLORS={
-  action:"#C14F30",adventure:"#BF8E00",animation:"#3B9430",
-  comedy:"#BF8E00",crime:"#5B2244",documentary:"#0A372C",
-  drama:"#322D5B",fantasy:"#322D5B",history:"#C14F30",
-  horror:"#191919",music:"#15A9FC",mystery:"#5B2244",
+  action:"#C14F30",adventure:"#BF8E00",animation:"#4CAF40",
+  comedy:"#BF8E00",crime:"#A8386F",documentary:"#1E8A7A",
+  drama:"#6B5BD6",fantasy:"#6B5BD6",history:"#C14F30",
+  horror:"#4A5AA5",music:"#15A9FC",mystery:"#A8386F",
   romance:"#F74366","science fiction":"#15A9FC","sci-fi":"#15A9FC",
-  sport:"#3B9430",sports:"#3B9430",thriller:"#5B2244",
-  war:"#0A372C",western:"#C14F30",family:"#15A9FC",
-  kids:"#F74366",anime:"#F74366",biography:"#322D5B",
-  reality:"#F74366",suspense:"#5B2244",short:"#0A372C",
+  sport:"#4CAF40",sports:"#4CAF40",thriller:"#A8386F",
+  war:"#1E8A7A",western:"#C14F30",family:"#15A9FC",
+  kids:"#F74366",anime:"#F74366",biography:"#6B5BD6",
+  reality:"#F74366",suspense:"#A8386F",short:"#1E8A7A",
 };
-const _GENRE_CLR_POOL=["#C14F30","#15A9FC","#F74366","#322D5B","#0A372C","#5B2244","#BF8E00","#3B9430"];
+const _GENRE_CLR_POOL=["#C14F30","#15A9FC","#F74366","#6B5BD6","#1E8A7A","#A8386F","#BF8E00","#4CAF40"];
 function genreColor(name){
   const k=(name||"").toLowerCase();
   if(GENRE_COLORS[k]) return GENRE_COLORS[k];
@@ -1923,7 +1936,7 @@ async function fetchGenreData(){
   if(!sec) return [];
   const [genresMc,itemsMc]=await Promise.all([
     api(`/library/sections/${sec.key}/genre`),
-    api(`/library/sections/${sec.key}/all?sort=rating:desc&X-Plex-Container-Size=80`)
+    api(`/library/sections/${sec.key}/all?sort=rating:desc&X-Plex-Container-Size=120`)
   ]);
   const genres=(genresMc.Directory||[]);
   const items=(itemsMc.Metadata||[]);
@@ -1934,10 +1947,15 @@ async function fetchGenreData(){
       byGenre.get(g.tag).push(it);
     });
   });
+  // Rank genres by how many top-rated items they have in our sample,
+  // then take the 10 most-represented for the rail.
+  const ranked=genres
+    .map(g=>({g,candidates:byGenre.get(g.title)||[]}))
+    .filter(x=>x.candidates.length>0)
+    .sort((a,b)=>b.candidates.length-a.candidates.length)
+    .slice(0,10);
   const result=[];
-  for(const g of genres){
-    const candidates=byGenre.get(g.title)||[];
-    if(!candidates.length) continue;
+  for(const {g,candidates} of ranked){
     const pick=candidates[Math.floor(Math.random()*Math.min(candidates.length,5))];
     const imgs=pick.Image||[];
     const sqImg=imgs.find(i=>i.type==="backgroundSquare");
@@ -1945,7 +1963,6 @@ async function fetchGenreData(){
       thumb:pick.thumb||pick.parentThumb,
       art:pick.art||pick.grandparentArt||pick.thumb,
       squareArt:(sqImg&&sqImg.url)||pick.thumb||pick.parentThumb});
-    if(result.length>=16) break;
   }
   _genreRailCache=result;
   return result;
