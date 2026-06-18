@@ -431,10 +431,6 @@
     font-weight:600;color:var(--dim);background:none;border:none;cursor:pointer;
     padding-bottom:3px;font-family:var(--font);transition:color .15s var(--ease)}
   .see-all:hover{color:var(--text)}
-  .see-all-banner{position:relative;height:min(38vh,300px);overflow:hidden;margin-bottom:8px}
-  .see-all-banner .hero-bg-img{left:0;width:100%;height:100%;object-fit:cover;
-    -webkit-mask-image:none;mask-image:none}
-  .see-all-banner .hero-scrim{background:linear-gradient(to bottom,rgba(10,10,12,.08) 0%,rgba(10,10,12,.4) 55%,var(--bg) 100%)}
   .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
   .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
@@ -2672,7 +2668,9 @@ function renderHubSection(hub,style){
   if(style==="carousel") return carouselHubSection(hub);
   if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false,sum);
   const wide=style==="billboard"||hub.items.every(x=>x.type==="episode");
-  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum);
+  const cm=hub.plexKey&&hub.plexKey.match(/\/library\/collections\/(\d+)/);
+  const collId=cm?cm[1]:null;
+  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum,collId);
 }
 
 async function showHome(gen){
@@ -2877,7 +2875,7 @@ async function setupHeroTrailer(wrap,it){
 /* ---- RAIL SECTION ----
    Each rail gets its own subtle UltraBlur color wash, derived from its
    first item's art, plus an optional small "library" kicker label. */
-function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summary){
+function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summary,collId){
   const sec=el("div","rail-section"+(featured?" featured":""));
   const firstArt=items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb||items[0].parentThumb);
   if(firstArt){
@@ -2885,9 +2883,13 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summar
     amb.style.backgroundImage=`url('${imgAmbient(firstArt)}')`;
     sec.appendChild(amb);
   }
+  const showSeeAllBtn=seeAll||collId;
   const head=el("div","rail-head"+(actorThumb?" with-avatar":""));
-  head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
-  if(seeAll) head.querySelector(".see-all").onclick=()=>{ seeAllCache={title,items,wide,libLabel,summary}; navigate("/see-all"); };
+  head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${showSeeAllBtn?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
+  if(showSeeAllBtn) head.querySelector(".see-all").onclick=()=>{
+    if(collId){ navigate("/collection/"+collId); return; }
+    seeAllCache={title,items,wide,libLabel,summary}; navigate("/see-all");
+  };
   sec.appendChild(head);
   if(summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=summary; sec.appendChild(p); }
   const viewport=el("div","rail-viewport");
@@ -3023,25 +3025,7 @@ function showSeeAll(){
   if(!cache) return showHome();
   setTitle(cache.title); clearUltraBlur();
   const c=$("#content");
-  c.innerHTML="";
-  const firstItem=cache.items[0];
-  if(firstItem){
-    const isSquare=getHeroStyle()==="square";
-    const squareImg=(firstItem.Image||[]).find(i=>i.type==="backgroundSquare");
-    const art=isSquare?(squareImg?.url||firstItem.thumb||firstItem.art)
-                      :(firstItem.art||firstItem.grandparentArt||firstItem.parentArt||firstItem.thumb);
-    const banner=el("div","see-all-banner");
-    banner.innerHTML=`<div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" decoding="async" loading="eager" alt=""></div><div class="hero-scrim"></div>`;
-    const blur=banner.querySelector(".hero-bg-blur");
-    blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
-    const bgImg=banner.querySelector(".hero-bg-img");
-    bgImg.onload=()=>bgImg.classList.add("loaded");
-    bgImg.onerror=()=>bgImg.remove();
-    bgImg.src=img(art,isSquare?800:1600,isSquare?800:500);
-    applyBackdropContrast(banner,art);
-    c.appendChild(banner);
-  }
-  c.insertAdjacentHTML("beforeend",pageHeadHTML(cache.title,cache.items.length,cache.libLabel));
+  c.innerHTML=pageHeadHTML(cache.title,cache.items.length,cache.libLabel);
   if(cache.summary){ const p=el("p","rail-summary"); p.textContent=cache.summary; c.appendChild(p); }
   const grid=el("div","grid-view"); c.appendChild(grid);
   cache.items.forEach(it=>grid.appendChild(card(it,cache.wide)));
