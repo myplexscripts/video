@@ -1,8 +1,10 @@
-/* Hume service worker.
-   Scope: same-origin app shell ONLY. All Plex traffic (API, images, video)
-   lives on a different origin (the user's server) and is deliberately ignored
-   here, so nothing auth'd, dynamic, or huge is ever cached. */
-const CACHE = "hume-v1";
+/* Hume service worker — app shell + targeted cross-origin caching.
+   Philosophy:
+   - Same-origin app shell: stale-while-revalidate (fonts, icons, manifest)
+   - index.html navigation: network-first → offline fallback
+   - HLS.js from CDN: cache-on-first-fetch, then serve forever from cache
+   - All other cross-origin traffic (Plex API, images, video): never cached */
+const CACHE = "hume-v2";
 const SHELL = [
   "./",
   "./index.html",
@@ -17,8 +19,12 @@ const SHELL = [
   "./assets/fonts/Circular/Circular-Black.ttf"
 ];
 
+// Exact CDN URLs to cache on first fetch (version-pinned so no stale risk)
+const CDN_CACHE = new Set([
+  "https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"
+]);
+
 self.addEventListener("install", e => {
-  // Best-effort precache: a missing optional asset must not abort the install.
   e.waitUntil(
     caches.open(CACHE)
       .then(c => Promise.allSettled(SHELL.map(u => c.add(u))))
@@ -40,26 +46,45 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // ignore Plex server, CDN, etc.
 
-  // App boot: network-first so a freshly deployed index.html always wins;
-  // fall back to the cached shell when offline.
+  // App boot: network-first so freshly deployed index.html always wins.
   if (req.mode === "navigate") {
     e.respondWith(
       fetch(req)
-        .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put("./index.html", copy)); return res; })
+        .then(res => { const c = res.clone(); caches.open(CACHE).then(ca => ca.put("./index.html", c)); return res; })
         .catch(() => caches.match("./index.html").then(r => r || caches.match("./")))
     );
     return;
   }
 
-  // Same-origin static assets (fonts, icons, manifest): stale-while-revalidate.
-  e.respondWith(
-    caches.match(req).then(cached => {
-      const net = fetch(req)
-        .then(res => { if (res && res.status === 200) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
-        .catch(() => cached);
-      return cached || net;
-    })
-  );
+  // Same-origin static assets: stale-while-revalidate for instant delivery.
+  if (url.origin === self.location.origin) {
+    e.respondWith(
+      caches.match(req).then(cached => {
+        const net = fetch(req)
+          .then(res => { if (res && res.status === 200) { const c = res.clone(); caches.open(CACHE).then(ca => ca.put(req, c)); } return res; })
+          .catch(() => cached);
+        return cached || net;
+      })
+    );
+    return;
+  }
+
+  // Version-pinned CDN assets (HLS.js): cache-on-first-fetch.
+  // After first load they're served instantly and work offline.
+  if (CDN_CACHE.has(req.url)) {
+    e.respondWith(
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        return fetch(req).then(res => {
+          if (res && res.status === 200) { const c = res.clone(); caches.open(CACHE).then(ca => ca.put(req, c)); }
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // Everything else (Plex API, images, video streams): pass through untouched.
+  // Never cache auth'd content or large media.
 });
