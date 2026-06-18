@@ -9,10 +9,20 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hume">
 <meta name="application-name" content="Hume">
+<!-- Security hardening: limit referrer leakage and block legacy injection
+     vectors. No default-src so script/img/connect stay unrestricted (the app
+     talks to arbitrary Plex servers + TMDB), but plugins/base/forms are locked. -->
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Hume</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<!-- Warm up the connections the app reaches for first: the settings/TMDB
+     Worker (hit at boot for sync) and TMDB's image + API CDNs. -->
+<link rel="preconnect" href="https://hume-settings.contactdavidbusch.workers.dev" crossorigin>
+<link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+<link rel="dns-prefetch" href="https://api.themoviedb.org">
 <!-- Preload the two font weights that render above the fold -->
 <link rel="preload" href="assets/fonts/Circular/Circular-Book.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="assets/fonts/Circular/Circular-Bold.ttf" as="font" type="font/ttf" crossorigin>
@@ -1383,16 +1393,24 @@ async function accountKey(){
 }
 async function loadRemoteSettings(){
   try{
-    const key=await accountKey(); if(!key){ _syncState="unavailable"; return; }
+    const key=await accountKey(); if(!key){ _syncState="unavailable"; return false; }
     const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`);
     if(!r.ok) throw new Error("HTTP "+r.status);
     const remote=await r.json();
+    let changed=false;
     if(remote && typeof remote==="object"){
-      if(remote[LS.railStyles]) localStorage.setItem(LS.railStyles,JSON.stringify(remote[LS.railStyles]));
-      if(remote[LS.navCollapsed]!=null) localStorage.setItem(LS.navCollapsed,String(remote[LS.navCollapsed]));
+      if(remote[LS.railStyles]){
+        const next=JSON.stringify(remote[LS.railStyles]);
+        if(next!==localStorage.getItem(LS.railStyles)){ localStorage.setItem(LS.railStyles,next); changed=true; }
+      }
+      if(remote[LS.navCollapsed]!=null){
+        const next=String(remote[LS.navCollapsed]);
+        if(next!==localStorage.getItem(LS.navCollapsed)){ localStorage.setItem(LS.navCollapsed,next); changed=true; }
+      }
     }
     _syncState="ok";
-  }catch(e){ _syncState="unavailable"; console.warn("[sync] load failed:",e.message); }
+    return changed;
+  }catch(e){ _syncState="unavailable"; console.warn("[sync] load failed:",e.message); return false; }
 }
 let _pushTimer=null;
 function pushRemoteSettings(){
@@ -1645,10 +1663,18 @@ async function bootApp(){
     document.head.appendChild(pc);
   }
   try{
-    await loadRemoteSettings();   // pull synced settings before first render
+    // Render instantly from local settings; pull synced settings in parallel
+    // and only refresh the UI if they actually differ from this device.
+    const settingsP=loadRemoteSettings();
     const mc=await api("/library/sections");
     sections=(mc.Directory||[]).filter(s=>s.type==="movie"||s.type==="show");
     buildNav(); initNavCollapse(); route();
+    settingsP.then(changed=>{
+      if(!changed) return;
+      initNavCollapse();
+      const seg=location.hash.replace(/^#\/?/,"").split("/")[0];
+      if(!seg||seg==="home") route();   // only home depends on rail styles
+    });
   }catch(e){ $("#content").innerHTML=errHTML(e,"bootApp"); }
 }
 function buildNav(){
@@ -2025,6 +2051,24 @@ function wireRailArrows(viewport,carousel,prev,next){
   if(window.ResizeObserver) new ResizeObserver(update).observe(carousel);
   requestAnimationFrame(update);
 }
+/* Warm the detail-metadata cache when a card is hovered/focused so the
+   subsequent click renders instantly (native-app feel). A short delay +
+   dedupe keeps a fast mouse-sweep across a rail from spamming the server. */
+const _prefetched=new Set();
+function prefetchItem(it){
+  if(!it||!it.ratingKey||!server) return;
+  if(!(it._collection||/^(movie|show|episode|collection)$/.test(it.type||""))) return;
+  const path=`/library/metadata/${it.ratingKey}`;
+  if(_prefetched.has(path)) return;
+  _prefetched.add(path);
+  api(path).catch(()=>_prefetched.delete(path));   // warm cache; allow retry on failure
+}
+function wireCardPrefetch(b,it){
+  let t=null;
+  b.addEventListener("pointerenter",()=>{ t=setTimeout(()=>prefetchItem(it),140); });
+  b.addEventListener("pointerleave",()=>clearTimeout(t));
+  b.addEventListener("focus",()=>prefetchItem(it));
+}
 function card(it,wide,square){
   if(it.type==="person"){
     const b=el("button","card person-card");
@@ -2088,6 +2132,7 @@ function card(it,wide,square){
     if(it.type==="person"){ goToActor(it.ratingKey,it.tag||it.title,it.thumb); return; }
     const r=pathForItem(it); if(r) navigate(r); else openItem(it);
   };
+  wireCardPrefetch(b,it);
   return b;
 }
 
@@ -3067,7 +3112,7 @@ function knownForSectionTmdb(tmdbCast,libByNorm,libByRk){
         +(posterUrl?`<img loading="lazy" alt="${esc(title)}" src="${posterUrl}" onerror="this.closest('.art').classList.add('broken')">`:"")
         +`<span class="art-fallback">${svgIcon(cr.media_type==="tv"?"television":"movies")}</span></div>`
         +`<div class="ct">${esc(title)}</div><div class="cs">${esc(sub)}</div>`;
-      b.onclick=()=>window.open(`https://www.themoviedb.org/${cr.media_type==="tv"?"tv":"movie"}/${cr.id}`,"_blank");
+      b.onclick=()=>window.open(`https://www.themoviedb.org/${cr.media_type==="tv"?"tv":"movie"}/${cr.id}`,"_blank","noopener,noreferrer");
       kfrag.appendChild(b);
     }
   });
