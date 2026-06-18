@@ -601,7 +601,7 @@
      metadata panel beneath. Rules: only in billboard rails. */
   .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column;
     position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate;
-    background:var(--bg2);transform:translateZ(0)}
+    background:var(--bg2);transform:translateZ(0);clip-path:inset(0 round var(--radius))}
   /* Shared blurred-art wash behind the whole card: the art's bottom dissolves
      into it and the meta strip rides on it, so there's no hard seam between them. */
   .card.billboard::before{content:'';position:absolute;inset:0;z-index:0;
