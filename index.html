@@ -1421,12 +1421,8 @@
     .content{padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px)}
     /* Collapse toggle is desktop-only */
     .nav-collapse-btn{display:none}
-    /* libNav: full-width frosted bar starting at safe-area top, pills scroll if needed */
+    /* libNav: pills float at the top with no frosted backing */
     #libNav{left:0;right:0;top:0;padding:env(safe-area-inset-top) var(--edge) 10px;
-      background:rgba(10,10,14,.84);
-      backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-      -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-      border-bottom:1px solid rgba(255,255,255,.07);
       overflow-x:auto;-webkit-overflow-scrolling:touch;
       scrollbar-width:none;justify-content:flex-start}
     #libNav::-webkit-scrollbar{display:none}
@@ -1445,11 +1441,7 @@
       -webkit-mask-image:linear-gradient(to bottom,#000 44%,transparent 92%);mask-image:linear-gradient(to bottom,#000 44%,transparent 92%)}
     .hero-sq .hero-bg-img{height:100vw}
     .hero-sq .hero-top{padding-top:calc(100vw - 64px)}
-    /* Top-of-hero fade: status bar zone bleeds to near-black */
-    .hero-scrim,.detail-scrim,.hub-carousel .hero-scrim{background-image:none}
-    .hero-scrim::before,.detail-scrim::before{content:"";position:absolute;inset:0;
-      background:linear-gradient(to bottom,rgba(0,0,0,.88) 0%,rgba(0,0,0,.3) 10%,transparent 22%);
-      pointer-events:none}
+    /* Top-of-hero fade: removed — #topFrost handles status bar coverage */
     .hero-scrim{background:linear-gradient(to bottom,transparent calc(38vw),rgba(10,10,12,.55) calc(68vw),rgba(10,10,12,.72) 100%)}
     .hero-sq .hero-scrim{background:linear-gradient(to bottom,transparent calc(55vw),rgba(10,10,12,.55) calc(78vw),rgba(10,10,12,.72) 100%)}
     .hero-top{position:relative;z-index:1;padding:calc(75vw - 64px) var(--edge) 0;max-width:100%;text-align:center}
@@ -1465,15 +1457,17 @@
     /* Hub carousel on mobile: keep the overlaid hero layout (logo top-left,
        ratings, summary, actions) rather than the full-bleed stacked variant. */
     .hub-carousel{height:calc(100vw + 190px);min-height:unset}
-    .hub-cs-slide{padding:0 var(--edge) 28px;justify-content:flex-end}
+    .hub-cs-slide{padding:0 var(--edge) 28px;justify-content:flex-end;align-items:center}
     .hub-carousel .hero-bg-img{position:absolute;top:0;left:0;right:0;width:100%;height:100vw;object-fit:cover;
       -webkit-mask-image:linear-gradient(to bottom,#000 50%,transparent 90%);mask-image:linear-gradient(to bottom,#000 50%,transparent 90%)}
     .hub-carousel .hero-bg-blur{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
     .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(10,10,12,.9) 0%,rgba(10,10,12,.4) 50%,transparent 78%)}
-    .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:left}
-    .hub-carousel .title-logo{max-height:100px;max-width:min(72%,320px);object-position:left bottom;margin:0 0 8px}
+    .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:center;width:100%}
+    .hub-carousel .hero-meta{justify-content:center}
+    .hub-carousel .hero-actions{justify-content:center}
+    .hub-carousel .title-logo{max-height:100px;max-width:min(72%,320px);object-position:center bottom;margin:0 auto 8px}
     .hub-carousel .hero-top h2{font-size:clamp(22px,7vw,34px)}
-    .hub-carousel-dots{bottom:14px}
+    .hub-carousel-dots{bottom:14px;left:0;right:auto;justify-content:center}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
@@ -3603,7 +3597,7 @@ function collHero(m,kicker,items,square){
   // editorial hero as a movie/show (logo title, no cover poster). Playlists
   // always keep the cover-poster layout below so their cover stays visible,
   // regardless of any logo/backdrop they may have (item 1).
-  if(!isPlaylist && (m.art||hasLogo)){
+  if(m.art||hasLogo){
     return `<div class="detail-wrap">
       <div class="detail-hero full">
         ${bgHTML}
