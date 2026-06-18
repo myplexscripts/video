@@ -1229,15 +1229,19 @@
     .detail-hero.full{min-height:unset;padding:0;flex-direction:column;justify-content:flex-start}
     .detail-hero.full .detail-bg{position:relative;width:100%;aspect-ratio:4/3;flex-shrink:0;overflow:hidden;background:transparent}
     .detail-hero.full.sq .detail-bg{aspect-ratio:1}
-    /* suppress blur echo — ultraBlur is sourced from the same art as the image */
-    .detail-hero.full .detail-bg-blur{display:none}
-    /* crisp image fades to transparent so the colour-matched ultraBlur shows through */
+    /* blur echo: same role as desktop — sits behind the crisp image as the blurred base.
+       Vertical mask fades it out at the bottom so it dissolves into the ultraBlur ambient. */
+    .detail-hero.full .detail-bg-blur{display:block;
+      -webkit-mask-image:linear-gradient(to bottom,black 0%,black 52%,transparent 92%);
+      mask-image:linear-gradient(to bottom,black 0%,black 52%,transparent 92%)}
+    /* crisp image: top-to-bottom vignette, same concept as desktop's radial vignette.
+       Fades into the blur echo below it. */
     .detail-hero.full .detail-bg-img{position:absolute;inset:0;right:0;width:100%;height:100%;object-fit:cover;
-      -webkit-mask-image:linear-gradient(to bottom,black 35%,transparent 75%);
-      mask-image:linear-gradient(to bottom,black 35%,transparent 75%)}
-    /* minimal top-only scrim for pill readability; transparent at bottom exposes ultraBlur */
+      -webkit-mask-image:linear-gradient(to bottom,black 32%,transparent 72%);
+      mask-image:linear-gradient(to bottom,black 32%,transparent 72%)}
+    /* minimal top scrim only; bottom is open so blur echo and ultraBlur show through */
     .detail-hero.full .detail-scrim{position:absolute;inset:0;
-      background:linear-gradient(to bottom,rgba(0,0,0,.22) 0%,transparent 35%)}
+      background:linear-gradient(to bottom,rgba(0,0,0,.22) 0%,transparent 32%)}
     .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
     .detail-hero.full .detail-top{position:relative;z-index:1;padding:16px var(--edge) 0;max-width:100%;margin-top:-80px;text-align:center}
     .detail-hero.full .detail-top h2{font-size:clamp(26px,8vw,38px)}
