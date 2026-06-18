@@ -142,6 +142,7 @@
        Search box / menu-toggle → glass pill, height var(--h-nav).
        All glass elements → backdrop-filter + var(--frost-*) tokens. */
     --nav-title-size:19px;
+    --tab-h:56px;    /* height of mobile bottom tab bar (excludes safe-area) */
   }
   *{margin:0;padding:0;box-sizing:border-box}
   /* html background must match --bg so the safe-area inset on iOS (which is
@@ -1269,22 +1270,65 @@
     .p-pause-title{font-size:32px}
     .p-pause-logo{max-height:104px}
   }
+  /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
+  #tabBar{
+    display:none;       /* shown only inside @media(max-width:680px) */
+    position:fixed;bottom:0;left:0;right:0;z-index:100;
+    background:rgba(10,10,14,.88);
+    backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    border-top:1px solid rgba(255,255,255,.07);
+    padding-bottom:env(safe-area-inset-bottom);
+    align-items:stretch}
+  .tab-btn{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:4px;
+    padding:8px 4px;background:none;border:none;cursor:pointer;
+    color:var(--faint);font-size:10px;font-weight:600;letter-spacing:.03em;
+    transition:color .15s var(--ease)}
+  .tab-btn .svgi{width:22px;height:22px}
+  .tab-btn.active{color:var(--accent)}
+  /* Library section picker sheet — slides up above the tab bar */
+  #tabLibPicker{
+    display:none;position:fixed;
+    bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));
+    left:0;right:0;z-index:99;
+    background:rgba(15,15,19,.96);
+    backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    border-top:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    padding:16px 24px;
+    transform:translateY(100%);
+    transition:transform .25s var(--ease),opacity .2s;
+    opacity:0}
+  #tabLibPicker.open{display:block;transform:translateY(0);opacity:1}
+  .tab-lib-option{
+    display:flex;align-items:center;gap:12px;width:100%;
+    padding:14px 4px;border:none;background:none;text-align:left;
+    color:var(--text);font-size:16px;font-weight:500;cursor:pointer;
+    border-bottom:1px solid var(--line)}
+  .tab-lib-option:last-child{border-bottom:none}
+  .tab-lib-option .svgi{width:20px;height:20px;color:var(--accent)}
   /* Below this, even the persistent 240px sidebar column gets too tight
      for both itself and a usable content column, so it becomes an
      off-canvas drawer over a scrim instead. */
   @media(max-width:680px){
     :root{--edge:24px}
     .shell{grid-template-columns:1fr}
-    .sidebar{position:fixed;left:0;top:0;bottom:0;width:248px;transform:translateX(-100%);
-      background:rgba(15,15,19,.94);transition:transform .25s var(--ease);box-shadow:var(--shadow-lg)}
-    .sidebar.open{transform:translateX(0)}
-    .scrim-nav{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:19;display:none}
-    .scrim-nav.show{display:block}
-    .menu-toggle{display:flex}
-    /* Collapse toggle is desktop-only; on phones the sidebar is a drawer */
+    /* Tab bar replaces sidebar + hamburger entirely on mobile */
+    #tabBar{display:flex}
+    .menu-toggle{display:none}
+    .searchbox{display:none}
+    .sidebar{display:none !important}
+    .scrim-nav{display:none !important}
+    .shell{grid-template-columns:1fr}
+    /* Content must scroll above the fixed tab bar */
+    .content{padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px)}
+    /* Collapse toggle is desktop-only */
     .nav-collapse-btn{display:none}
-    /* On mobile the sidebar is off-canvas; start libNav after the menu-toggle (44px + 8px gap) */
-    #libNav{left:max(68px,calc(env(safe-area-inset-left) + 60px))}
+    /* libNav stays usable when tab bar is present */
+    #libNav{left:max(16px,env(safe-area-inset-left))}
   }
   @media(max-width:560px){
     .p-vol{display:none}.p-status{display:none}
@@ -1400,6 +1444,13 @@
 <!-- APP -->
 <div id="app">
   <div class="scrim-nav" id="scrimNav"></div>
+  <div id="tabBar" role="tablist" aria-label="Main navigation">
+    <button class="tab-btn" id="tabHome"     role="tab" aria-label="Home"></button>
+    <button class="tab-btn" id="tabLib"      role="tab" aria-label="Library"></button>
+    <button class="tab-btn" id="tabSearch"   role="tab" aria-label="Search"></button>
+    <button class="tab-btn" id="tabSettings" role="tab" aria-label="Settings"></button>
+  </div>
+  <div id="tabLibPicker" role="dialog" aria-label="Choose library"></div>
   <div class="shell">
     <aside class="sidebar" id="sidebar">
       <div class="brand"><span class="svgi" style="--i:url('assets/images/icons/ui/popcorn-duotone.svg')" aria-hidden="true"></span><b>Hume</b><span class="ver">v0.4</span></div>
@@ -1953,7 +2004,7 @@ async function bootApp(){
     const settingsP=loadRemoteSettings();
     const mc=await api("/library/sections");
     sections=(mc.Directory||[]).filter(s=>s.type==="movie"||s.type==="show");
-    buildNav(); initNavCollapse(); route();
+    buildNav(); buildTabBar(); initNavCollapse(); route();
     settingsP.then(changed=>{
       if(!changed) return;
       initNavCollapse();
@@ -1980,6 +2031,46 @@ function buildNav(){
   const lab2=el("div","nav-label"); lab2.textContent="More"; nav.appendChild(lab2);
   item("svg:playlist","Playlists",()=>navigate("/playlists"),{id:"navPlaylists"});
   item("svg:gear","Settings",()=>navigate("/settings"),{id:"navSettings"});
+}
+function buildTabBar(){
+  const tabs=[
+    {id:"tabHome",    icon:"house",           label:"Home",     action:()=>{closeTabLibPicker();navigate("/")}},
+    {id:"tabLib",     icon:"movies",          label:"Library",  action:tabLibTap},
+    {id:"tabSearch",  icon:"magnifying-glass",label:"Search",   action:()=>{closeTabLibPicker();navigate("/search")}},
+    {id:"tabSettings",icon:"gear",            label:"Settings", action:()=>{closeTabLibPicker();navigate("/settings")}},
+  ];
+  tabs.forEach(t=>{
+    const btn=document.getElementById(t.id);
+    if(!btn) return;
+    btn.innerHTML=svgIcon(t.icon)+`<span>${t.label}</span>`;
+    btn.onclick=t.action;
+  });
+}
+function tabLibTap(){
+  const picker=$("#tabLibPicker");
+  if(picker.classList.contains("open")){ closeTabLibPicker(); return; }
+  if(sections.length<=1){
+    if(sections[0]) navigate(`/library/${sections[0].key}`);
+    return;
+  }
+  picker.innerHTML=sections.map(s=>
+    `<button class="tab-lib-option" onclick="closeTabLibPicker();navigate('/library/${s.key}')">
+      ${svgIcon(s.type==="show"?"television":"movies")} ${esc(s.title)}
+    </button>`
+  ).join("");
+  picker.classList.add("open");
+}
+function closeTabLibPicker(){
+  const p=$("#tabLibPicker");
+  if(p) p.classList.remove("open");
+}
+function highlightTab(seg){
+  const libSegs=new Set(["library","movie","show","episode","collection","genre","actor","see-all","playlists","playlist"]);
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  if(!seg||seg==="home") $("#tabHome")?.classList.add("active");
+  else if(libSegs.has(seg)) $("#tabLib")?.classList.add("active");
+  else if(seg==="search") $("#tabSearch")?.classList.add("active");
+  else if(seg==="settings") $("#tabSettings")?.classList.add("active");
 }
 
 /* ============================================================ ROUTER
@@ -2099,6 +2190,7 @@ function highlightNav(seg,key){
   else if(seg==="playlists") sel=$("#navPlaylists");
   else if(seg==="settings") sel=$("#navSettings");
   if(sel) sel.classList.add("active");
+  highlightTab(seg);
 }
 async function metaItem(ratingKey){
   const mc=await api(`/library/metadata/${ratingKey}`);
@@ -2112,7 +2204,7 @@ let _routeGen=0;
 const _scrollPos=new Map();
 async function route(){
   const gen=++_routeGen;
-  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); closeTrailerModal(); hideLibNav();
+  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
   const parts=pathPart.split("/").filter(Boolean).map(p=>{ try{return decodeURIComponent(p);}catch(_){return p;} });
