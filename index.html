@@ -1227,15 +1227,19 @@
     .detail-poster.wide{width:100%;order:-1}
     /* ---- MOBILE FULL-BLEED DETAIL HERO ---- */
     .detail-hero.full{min-height:unset;padding:0;flex-direction:column;justify-content:flex-start}
-    .detail-hero.full .detail-bg{position:relative;width:100%;aspect-ratio:4/3;flex-shrink:0;overflow:hidden}
+    /* clip-path instead of overflow:hidden so the blur echo spills 100px below the image into the content */
+    .detail-hero.full .detail-bg{position:relative;width:100%;aspect-ratio:4/3;flex-shrink:0;overflow:visible;clip-path:inset(0 0 -100px 0)}
     .detail-hero.full.sq .detail-bg{aspect-ratio:1}
-    .detail-hero.full .detail-bg-blur{inset:-8%;filter:blur(30px) saturate(1.4) brightness(.85)}
+    .detail-hero.full .detail-bg-blur{inset:-5%;filter:blur(60px) saturate(1.5) brightness(.9)}
     .detail-hero.full .detail-bg-img{position:absolute;inset:0;right:0;width:100%;height:100%;object-fit:cover;-webkit-mask-image:none;mask-image:none}
-    .detail-hero.full .detail-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 35%,var(--bg) 100%)}
+    /* scrim extends 100px below image so gradient blends blur echo into page */
+    .detail-hero.full .detail-scrim{position:absolute;inset:0;bottom:-100px;background:linear-gradient(to bottom,transparent 10%,#0a0a0c 78%)}
     .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
-    .detail-hero.full .detail-top{position:relative;z-index:1;padding:12px var(--edge) 0;max-width:100%;margin-top:-52px}
+    .detail-hero.full .detail-top{position:relative;z-index:1;padding:16px var(--edge) 0;max-width:100%;margin-top:-80px;text-align:center}
     .detail-hero.full .detail-top h2{font-size:clamp(26px,8vw,38px)}
-    .detail-hero.full .title-logo{max-height:52px;max-width:min(260px,68vw)}
+    .detail-hero.full .title-logo{max-height:56px;max-width:min(270px,72vw);margin:0 auto;display:block}
+    .detail-hero.full .detail-top .sub{justify-content:center}
+    .detail-hero.full .detail-top .genres{text-align:center}
     .detail-hero.full .detail-bottom{padding:16px var(--edge) 32px}
     .detail-hero.full .rate-float{display:none}
     .ep-card{width:220px}
