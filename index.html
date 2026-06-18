@@ -283,18 +283,16 @@
   .searchbox{position:fixed;top:max(16px,env(safe-area-inset-top));
     right:max(24px,env(safe-area-inset-right));z-index:15;display:flex;align-items:center;gap:8px;
     background:var(--surface2);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    border:1px solid var(--frost-border);border-radius:100px;height:44px;padding:0 18px;width:240px;
-    box-shadow:var(--frost-shadow);
-    transition:border-color .15s,background-color .15s,box-shadow .15s,width .2s,padding .2s}
-  .searchbox:focus-within{background:var(--surface3);box-shadow:var(--frost-shadow-lg)}
+    border:1px solid var(--frost-border);border-radius:100px;height:44px;padding:0 14px;width:44px;
+    cursor:pointer;overflow:hidden;box-shadow:var(--frost-shadow);
+    transition:width .38s var(--ease),background-color .15s,box-shadow .15s}
+  .searchbox:focus-within{width:260px;cursor:default;background:var(--surface3);box-shadow:var(--frost-shadow-lg)}
   .searchbox i,.searchbox .svgi{color:var(--faint);font-size:16px;width:16px;height:16px;flex:0 0 auto}
-  .searchbox input{background:none;border:none;color:var(--text);font-size:13px;width:100%;outline:none;
-    font-family:var(--font)}
+  .searchbox input{background:none;border:none;color:var(--text);font-size:13px;width:0;opacity:0;
+    pointer-events:none;outline:none;font-family:var(--font);
+    transition:width .38s var(--ease),opacity .25s}
+  .searchbox:focus-within input{width:100%;opacity:1;pointer-events:auto}
   .searchbox input::placeholder{color:var(--faint);opacity:1}
-  /* Adaptive legibility: while idle, the icon + text invert against whatever
-     sits behind the box (bright artwork or dark page alike) via difference
-     blending, so "Search" never washes out. On focus we drop the blend for
-     stable, high-contrast editing. */
   .searchbox:not(:focus-within) .svgi,
   .searchbox:not(:focus-within) input{color:#fff;mix-blend-mode:difference}
   .searchbox:not(:focus-within) input::placeholder{color:#fff;opacity:1}
@@ -1181,7 +1179,6 @@
 
   /* ---- RESPONSIVE ---- */
   @media(max-width:900px){
-    .searchbox{width:160px}
     .detail-row{padding:calc(var(--pill-clear) + 4px) var(--edge) 32px;gap:28px}
     .detail-poster{width:140px}
     .detail-poster.wide{width:260px}
@@ -1239,12 +1236,7 @@
     .lib-ctrl .cap{display:none}
     .lib-menu{max-width:calc(100vw - 24px)}
 
-    /* Collapse the floating search to a glass icon button; it expands to a
-       pill once focused so it doesn't dominate small screens. */
-    .searchbox{width:44px;padding:0;justify-content:center;cursor:pointer}
-    .searchbox input{width:0;opacity:0;transition:width .2s var(--ease),opacity .2s var(--ease)}
-    .searchbox:focus-within{width:min(72vw,260px);padding:0 16px;justify-content:flex-start}
-    .searchbox:focus-within input{width:100%;opacity:1;margin-left:8px}
+    .searchbox:focus-within{width:min(72vw,260px)}
 
     /* Player chrome: tighten controls so nothing overflows narrow screens. */
     .pbtn{width:38px;height:38px;font-size:16px;border-radius:10px}
