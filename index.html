@@ -184,6 +184,7 @@
   #content > .grid-view:first-child,#content > .empty:first-child,
   #content > .loading:first-child,#content > .err:first-child,
   #content > .lib-tabs:first-child,#content > .search-head:first-child,
+  #content > .lib-wrap:first-child,#content > .grid-view.lib-page:first-child,
   #content > .page-head:first-child{margin-top:var(--pill-clear)}
 
   /* ---- FLOATING GLASS BAR ----
@@ -320,6 +321,15 @@
   .lib-tab:hover{background:var(--surface3);color:var(--text)}
   .lib-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .lib-tab.active:hover{background:var(--accent-glass-hover)}
+  #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));z-index:15;align-items:center;gap:8px;flex-wrap:nowrap}
+  #libNav.visible{display:flex}
+  #libNavName{background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:100px;height:44px;padding:0 18px;font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;white-space:nowrap;box-shadow:var(--frost-shadow);letter-spacing:-.01em}
+  .lib-nav-tabs{display:flex;gap:6px}
+  .lib-nav-tab{background:var(--surface2);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:100px;height:38px;padding:0 16px;color:var(--dim);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;box-shadow:var(--frost-shadow-sm);transition:background-color .15s,color .15s,border-color .15s;white-space:nowrap}
+  .lib-nav-tab:hover{background:var(--surface3);color:var(--text)}
+  .lib-nav-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
+  .lib-nav-tab.active:hover{background:var(--accent-glass-hover)}
+  .lib-filter-note{font-size:12px;color:var(--faint);padding:0 var(--edge) 12px;margin-top:calc(var(--pill-clear) + 8px)}
 
   /* ---- LIBRARY TOOLBAR ----
      A "Liquid Glass" control strip for the library grid: live, client-side
@@ -1077,6 +1087,7 @@
     </aside>
     <main class="main" id="main">
       <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/list.svg')" aria-hidden="true"></span></button>
+      <div id="libNav" aria-label="Library navigation"></div>
       <div class="searchbox" id="searchBox" role="search">
         <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
         <label class="sr-only" for="search">Search</label>
@@ -1266,7 +1277,10 @@ function selectServer(c){ server=c; localStorage.setItem(LS.server,JSON.stringif
   $("#servers").style.display="none"; bootApp(); }
 
 /* ============================================================ API */
+const _apiCache=new Map();
 async function api(path){
+  const hit=_apiCache.get(path);
+  if(hit&&Date.now()-hit.ts<60000) return hit.data;
   const sep=path.includes("?")?"&":"?";
   let r;
   try{
@@ -1276,7 +1290,9 @@ async function api(path){
     err.offline=true; throw err;
   }
   if(!r.ok) throw new Error(`Server error ${r.status}`);
-  return (await r.json()).MediaContainer||{};
+  const data=(await r.json()).MediaContainer||{};
+  _apiCache.set(path,{data,ts:Date.now()});
+  return data;
 }
 // Playlist/collection composite art is server-generated and isn't a valid
 // photo-transcoder resource — serve it directly instead.
@@ -1397,7 +1413,7 @@ async function playlistMeta(ratingKey){
   catch(_){ return {ratingKey,title:"Playlist"}; }
 }
 async function route(){
-  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); closeTrailerModal();
+  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); closeTrailerModal(); hideLibNav();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
   const parts=pathPart.split("/").filter(Boolean).map(p=>{ try{return decodeURIComponent(p);}catch(_){return p;} });
@@ -1410,7 +1426,10 @@ async function route(){
       case "library": {
         const section=sections.find(s=>String(s.key)===parts[1]);
         if(!section) return showHome();
-        return parts[2]==="all" ? showLibrary(section) : showLibraryRecommended(section);
+        if(parts[2]==="all") return showLibrary(section);
+        if(parts[2]==="collections") return showLibraryCollections(section);
+        if(parts[2]==="playlists") return showLibraryPlaylists(section);
+        return showLibraryRecommended(section);
       }
       case "movie": return openMovie(await metaItem(parts[1]));
       case "show": return openShow(await metaItem(parts[1]), parts[2]==="season"?parts[3]:undefined);
@@ -1714,6 +1733,19 @@ function libTabsHTML(section,active){
   </div>`;
 }
 function wireLibTabs(c){ c.querySelectorAll(".lib-tab[data-href]").forEach(b=>{ b.onclick=()=>navigate(b.dataset.href); }); }
+function showLibNav(section,active){
+  const nav=$("#libNav"); if(!nav) return;
+  nav.innerHTML=`<span id="libNavName">${esc(section.title)}</span><div class="lib-nav-tabs">`
+    +[{k:"recommended",l:"Recommended",h:`/library/${section.key}`},
+      {k:"all",l:"Library",h:`/library/${section.key}/all`},
+      {k:"collections",l:"Collections",h:`/library/${section.key}/collections`},
+      {k:"playlists",l:"Playlists",h:`/library/${section.key}/playlists`},
+    ].map(t=>`<button class="lib-nav-tab${active===t.k?" active":""}" data-href="${t.h}">${t.l}</button>`).join("")
+    +"</div>";
+  nav.querySelectorAll(".lib-nav-tab").forEach(b=>b.onclick=()=>navigate(b.dataset.href));
+  nav.classList.add("visible");
+}
+function hideLibNav(){ const n=$("#libNav"); if(n) n.classList.remove("visible"); }
 /* ---- LIBRARY RECOMMENDED ----
    Curated per-library hubs (Recently Added, Recently Released, etc.),
    the default landing page for a library — mirrors Plex's own UI. */
@@ -1724,7 +1756,8 @@ async function showLibraryRecommended(section){
     const videoHubs=(hubs.Hub||[])
       .map(h=>({title:h.title, items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type))}))
       .filter(h=>h.items.length);
-    c.innerHTML=pageHeadHTML(section.title)+libTabsHTML(section,"recommended");
+    showLibNav(section,"recommended");
+    c.innerHTML="";
     if(!videoHubs.length){
       const empty=el("div","empty");
       empty.innerHTML=`${svgIcon("sparkle-fill")}No recommendations yet.
@@ -1737,30 +1770,65 @@ async function showLibraryRecommended(section){
         c.appendChild(railSection(h.title,h.items,wide,false,undefined,!wide));
       });
     }
-    wireLibTabs(c);
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 async function showLibrary(section){
   setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
-    const [all,colls]=await Promise.all([
-      api(`/library/sections/${section.key}/all`),
-      api(`/library/sections/${section.key}/collections`).catch(()=>({}))
-    ]);
-    c.innerHTML=pageHeadHTML(section.title)+libTabsHTML(section,"all");
-    const collItems=(colls.Metadata||colls.Directory||[]);
-    if(collItems.length) c.appendChild(railSection("Collections", collItems.map(x=>({...x,_collection:true})), false, false));
+    const all=await api(`/library/sections/${section.key}/all`);
+    showLibNav(section,"all");
     const items=all.Metadata||[];
     const genreSet=new Set();
     items.forEach(it=>(it.Genre||[]).forEach(g=>g.tag&&genreSet.add(g.tag)));
     const genres=[...genreSet].sort((a,b)=>a.localeCompare(b));
     libState={section,items,genres,sort:"added",filter:"all",genre:""};
+    c.innerHTML="";
     const wrap=el("div","lib-wrap");
     wrap.innerHTML=libToolbarHTML(section)+`<div class="grid-view" id="libGrid"></div>`;
     c.appendChild(wrap);
-    wireLibTabs(c);
     wireLibToolbar();
     renderLibGrid();
+  }catch(e){ c.innerHTML=errHTML(e); }
+}
+async function showLibraryCollections(section){
+  setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  showLibNav(section,"collections");
+  try{
+    const colls=await api(`/library/sections/${section.key}/collections`).catch(()=>({}));
+    const items=(colls.Metadata||colls.Directory||[]).map(x=>({...x,_collection:true}));
+    c.innerHTML="";
+    if(!items.length){ c.innerHTML=`<div class='empty'>${svgIcon("stack-fill")}No collections in this library.</div>`; return; }
+    const grid=el("div","grid-view lib-page");
+    const frag=document.createDocumentFragment();
+    items.forEach(it=>frag.appendChild(card(it)));
+    grid.appendChild(frag);
+    c.appendChild(grid);
+  }catch(e){ c.innerHTML=errHTML(e); }
+}
+async function showLibraryPlaylists(section){
+  setTitle(section.title); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
+  showLibNav(section,"playlists");
+  try{
+    const mc=await api("/playlists");
+    let pls=(mc.Metadata||[]).filter(p=>p.playlistType==="video");
+    await Promise.all(pls.map(async p=>{
+      try{
+        const ic=await api(`/playlists/${p.ratingKey}/items?X-Plex-Container-Size=4`);
+        p._mosaicItems=(ic.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
+      }catch(_){ p._mosaicItems=[]; }
+    }));
+    const sk=String(section.key);
+    const filtered=pls.filter(p=>(p._mosaicItems||[]).some(it=>
+      String(it.librarySectionID||it.librarySectionKey||"")===sk||
+      String(it.librarySectionTitle||"")===section.title));
+    const show=filtered.length?filtered:pls;
+    c.innerHTML="";
+    if(!show.length){ c.innerHTML=`<div class='empty'>${svgIcon("playlist")}No video playlists.</div>`; return; }
+    const grid=el("div","grid-view lib-page");
+    const frag=document.createDocumentFragment();
+    show.forEach(p=>frag.appendChild(card(p,false,true)));
+    grid.appendChild(frag);
+    c.appendChild(grid);
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 function libToolbarHTML(section){
@@ -1850,9 +1918,26 @@ function renderLibGrid(){
     ? String(val(a)).localeCompare(String(val(b)))
     : (val(b)-val(a)));
   grid.innerHTML="";
-  if(!items.length){ grid.innerHTML=`<div class='empty' style='grid-column:1/-1'>${svgIcon("funnel")}No titles match these filters.</div>`; }
-  else items.forEach(it=>grid.appendChild(card(it)));
   const cnt=$("#libCount"); if(cnt) cnt.textContent=`${items.length} ${items.length===1?"title":"titles"}`;
+  if(!items.length){ grid.innerHTML=`<div class='empty' style='grid-column:1/-1'>${svgIcon("funnel")}No titles match these filters.</div>`; return; }
+  const BATCH=60;
+  let offset=0;
+  const renderBatch=()=>{
+    const frag=document.createDocumentFragment();
+    items.slice(offset,offset+BATCH).forEach(it=>frag.appendChild(card(it)));
+    grid.appendChild(frag);
+    offset+=BATCH;
+    if(offset<items.length){
+      const sentinel=el("div"); sentinel.style.cssText="height:1px;grid-column:1/-1";
+      grid.appendChild(sentinel);
+      const obs=new IntersectionObserver(en=>{
+        if(!en[0].isIntersecting) return;
+        obs.disconnect(); sentinel.remove(); renderBatch();
+      },{rootMargin:"300px"});
+      obs.observe(sentinel);
+    }
+  };
+  renderBatch();
 }
 
 /* ============================================================ PLAYLISTS */
