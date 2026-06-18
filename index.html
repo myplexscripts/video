@@ -1225,6 +1225,19 @@
     .detail-row{flex-wrap:wrap;gap:20px}
     /* On phones the thumbnail stacks back on top of the info column. */
     .detail-poster.wide{width:100%;order:-1}
+    /* ---- MOBILE FULL-BLEED DETAIL HERO ---- */
+    .detail-hero.full{min-height:unset;padding:0;flex-direction:column;justify-content:flex-start}
+    .detail-hero.full .detail-bg{position:relative;width:100%;aspect-ratio:4/3;flex-shrink:0;overflow:hidden}
+    .detail-hero.full.sq .detail-bg{aspect-ratio:1}
+    .detail-hero.full .detail-bg-blur{inset:-8%;filter:blur(30px) saturate(1.4) brightness(.85)}
+    .detail-hero.full .detail-bg-img{position:absolute;inset:0;right:0;width:100%;height:100%;object-fit:cover;-webkit-mask-image:none;mask-image:none}
+    .detail-hero.full .detail-scrim{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 35%,var(--bg) 100%)}
+    .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
+    .detail-hero.full .detail-top{position:relative;z-index:1;padding:12px var(--edge) 0;max-width:100%;margin-top:-52px}
+    .detail-hero.full .detail-top h2{font-size:clamp(26px,8vw,38px)}
+    .detail-hero.full .title-logo{max-height:52px;max-width:min(260px,68vw)}
+    .detail-hero.full .detail-bottom{padding:16px var(--edge) 32px}
+    .detail-hero.full .rate-float{display:none}
     .ep-card{width:220px}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
@@ -1383,7 +1396,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- FONT THEMING ---- */
@@ -1483,6 +1496,10 @@ async function loadRemoteSettings(){
         const next=remote[LS.font];
         if(next!==localStorage.getItem(LS.font)){ localStorage.setItem(LS.font,next); applyFont(next,false); changed=true; }
       }
+      if(remote[LS.detailArt]==="backdrop"||remote[LS.detailArt]==="square"){
+        const next=remote[LS.detailArt];
+        if(next!==localStorage.getItem(LS.detailArt)){ localStorage.setItem(LS.detailArt,next); changed=true; }
+      }
     }
     _syncState="ok";
     return changed;
@@ -1498,6 +1515,7 @@ function pushRemoteSettings(){
         [LS.railStyles]:getRailStyles(),
         [LS.navCollapsed]:localStorage.getItem(LS.navCollapsed)||"0",
         [LS.font]:localStorage.getItem(LS.font)||"circular",
+        [LS.detailArt]:localStorage.getItem(LS.detailArt)||"backdrop",
       };
       const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`,{method:"PUT",body:JSON.stringify(payload)});
       _syncState=r.ok?"ok":"unavailable";
@@ -2576,7 +2594,9 @@ async function showSettings(){
   setTitle("Settings"); clearUltraBlur(); hideLibNav();
   const c=$("#content");
   const cf=localStorage.getItem(LS.font)||"circular";
+  const da=localStorage.getItem(LS.detailArt)||"backdrop";
   const fBtn=(id,label)=>`<button class="rail-style-btn${cf===id?" active":""}" data-font="${id}">${label}</button>`;
+  const daBtn=(id,label)=>`<button class="rail-style-btn${da===id?" active":""}" data-detailart="${id}">${label}</button>`;
   c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>Settings</h2></div></div>
     <div class="settings-wrap">
     <div class="settings-group">
@@ -2587,6 +2607,14 @@ async function showSettings(){
         </div>
         <div class="rail-style-btns" id="settingsFontBtns">
           ${fBtn("circular","Circular")}${fBtn("inter","Inter")}${fBtn("outfit","Outfit")}
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Detail Art
+          <small>Art style on movie &amp; show pages on mobile.</small>
+        </div>
+        <div class="rail-style-btns" id="settingsDetailArtBtns">
+          ${daBtn("backdrop","Backdrop")}${daBtn("square","Square")}
         </div>
       </div>
     </div>
@@ -2611,6 +2639,14 @@ async function showSettings(){
     btn.onclick=()=>{
       applyFont(btn.dataset.font);
       c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
+    };
+  });
+  // Wire detail art picker
+  c.querySelectorAll("#settingsDetailArtBtns .rail-style-btn").forEach(btn=>{
+    btn.onclick=()=>{
+      localStorage.setItem(LS.detailArt,btn.dataset.detailart);
+      pushRemoteSettings(); toast("Settings saved");
+      c.querySelectorAll("#settingsDetailArtBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
     };
   });
   // Reflect live sync status so failures are visible, not silent.
@@ -2926,8 +2962,7 @@ function detailHero(m,isMovie,actionsHTML,extras){
   const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
   return `<div class="detail-wrap">
     <div class="detail-hero full">
-      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>
-      <div class="detail-scrim"></div>
+      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""><div class="detail-scrim"></div></div>
       <div class="detail-top">
         ${titleArtHTML(m)}
         <div class="sub">${metaBits(m,isMovie)}</div>
@@ -3517,16 +3552,22 @@ function wireRateFloat(c,m){
   });
   group.onmouseleave=()=>paintStars(root,current());
 }
-function wireBackdrop(c,art){
+function wireBackdrop(c,art,mobileArt){
   setUltraBlur(art);
-  wireDetailBg(c,art);
+  wireDetailBg(c,art,mobileArt);
 }
-function wireDetailBg(c,art){
+function wireDetailBg(c,art,mobileArt){
   if(!art) return;
+  const pref=localStorage.getItem(LS.detailArt)||"backdrop";
+  const isMobile=window.innerWidth<=560;
+  const useSq=isMobile&&pref==="square"&&!!mobileArt;
+  const src=useSq?mobileArt:art;
+  const hero=c.querySelector(".detail-hero.full");
+  if(hero&&useSq) hero.classList.add("sq");
   const blur=c.querySelector(".detail-bg-blur");
-  if(blur) blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
+  if(blur) blur.style.backgroundImage=`url('${imgAmbient(src)}')`;
   const bgImg=c.querySelector(".detail-bg-img");
-  if(bgImg){ bgImg.onload=()=>bgImg.classList.add("loaded"); bgImg.src=img(art,1600,900); }
+  if(bgImg){ bgImg.onload=()=>bgImg.classList.add("loaded"); bgImg.src=img(src,useSq?800:1600,useSq?800:900); }
   applyBackdropContrast(c.querySelector(".detail-hero"),art);
 }
 async function openMovie(it){
@@ -3539,7 +3580,7 @@ async function openMovie(it){
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
     c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
     appendRelatedRails(c,related,m);
-    wireBackdrop(c,m.art||m.thumb);
+    wireBackdrop(c,m.art||m.thumb,(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
@@ -3579,7 +3620,7 @@ async function openShow(it,jumpSeasonKey){
       +extrasRailHTML(extras)
       +crewHTML(show);
     appendRelatedRails(c,related,show);
-    wireBackdrop(c,show.art||show.thumb);
+    wireBackdrop(c,show.art||show.thumb,(show.Image||[]).find(i=>i.type==="backgroundSquare")?.url);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
     injectFirstWatched(show.ratingKey,true);
