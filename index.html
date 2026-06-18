@@ -1279,6 +1279,9 @@
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     border-left:1px solid var(--frost-border)}
   .p-panel.show{transform:translateX(0)}
+  .p-panel-scrim{position:absolute;inset:0;z-index:14;background:rgba(0,0,0,.45);
+    opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
+  .p-panel-scrim.show{opacity:1;pointer-events:auto}
   #player.panel-open.idle .p-top{opacity:1;transform:none;pointer-events:auto}
   .p-panel-head{display:flex;align-items:center;justify-content:flex-end;padding:10px 12px;
     flex:0 0 auto;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -1544,8 +1547,16 @@
 
     /* Player chrome: tighten controls so nothing overflows narrow screens. */
     /* ---- Mobile player redesign ---- */
-    /* Top bar: centered title, hide minimize */
-    #minPlayer{display:none}
+    /* Panel: bottom sheet on mobile */
+    .p-panel{top:auto;left:0;right:0;bottom:0;width:100%;height:min(62vh,520px);
+      transform:translateY(100%);border-left:none;
+      border-top:1px solid var(--frost-border);
+      border-radius:18px 18px 0 0}
+    .p-panel.show{transform:translateY(0)}
+    .p-panel::before{content:"";display:block;width:36px;height:4px;
+      border-radius:2px;background:rgba(255,255,255,.22);
+      margin:10px auto 0;flex-shrink:0}
+    .p-panel-head{justify-content:flex-end;padding:8px 12px 4px}
     .p-top{padding:max(env(safe-area-inset-top),14px) 14px 12px;gap:10px}
     .p-top .pt .pt-main{font-size:14px}
     .p-top .pt .pt-sub{font-size:11px}
@@ -1718,6 +1729,7 @@
       </div>
     </div>
   </div>
+  <div class="p-panel-scrim" id="pPanelScrim"></div>
   <div class="p-panel" id="pPanel" aria-hidden="true">
     <div class="p-panel-head"><button class="p-panel-close" id="pPanelClose" aria-label="Close"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button></div>
     <div class="p-panel-body" id="pPanelBody"></div>
@@ -4951,12 +4963,14 @@ function panelOpen(){ return $("#pPanel").classList.contains("show"); }
 function openPanel(){
   $("#pMenu").classList.remove("open"); $("#settingsBtn").setAttribute("aria-expanded","false");
   $("#pPanel").classList.add("show"); $("#pPanel").setAttribute("aria-hidden","false");
+  $("#pPanelScrim").classList.add("show");
   $("#player").classList.add("panel-open");
   $("#chaptersBtn").setAttribute("aria-expanded","true");
   renderPanel();
 }
 function closePanel(){
   $("#pPanel").classList.remove("show"); $("#pPanel").setAttribute("aria-hidden","true");
+  $("#pPanelScrim").classList.remove("show");
   $("#player").classList.remove("panel-open");
   $("#chaptersBtn").setAttribute("aria-expanded","false");
 }
@@ -5010,6 +5024,7 @@ function renderPanel(){
 }
 $("#chaptersBtn").onclick=e=>{ e.stopPropagation(); togglePanel(); };
 $("#pPanelClose").onclick=closePanel;
+$("#pPanelScrim").onclick=closePanel;
 
 /* ---- accessible menu keyboard navigation (arrows / escape / tab) ---- */
 function menuKeyHandler(menu,toggleBtn){
