@@ -144,8 +144,10 @@
     --nav-title-size:19px;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%}
-  body{background:var(--bg);color:var(--text);font-family:var(--font);
+  /* html background must match --bg so the safe-area inset on iOS (which is
+     painted by the html/viewport layer, not body) is app-coloured not black. */
+  html,body{height:100%;background:var(--bg)}
+  body{color:var(--text);font-family:var(--font);
     -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow:hidden}
   button,input{font-family:inherit;color:inherit}
   button{cursor:pointer}
@@ -489,12 +491,16 @@
     flex:0 0 auto;color:inherit;outline:none;border-radius:var(--radius-sm);touch-action:manipulation}
   .carousel .card{width:180px}
   .carousel .card.wide{width:262px}
-  .card:focus-visible .art{outline:2px solid var(--accent);outline-offset:2px}
+  /* Gold ring lives on .art (border-radius:14px) not the button (10px) so the
+     glow follows the actual visible card edge, not the squarer button bounds. */
+  .card:focus-visible .art{
+    box-shadow:0 0 0 2.5px var(--accent),0 0 0 6px rgba(232,184,37,.18),0 16px 48px rgba(232,184,37,.2) !important;
+    outline:none}
   .art{position:relative;border-radius:14px;overflow:hidden;background:var(--bg2);
     box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease);aspect-ratio:2/3}
   .card.wide .art{aspect-ratio:16/9}
   .card.square .art{aspect-ratio:1/1}
-  .card:hover .art,.card:focus-visible .art{box-shadow:var(--shadow)}
+  .card:hover .art{box-shadow:var(--shadow)}
   .art img:not(.bill-logo){width:100%;height:100%;object-fit:cover;display:block}
   .art .art-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
     font-size:40px;color:var(--faint)}
@@ -1018,7 +1024,13 @@
      :focus-visible fires only on keyboard/D-pad — never on touch taps — so
      the ring never appears for mouse or touchscreen users. */
   :focus-visible{outline:none}
-  button.card:focus-visible,.genre-card:focus-visible{
+  /* Cards: scale the whole card — ring is on .art below so it follows 14px radius.
+     Genre cards have their own ring here since they don't use .art. */
+  button.card:focus-visible{
+    outline:none;z-index:4;position:relative;
+    transform:scale(1.06);
+    transition:transform .14s var(--ease)}
+  .genre-card:focus-visible{
     outline:none;z-index:4;position:relative;
     transform:scale(1.06);
     box-shadow:0 0 0 2.5px var(--accent),0 0 0 6px rgba(232,184,37,.18),0 16px 48px rgba(232,184,37,.2);
