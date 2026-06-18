@@ -388,10 +388,10 @@
      carries the stacking/positioning for the wipe transition. */
   .hub-carousel-section{padding:40px 0 10px;overflow:visible}
   .hub-carousel{position:relative;height:min(56vh,560px);min-height:380px;overflow:hidden}
-  .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;
+  .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;visibility:hidden;
     will-change:transform;display:flex;flex-direction:column;justify-content:space-between;
     padding:36px var(--edge) 40px}
-  .hub-cs-slide.active{z-index:1;pointer-events:auto}
+  .hub-cs-slide.active{visibility:visible;z-index:1;pointer-events:auto}
   /* Keep the desktop overlay layout at every breakpoint inside the carousel,
      so the mobile full-bleed home-hero overrides don't reshape the slides. */
   .hub-carousel .hero-bg-img{position:absolute;top:0;right:0;left:auto;width:auto;height:100%;
@@ -2883,7 +2883,7 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summar
   }
   const head=el("div","rail-head"+(actorThumb?" with-avatar":""));
   head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
-  if(seeAll) head.querySelector(".see-all").onclick=()=>{ seeAllCache={title,items,wide,libLabel}; navigate("/see-all"); };
+  if(seeAll) head.querySelector(".see-all").onclick=()=>{ seeAllCache={title,items,wide,libLabel,summary}; navigate("/see-all"); };
   sec.appendChild(head);
   if(summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=summary; sec.appendChild(p); }
   const viewport=el("div","rail-viewport");
@@ -3019,9 +3019,12 @@ function showSeeAll(){
   if(!cache) return showHome();
   setTitle(cache.title); clearUltraBlur();
   const c=$("#content");
-  c.innerHTML=pageHeadHTML(cache.title,cache.items.length,cache.libLabel)+`<div class="grid-view"></div>`;
-  const grid=c.querySelector(".grid-view");
-  cache.items.forEach(it=>grid.appendChild(card(it,cache.wide)));
+  const sq=getHeroStyle()==="square";
+  const wide=sq?false:cache.wide;
+  c.innerHTML=pageHeadHTML(cache.title,cache.items.length,cache.libLabel);
+  if(cache.summary){ const p=el("p","rail-summary"); p.textContent=cache.summary; c.appendChild(p); }
+  const grid=el("div","grid-view"); c.appendChild(grid);
+  cache.items.forEach(it=>grid.appendChild(card(it,wide,sq)));
 }
 
 /* ============================================================ LIBRARY */
