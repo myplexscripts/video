@@ -1225,26 +1225,33 @@
     .detail-row{flex-wrap:wrap;gap:20px}
     /* On phones the thumbnail stacks back on top of the info column. */
     .detail-poster.wide{width:100%;order:-1}
-    /* ---- MOBILE FULL-BLEED DETAIL HERO ---- */
+    /* ---- MOBILE FULL-BLEED DETAIL HERO ----
+       Same structure as desktop: detail-bg fills the full hero (position:absolute;inset:0),
+       blur echo is the blurred art backdrop for the whole hero area, crisp image covers
+       just the top 4:3 portion and vignettes at its bottom into the blur echo below it.
+       Blur echo then fades at the hero's bottom edge into the ultraBlur ambient.
+       This is identical to how the desktop hero works, just rotated 90°. */
     .detail-hero.full{min-height:unset;padding:0;flex-direction:column;justify-content:flex-start}
-    .detail-hero.full .detail-bg{position:relative;width:100%;aspect-ratio:4/3;flex-shrink:0;overflow:hidden;background:transparent}
-    .detail-hero.full.sq .detail-bg{aspect-ratio:1}
-    /* No blur echo. The page's fixed ultraBlur — now sourced from the very same art
-       the user picked — IS the blurred backdrop, so there is only ONE blurred layer
-       and never a second colour to clash. The crisp art just vignettes at its bottom
-       edge into that blur, the exact mirror of how the desktop hero vignettes on its
-       left. Because the art fades via an alpha gradient sitting OVER the same blurred
-       art, the brightness ramps down smoothly into it — no seam is possible. */
-    .detail-hero.full .detail-bg-blur{display:none}
-    .detail-hero.full .detail-bg-img{position:absolute;inset:0;right:0;width:100%;height:100%;object-fit:cover;
-      -webkit-mask-image:linear-gradient(to bottom,#000 44%,transparent 96%);
-      mask-image:linear-gradient(to bottom,#000 44%,transparent 96%)}
-    /* faint top-only scrim for pill legibility; the bottom is left fully open so the
-       art's alpha vignette rides straight down into the ultraBlur */
+    /* detail-bg: absolute like desktop, fills the full hero height */
+    .detail-hero.full .detail-bg{position:absolute;inset:0;overflow:hidden;background:transparent}
+    /* blur echo: restored — local blurred art fills the whole hero, same as desktop.
+       Fades out at the bottom so it dissolves into the ultraBlur ambient below. */
+    .detail-hero.full .detail-bg-blur{display:block;
+      -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);
+      mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
+    /* crisp image: covers just the 4:3 art zone at the top; vignettes at its bottom
+       edge into the blur echo behind it — same concept as the desktop left-edge vignette */
+    .detail-hero.full .detail-bg-img{position:absolute;top:0;left:0;right:0;width:100%;height:75vw;
+      object-fit:cover;
+      -webkit-mask-image:linear-gradient(to bottom,#000 44%,transparent 92%);
+      mask-image:linear-gradient(to bottom,#000 44%,transparent 92%)}
+    .detail-hero.full.sq .detail-bg-img{height:100vw}
     .detail-hero.full .detail-scrim{position:absolute;inset:0;
-      background:linear-gradient(to bottom,rgba(10,10,12,.24) 0%,transparent 26%)}
+      background:linear-gradient(to bottom,rgba(10,10,12,.28) 0%,transparent 24%)}
     .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
-    .detail-hero.full .detail-top{position:relative;z-index:1;padding:16px var(--edge) 0;max-width:100%;margin-top:-80px;text-align:center}
+    /* detail-top: padding-top pushes it below the 4:3 art with a 64px overlap into the fade zone */
+    .detail-hero.full .detail-top{position:relative;z-index:1;padding:calc(75vw - 64px) var(--edge) 0;max-width:100%;text-align:center}
+    .detail-hero.full.sq .detail-top{padding-top:calc(100vw - 64px)}
     .detail-hero.full .detail-top h2{font-size:clamp(26px,8vw,38px)}
     .detail-hero.full .title-logo{display:block;height:73px;max-width:min(320px,80vw);width:100%;
       object-fit:contain;object-position:center bottom;margin:0 auto}
