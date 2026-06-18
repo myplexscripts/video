@@ -1274,6 +1274,14 @@
     .p-pause-logo{max-height:104px}
   }
   /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
+  /* #tabBarBg fills the home-indicator safe area BELOW the tab bar with a
+     solid colour that matches the frosted bar above it. This avoids the
+     "black strip" that appears when backdrop-filter has nothing colourful to
+     blur in the void below the flex content (just html background). */
+  #tabBarBg{
+    display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+    height:env(safe-area-inset-bottom);
+    background:rgba(10,10,14,1)}   /* fully-opaque match for tab bar */
   #tabBar{
     display:none;       /* shown only inside @media(max-width:680px) */
     position:fixed;bottom:0;left:0;right:0;z-index:100;
@@ -1281,14 +1289,7 @@
     backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     border-top:1px solid rgba(255,255,255,.07);
-    padding-bottom:env(safe-area-inset-bottom);
     align-items:stretch}
-  /* Solid fill for the home-indicator strip — prevents the semi-transparent
-     frosted glass from rendering as near-black over the void below the app */
-  #tabBar::after{
-    content:'';position:absolute;left:0;right:0;bottom:0;
-    height:env(safe-area-inset-bottom);
-    background:var(--bg);pointer-events:none}
   .tab-btn{
     flex:1;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:4px;
@@ -1348,7 +1349,8 @@
     :root{--edge:24px}
     .shell{grid-template-columns:1fr}
     /* Tab bar replaces sidebar + hamburger entirely on mobile */
-    #tabBar{display:flex}
+    #tabBarBg{display:block}
+    #tabBar{display:flex;bottom:env(safe-area-inset-bottom)}
     #menuToggle{display:none}
     .searchbox{display:none}
     .sidebar{display:none !important}
@@ -1475,6 +1477,7 @@
 <!-- APP -->
 <div id="app">
   <div class="scrim-nav" id="scrimNav"></div>
+  <div id="tabBarBg" aria-hidden="true"></div>
   <div id="tabBar" role="tablist" aria-label="Main navigation">
     <button class="tab-btn" id="tabHome"     role="tab" aria-label="Home"></button>
     <button class="tab-btn" id="tabLib"      role="tab" aria-label="Library"></button>
