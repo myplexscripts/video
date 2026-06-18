@@ -1446,7 +1446,7 @@
     .hub-carousel .hero-bg-blur{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
     .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(10,10,12,.9) 0%,rgba(10,10,12,.4) 50%,transparent 78%)}
     .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:left}
-    .hub-carousel .title-logo{max-height:72px;max-width:min(65%,280px);object-position:left bottom;margin:0 0 8px}
+    .hub-carousel .title-logo{max-height:100px;max-width:min(72%,320px);object-position:left bottom;margin:0 0 8px}
     .hub-carousel .hero-top h2{font-size:clamp(22px,7vw,34px)}
     .hub-carousel-dots{bottom:14px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
@@ -2653,7 +2653,14 @@ function carouselHubSection(hub){
   next.onclick=()=>{ stop(); goTo(cur+1,true); start(); };
   dotEls.forEach((d,i)=>{ d.onclick=()=>{ stop(); goTo(i); start(); }; });
   car.addEventListener("mouseenter",stop); car.addEventListener("mouseleave",start);
-  car.addEventListener("touchstart",stop,{passive:true});
+  let _tx=null;
+  car.addEventListener("touchstart",e=>{ stop(); _tx=e.touches[0].clientX; },{passive:true});
+  car.addEventListener("touchend",e=>{
+    if(_tx===null) return;
+    const dx=e.changedTouches[0].clientX-_tx; _tx=null;
+    if(Math.abs(dx)>48){ dx<0?goTo(cur+1,true):goTo(cur-1,false); }
+    start();
+  },{passive:true});
   return sec;
 }
 function renderHubSection(hub,style){
