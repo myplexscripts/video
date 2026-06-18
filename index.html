@@ -1960,7 +1960,14 @@ async function fetchGenreData(){
     const pick=candidates[Math.floor(Math.random()*Math.min(candidates.length,5))];
     const imgs=pick.Image||[];
     const sqImg=imgs.find(i=>i.type==="backgroundSquare");
-    result.push({name:g.title,key:g.key,sectionKey:sec.key,
+    // Extract numeric genre ID from key (e.g. "/library/sections/1/all?genre=9" or
+    // "/library/sections/1/genre/9") so the detail page can build its own clean URL
+    // rather than forwarding g.key verbatim, which varies by server version.
+    let genreId=null;
+    try{ genreId=new URL(g.key,"https://x").searchParams.get("genre"); }catch(_){}
+    if(!genreId){ const m=(g.key||"").match(/\/genres?\/(\d+)/); if(m) genreId=m[1]; }
+    if(!genreId) genreId=g.ratingKey||null;
+    result.push({name:g.title,genreId,sectionKey:sec.key,
       thumb:pick.thumb||pick.parentThumb,
       art:pick.art||pick.grandparentArt||pick.thumb,
       squareArt:(sqImg&&sqImg.url)||pick.thumb||pick.parentThumb});
@@ -1975,7 +1982,7 @@ function genreCard(g,style){
   const b=el("button","genre-card genre-card--"+style);
   b.style.setProperty("--gc",gc);
   b.innerHTML=`<div class="genre-art">${artSrc?`<img loading="lazy" alt="${esc(g.name)}" src="${img(artSrc,w,h)}" onerror="this.remove()">`:""}<div class="genre-fade"></div></div><div class="genre-label">${esc(g.name)}</div>`;
-  b.onclick=()=>{ _genrePageData={title:g.name,key:g.key,sectionKey:g.sectionKey}; navigate("/genre"); };
+  b.onclick=()=>{ _genrePageData={title:g.name,genreId:g.genreId,sectionKey:g.sectionKey}; navigate("/genre"); };
   return b;
 }
 function genreRailSection(genreItems,style){
@@ -1997,15 +2004,15 @@ function genreRailSection(genreItems,style){
   return sec;
 }
 async function showGenrePage(){
-  const {title,key,sectionKey}=_genrePageData||{};
-  if(!title||!key) return showHome();
+  const {title,genreId,sectionKey}=_genrePageData||{};
+  if(!title||!sectionKey) return showHome();
   setTitle(title); clearUltraBlur(); hideLibNav();
   const c=$("#content"); c.innerHTML=`<div class='loading'>Loading…</div>`;
   try{
-    const sep=key.includes("?")?"&":"?";
-    const mc=await api(`${key}${sep}sort=rating:desc&X-Plex-Container-Size=200`);
+    const filter=genreId||encodeURIComponent(title);
+    const mc=await api(`/library/sections/${sectionKey}/all?genre=${filter}&sort=rating:desc&X-Plex-Container-Size=100`);
     const items=(mc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-    c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>${esc(title)}</h2></div></div>`;
+    c.innerHTML=pageHeadHTML(title);
     if(!items.length){ c.innerHTML+=`<div class='empty'>${svgIcon("movies")}No titles found.</div>`; return; }
     const grid=el("div","grid-view");
     const frag=document.createDocumentFragment();
