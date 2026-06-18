@@ -1322,6 +1322,11 @@
     .p-pause-title{font-size:32px}
     .p-pause-logo{max-height:104px}
   }
+  /* ── Always-on status-bar dark veil (mobile only) ──────────────────────── */
+  #topFrost{display:none;position:fixed;top:0;left:0;right:0;z-index:8;
+    height:calc(env(safe-area-inset-top) + 36px);
+    background:linear-gradient(to bottom,rgba(0,0,0,.78) 0%,transparent 100%);
+    pointer-events:none}
   /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
   /* SOLID background (no backdrop-filter): a frosted bar must re-blur the
      content behind it on every scroll frame, which is expensive on phones and
@@ -1404,6 +1409,8 @@
     #app{height:auto;min-height:100svh}
     .shell{display:block;height:auto;min-height:100svh}
     .main{overflow:visible;height:auto;scroll-behavior:auto}
+    /* Status-bar veil always on */
+    #topFrost{display:block}
     /* Tab bar replaces sidebar + hamburger entirely on mobile */
     #tabBar{display:flex}
     #menuToggle{display:none}
@@ -1527,6 +1534,14 @@
     .lib-menu{max-width:calc(100vw - 24px)}
 
     .searchbox:focus-within{width:min(72vw,260px)}
+    /* Mobile search landing page */
+    .mobile-search-landing{padding:calc(env(safe-area-inset-top) + 16px) var(--edge) 0}
+    .ms-field{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);
+      border-radius:14px;padding:13px 16px;margin-top:12px}
+    .ms-field .svgi{width:18px;height:18px;color:var(--dim);flex:0 0 auto}
+    .ms-field input{flex:1;background:none;border:none;color:var(--text);font-size:16px;
+      outline:none;-webkit-appearance:none}
+    .ms-field input::placeholder{color:var(--dim)}
 
     /* Player chrome: tighten controls so nothing overflows narrow screens. */
     .pbtn{width:38px;height:38px;font-size:16px;border-radius:10px}
@@ -1577,11 +1592,13 @@
 <!-- APP -->
 <div id="app">
   <div class="scrim-nav" id="scrimNav"></div>
+  <div id="topFrost" aria-hidden="true"></div>
   <div id="tabBar" role="tablist" aria-label="Main navigation">
-    <button class="tab-btn" id="tabHome"     role="tab" aria-label="Home"></button>
-    <button class="tab-btn" id="tabLib"      role="tab" aria-label="Library"></button>
-    <button class="tab-btn" id="tabSearch"   role="tab" aria-label="Search"></button>
-    <button class="tab-btn" id="tabSettings" role="tab" aria-label="Settings"></button>
+    <button class="tab-btn" id="tabHome"      role="tab" aria-label="Home"></button>
+    <button class="tab-btn" id="tabLib"       role="tab" aria-label="Library"></button>
+    <button class="tab-btn" id="tabPlaylists" role="tab" aria-label="Playlists"></button>
+    <button class="tab-btn" id="tabSearch"    role="tab" aria-label="Search"></button>
+    <button class="tab-btn" id="tabSettings"  role="tab" aria-label="Settings"></button>
   </div>
   <div id="tabLibPicker" role="dialog" aria-label="Choose library"></div>
   <div id="installHint" role="status" aria-live="polite">
@@ -2185,10 +2202,11 @@ function buildNav(){
 }
 function buildTabBar(){
   const tabs=[
-    {id:"tabHome",    icon:"house",           label:"Home",     action:()=>{closeTabLibPicker();navigate("/")}},
-    {id:"tabLib",     icon:"movies",          label:"Library",  action:tabLibTap},
-    {id:"tabSearch",  icon:"magnifying-glass",label:"Search",   action:()=>{closeTabLibPicker();navigate("/search")}},
-    {id:"tabSettings",icon:"gear",            label:"Settings", action:()=>{closeTabLibPicker();navigate("/settings")}},
+    {id:"tabHome",      icon:"house",           label:"Home",      action:()=>{closeTabLibPicker();navigate("/")}},
+    {id:"tabLib",       icon:"movies",          label:"Library",   action:tabLibTap},
+    {id:"tabPlaylists", icon:"playlist",        label:"Playlists", action:()=>{closeTabLibPicker();navigate("/playlists")}},
+    {id:"tabSearch",    icon:"magnifying-glass",label:"Search",    action:()=>{closeTabLibPicker();navigate("/search")}},
+    {id:"tabSettings",  icon:"gear",            label:"Settings",  action:()=>{closeTabLibPicker();navigate("/settings")}},
   ];
   tabs.forEach(t=>{
     const btn=document.getElementById(t.id);
@@ -2231,10 +2249,11 @@ function maybeShowInstallHint(){
   };
 }
 function highlightTab(seg){
-  const libSegs=new Set(["library","movie","show","episode","collection","genre","actor","see-all","playlists","playlist"]);
+  const libSegs=new Set(["library","movie","show","episode","collection","genre","actor","see-all"]);
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
   if(!seg||seg==="home") $("#tabHome")?.classList.add("active");
   else if(libSegs.has(seg)) $("#tabLib")?.classList.add("active");
+  else if(seg==="playlists"||seg==="playlist") $("#tabPlaylists")?.classList.add("active");
   else if(seg==="search") $("#tabSearch")?.classList.add("active");
   else if(seg==="settings") $("#tabSettings")?.classList.add("active");
 }
@@ -2418,7 +2437,7 @@ async function route(){
       case "search": {
         const q=params.get("q")||"";
         if($("#search")) $("#search").value=q;
-        return q ? runSearch(q) : showHome(gen);
+        return q ? runSearch(q) : (window.innerWidth<=680 ? showMobileSearch() : showHome(gen));
       }
       default: return showHome(gen);
     }
@@ -4562,6 +4581,28 @@ async function openEpisode(it){
 }
 
 /* ============================================================ SEARCH */
+function showMobileSearch(){
+  setTitle("Search"); clearUltraBlur();
+  const c=$("#content");
+  c.innerHTML=`<div class="mobile-search-landing">
+    <div class="ms-field">
+      <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
+      <input id="mobileSearchInput" type="search" placeholder="Movies, shows, people…"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+  </div>`;
+  const inp=c.querySelector("#mobileSearchInput");
+  if(!inp) return;
+  requestAnimationFrame(()=>inp.focus());
+  let st=null;
+  inp.addEventListener("input",e=>{
+    clearTimeout(st);
+    const q=e.target.value.trim();
+    st=setTimeout(()=>{
+      if(q.length>=2) location.hash=`/search?q=${encodeURIComponent(q)}`;
+    },350);
+  });
+}
 let searchTimer=null;
 $("#search").addEventListener("input",e=>{
   clearTimeout(searchTimer); const q=e.target.value.trim();
