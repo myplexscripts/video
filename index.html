@@ -431,6 +431,10 @@
     font-weight:600;color:var(--dim);background:none;border:none;cursor:pointer;
     padding-bottom:3px;font-family:var(--font);transition:color .15s var(--ease)}
   .see-all:hover{color:var(--text)}
+  .see-all-banner{position:relative;height:min(38vh,300px);overflow:hidden;margin-bottom:8px}
+  .see-all-banner .hero-bg-img{left:0;width:100%;height:100%;object-fit:cover;
+    -webkit-mask-image:none;mask-image:none}
+  .see-all-banner .hero-scrim{background:linear-gradient(to bottom,rgba(10,10,12,.08) 0%,rgba(10,10,12,.4) 55%,var(--bg) 100%)}
   .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
   .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
@@ -3019,12 +3023,28 @@ function showSeeAll(){
   if(!cache) return showHome();
   setTitle(cache.title); clearUltraBlur();
   const c=$("#content");
-  const sq=getHeroStyle()==="square";
-  const wide=sq?false:cache.wide;
-  c.innerHTML=pageHeadHTML(cache.title,cache.items.length,cache.libLabel);
+  c.innerHTML="";
+  const firstItem=cache.items[0];
+  if(firstItem){
+    const isSquare=getHeroStyle()==="square";
+    const squareImg=(firstItem.Image||[]).find(i=>i.type==="backgroundSquare");
+    const art=isSquare?(squareImg?.url||firstItem.thumb||firstItem.art)
+                      :(firstItem.art||firstItem.grandparentArt||firstItem.parentArt||firstItem.thumb);
+    const banner=el("div","see-all-banner");
+    banner.innerHTML=`<div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" decoding="async" loading="eager" alt=""></div><div class="hero-scrim"></div>`;
+    const blur=banner.querySelector(".hero-bg-blur");
+    blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
+    const bgImg=banner.querySelector(".hero-bg-img");
+    bgImg.onload=()=>bgImg.classList.add("loaded");
+    bgImg.onerror=()=>bgImg.remove();
+    bgImg.src=img(art,isSquare?800:1600,isSquare?800:500);
+    applyBackdropContrast(banner,art);
+    c.appendChild(banner);
+  }
+  c.insertAdjacentHTML("beforeend",pageHeadHTML(cache.title,cache.items.length,cache.libLabel));
   if(cache.summary){ const p=el("p","rail-summary"); p.textContent=cache.summary; c.appendChild(p); }
   const grid=el("div","grid-view"); c.appendChild(grid);
-  cache.items.forEach(it=>grid.appendChild(card(it,wide,sq)));
+  cache.items.forEach(it=>grid.appendChild(card(it,cache.wide)));
 }
 
 /* ============================================================ LIBRARY */
