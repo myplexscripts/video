@@ -1313,6 +1313,28 @@
     border-bottom:1px solid var(--line)}
   .tab-lib-option:last-child{border-bottom:none}
   .tab-lib-option .svgi{width:20px;height:20px;color:var(--accent)}
+  /* iOS "Add to Home Screen" install hint — shown only in browser mode, mobile only */
+  #installHint{
+    display:none;position:fixed;
+    bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));
+    left:0;right:0;z-index:98;
+    background:rgba(10,10,14,.94);
+    backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    border-top:1px solid rgba(255,255,255,.08);
+    padding:10px 14px;align-items:center;gap:10px}
+  #installHint .ih-arrow{
+    flex:0 0 28px;width:28px;height:28px;border-radius:8px;
+    background:rgba(255,255,255,.07);
+    display:flex;align-items:center;justify-content:center}
+  #installHint .ih-arrow .svgi{width:14px;height:14px;transform:rotate(-90deg);color:var(--accent)}
+  #installHint .ih-text{flex:1;font-size:12px;line-height:1.35;color:var(--dim)}
+  #installHint .ih-text b{color:var(--text);font-weight:600}
+  #installHint .ih-dismiss{
+    flex:0 0 auto;background:none;border:none;cursor:pointer;
+    color:var(--faint);padding:4px}
+  #installHint .ih-dismiss .svgi{width:14px;height:14px}
+  @media(max-width:680px){#installHint.visible{display:flex}}
   /* Below this, even the persistent 240px sidebar column gets too tight
      for both itself and a usable content column, so it becomes an
      off-canvas drawer over a scrim instead. */
@@ -1454,6 +1476,13 @@
     <button class="tab-btn" id="tabSettings" role="tab" aria-label="Settings"></button>
   </div>
   <div id="tabLibPicker" role="dialog" aria-label="Choose library"></div>
+  <div id="installHint" role="status" aria-live="polite">
+    <div class="ih-arrow"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-right.svg')" aria-hidden="true"></span></div>
+    <span class="ih-text">Tap <b>Share</b> then <b>Add to Home Screen</b> for a full-screen experience</span>
+    <button class="ih-dismiss" id="installHintDismiss" aria-label="Dismiss">
+      <span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span>
+    </button>
+  </div>
   <div class="shell">
     <aside class="sidebar" id="sidebar">
       <div class="brand"><span class="svgi" style="--i:url('assets/images/icons/ui/popcorn-duotone.svg')" aria-hidden="true"></span><b>Hume</b><span class="ver">v0.4</span></div>
@@ -2008,7 +2037,7 @@ async function bootApp(){
     const settingsP=loadRemoteSettings();
     const mc=await api("/library/sections");
     sections=(mc.Directory||[]).filter(s=>s.type==="movie"||s.type==="show");
-    buildNav(); buildTabBar(); initNavCollapse(); route();
+    buildNav(); buildTabBar(); initNavCollapse(); maybeShowInstallHint(); route();
     settingsP.then(changed=>{
       if(!changed) return;
       initNavCollapse();
@@ -2067,6 +2096,21 @@ function tabLibTap(){
 function closeTabLibPicker(){
   const p=$("#tabLibPicker");
   if(p) p.classList.remove("open");
+}
+function maybeShowInstallHint(){
+  // Skip if already running as installed PWA
+  if(navigator.standalone||window.matchMedia("(display-mode:standalone)").matches) return;
+  // Skip if already dismissed
+  if(localStorage.getItem("hume_install_dismissed")) return;
+  // iOS Safari only (Android gets native install prompt from browser)
+  if(!/iphone|ipad|ipod/i.test(navigator.userAgent)) return;
+  const hint=document.getElementById("installHint");
+  if(!hint) return;
+  hint.classList.add("visible");
+  document.getElementById("installHintDismiss").onclick=()=>{
+    hint.classList.remove("visible");
+    localStorage.setItem("hume_install_dismissed","1");
+  };
 }
 function highlightTab(seg){
   const libSegs=new Set(["library","movie","show","episode","collection","genre","actor","see-all","playlists","playlist"]);
