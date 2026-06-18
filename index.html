@@ -33,6 +33,12 @@
 <script>
   if("serviceWorker" in navigator){
     addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+    // Re-send the connection info whenever a new SW takes control, so its
+    // image-caching strategy always knows local vs remote/relay.
+    navigator.serviceWorker.addEventListener("controllerchange",()=>{
+      if(window.__swServerMsg && navigator.serviceWorker.controller)
+        navigator.serviceWorker.controller.postMessage(window.__swServerMsg);
+    });
   }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
@@ -1690,8 +1696,69 @@ function selectServer(c){ server=c; localStorage.setItem(LS.server,JSON.stringif
    for the subsequent render. */
 const _apiCache=new Map();
 const _apiBg=new Set();
+/* Persistent API cache (IndexedDB).
+   The in-memory Map above dies on reload; persisting it means a cold start
+   paints from the last session's data, then stale-while-revalidate quietly
+   refreshes it — exactly how a native app feels. Hydration is lazy (per path,
+   on first touch) so boot only reads the handful of responses the first screen
+   needs, not the whole store. Bounded by count + age so it can't grow forever. */
+const IDB_NAME="hume-cache", IDB_STORE="api", IDB_MAX=220, IDB_TTL=864e5; // 24h
+const _idbTried=new Set();
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(IDB_NAME,1);
+    r.onupgradeneeded=()=>{ const db=r.result; if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE); };
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+function idbGet(key){
+  return idbOpen().then(db=>new Promise(res=>{
+    const r=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);
+    r.onsuccess=()=>res(r.result||null); r.onerror=()=>res(null);
+  })).catch(()=>null);
+}
+function idbSet(key,val){
+  idbOpen().then(db=>{ db.transaction(IDB_STORE,"readwrite").objectStore(IDB_STORE).put(val,key); }).catch(()=>{});
+}
+function idbDel(keys){
+  if(!keys||!keys.length) return;
+  idbOpen().then(db=>{ const st=db.transaction(IDB_STORE,"readwrite").objectStore(IDB_STORE); keys.forEach(k=>st.delete(k)); }).catch(()=>{});
+}
+function idbAllKeys(){
+  return idbOpen().then(db=>new Promise(res=>{
+    const r=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).getAllKeys();
+    r.onsuccess=()=>res(r.result||[]); r.onerror=()=>res([]);
+  })).catch(()=>[]);
+}
+function idbGetAll(){
+  return idbOpen().then(db=>new Promise(res=>{
+    const out=[], cur=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).openCursor();
+    cur.onsuccess=e=>{ const c=e.target.result; if(c){ out.push([c.key,c.value]); c.continue(); } else res(out); };
+    cur.onerror=()=>res(out);
+  })).catch(()=>[]);
+}
+// Bound the on-disk cache. Cheap path (under cap) is a single keys-only count;
+// only when we're actually over the cap do we read everything to trim oldest +
+// expired. Runs once at boot, off the critical path. Touched-but-stale entries
+// are also cleaned lazily in api() as they're read.
+async function pruneIdb(){
+  const keys=await idbAllKeys();
+  if(keys.length<=IDB_MAX) return;
+  const all=await idbGetAll(), now=Date.now(), drop=[];
+  let live=all.filter(([k,v])=>{ if(v&&v.ts&&now-v.ts<IDB_TTL) return true; drop.push(k); return false; });
+  if(live.length>IDB_MAX){ live.sort((a,b)=>a[1].ts-b[1].ts); live.slice(0,live.length-IDB_MAX).forEach(([k])=>drop.push(k)); }
+  idbDel(drop);
+}
 async function api(path,{_bg=false}={}){
-  const hit=_apiCache.get(path);
+  let hit=_apiCache.get(path);
+  // Lazy disk hydration: first time we touch a path this session, fall back to
+  // the persisted copy so the screen can paint instantly while we revalidate.
+  if(!hit&&!_bg&&!_idbTried.has(path)){
+    _idbTried.add(path);
+    const disk=await idbGet(path);
+    if(disk&&disk.ts&&Date.now()-disk.ts<IDB_TTL){ _apiCache.set(path,disk); hit=disk; }
+    else if(disk){ idbDel([path]); }
+  }
   const age=hit?Date.now()-hit.ts:Infinity;
   if(hit&&!_bg){
     // Serve stale immediately; kick off silent revalidation if stale > 60s
@@ -1712,7 +1779,9 @@ async function api(path,{_bg=false}={}){
   }
   if(!r.ok) throw new Error(`Server error ${r.status}`);
   const data=(await r.json()).MediaContainer||{};
-  _apiCache.set(path,{data,ts:Date.now()});
+  const entry={data,ts:Date.now()};
+  _apiCache.set(path,entry);
+  idbSet(path,entry);   // persist for instant cold-start next session
   return data;
 }
 /* Skeleton helpers — shown instantly before data arrives so the screen
@@ -1798,6 +1867,18 @@ async function afterLogin(){
   if(servers.length===1){ const c=await pickConnection(servers[0]); if(c){selectServer(c);return;} }
   showServerPicker(servers);
 }
+// Tell the service worker about the active connection so it can pick the right
+// image strategy (direct for local, Cloudflare edge-cache for remote/relay).
+function notifySW(){
+  if(!("serviceWorker" in navigator)||!server) return;
+  let host=""; try{ host=new URL(server.uri).host; }catch(_){}
+  window.__swServerMsg={type:"server",local:!!server.local,relay:!!server.relay,
+    host,workerImg:SETTINGS_WORKER+"/img"};
+  navigator.serviceWorker.ready.then(reg=>{
+    const t=navigator.serviceWorker.controller||reg.active;
+    if(t) t.postMessage(window.__swServerMsg);
+  }).catch(()=>{});
+}
 async function bootApp(){
   $("#login").style.display="none"; $("#servers").style.display="none"; $("#app").style.display="block";
   // Preconnect to the Plex server so the first API call skips TCP+TLS setup
@@ -1805,7 +1886,11 @@ async function bootApp(){
     const pc=document.createElement("link"); pc.rel="preconnect"; pc.href=server.uri;
     document.head.appendChild(pc);
   }
+  notifySW();
+  pruneIdb().catch(()=>{});   // bound the persisted cache in the background (off critical path)
   try{
+    // Persisted responses are hydrated lazily per-path inside api(), so the
+    // first screen paints from disk instantly without reading the whole store.
     // Render instantly from local settings; pull synced settings in parallel
     // and only refresh the UI if they actually differ from this device.
     const settingsP=loadRemoteSettings();
@@ -1957,7 +2042,7 @@ function billboardCard(it,rank){
   const meta=(it.Genre||[]).slice(0,3).map(g=>g.tag).join(" · ");
   b.innerHTML=`
     <div class="art${artSrc?"":" broken"}">
-      ${artSrc?`<img loading="lazy" alt="${esc(title)}" src="${artSrc}" onerror="this.closest('.art').classList.add('broken')">`
+      ${artSrc?`<img loading="lazy" decoding="async" alt="${esc(title)}" src="${artSrc}" onerror="this.closest('.art').classList.add('broken')">`
               :`<span class="art-fallback">${svgIcon(it.type==="show"?"television":"movies")}</span>`}
       ${rank!=null?`<div class="bill-rank">${rank}</div>`:""}
       <div class="play-hover">${svgIcon("play-circle-fill")}</div>
@@ -2179,7 +2264,7 @@ async function heroEl(it){
   const ratingBadges=ratingBadgesHTML(it);
   const ratingFallback=ratingBadges?"":(it.rating?`<span class="pill">${svgIcon("star-fill","","color:var(--accent)")} ${(+it.rating).toFixed(1)}</span>`:"");
   wrap.innerHTML=`
-    <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" alt=""></div>
+    <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" decoding="async" fetchpriority="high" alt=""></div>
     <div class="hero-scrim"></div>
     <div class="hero-top">
       <div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>
@@ -2375,7 +2460,7 @@ function card(it,wide,square){
   }
   b.innerHTML=`
     <div class="art${src||mosaic?"":" broken"}">
-      ${src?`<img class="${useWide&&!square?"wide":""}" loading="lazy" alt="${esc(title)}"
+      ${src?`<img class="${useWide&&!square?"wide":""}" loading="lazy" decoding="async" alt="${esc(title)}"
         src="${src}" onerror="this.closest('.art').classList.add('broken')">`:mosaic}
       ${fallbackIconHTML}
       <div class="play-hover">${svgIcon("play-circle-fill")}</div>
@@ -2890,7 +2975,7 @@ function collHero(m,kicker,items,square){
   // Only render the in-hero backdrop layer when there's a real backdrop image;
   // with none, the hero stays transparent so the page's ambient ultrablur
   // shows through instead (item 2).
-  const bgHTML=backdrop?`<div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""></div>`:"";
+  const bgHTML=backdrop?`<div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" decoding="async" fetchpriority="high" alt=""></div>`:"";
   // A collection with its own logo and/or backdrop art gets the same full-bleed
   // editorial hero as a movie/show (logo title, no cover poster). Playlists
   // always keep the cover-poster layout below so their cover stays visible,
@@ -3025,7 +3110,7 @@ function detailHero(m,isMovie,actionsHTML,extras){
   const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
   return `<div class="detail-wrap">
     <div class="detail-hero full">
-      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" alt=""><div class="detail-scrim"></div></div>
+      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" decoding="async" fetchpriority="high" alt=""><div class="detail-scrim"></div></div>
       <div class="detail-top">
         ${titleArtHTML(m)}
         <div class="sub">${metaBits(m,isMovie)}</div>
@@ -3415,7 +3500,7 @@ function knownForSectionTmdb(tmdbCast,libByNorm,libByRk){
       const mediaLabel=cr.media_type==="tv"?"TV Show":"Movie";
       const sub=[year,mediaLabel].filter(Boolean).join(" · ");
       b.innerHTML=`<div class="art${posterUrl?"":" broken"}">`
-        +(posterUrl?`<img loading="lazy" alt="${esc(title)}" src="${posterUrl}" onerror="this.closest('.art').classList.add('broken')">`:"")
+        +(posterUrl?`<img loading="lazy" decoding="async" alt="${esc(title)}" src="${posterUrl}" onerror="this.closest('.art').classList.add('broken')">`:"")
         +`<span class="art-fallback">${svgIcon(cr.media_type==="tv"?"television":"movies")}</span></div>`
         +`<div class="ct">${esc(title)}</div><div class="cs">${esc(sub)}</div>`;
       b.onclick=()=>window.open(`https://www.themoviedb.org/${cr.media_type==="tv"?"tv":"movie"}/${cr.id}`,"_blank","noopener,noreferrer");

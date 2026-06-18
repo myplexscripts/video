@@ -4,12 +4,23 @@
    - index.html navigation: network-first → offline fallback
    - HLS.js from CDN: cache-on-first-fetch, then serve forever from cache
    - TMDB-proxy Worker (/tmdb): stale-while-revalidate for instant repeats
-   - All other cross-origin traffic (Plex API, images, video): never cached */
+   - Plex posters/art: cache-first on a capped, durable store (the native feel)
+   - Plex API JSON + video streams: never cached here (JSON handled in-app) */
 const CACHE = "hume-v3";
 const RUNTIME = "hume-runtime-v3";
+// Dedicated, durable poster/art cache — this is what makes revisits feel
+// native: an image is fetched (and transcoded by Plex) once, then served from
+// disk forever. Capped so it can't grow without bound (oldest evicted first).
+const IMG_CACHE = "hume-img-v1";
+const IMG_MAX = 800;
 // The settings/TMDB Worker. Its /tmdb responses are public and shared across
 // users, so we stale-while-revalidate them for instant repeat loads + offline.
 const TMDB_PROXY_HOST = "hume-settings.contactdavidbusch.workers.dev";
+
+// Live connection info, pushed from the page. Lets the SW decide whether to
+// route images through the Cloudflare edge-cache proxy (remote/relay only —
+// the Worker can't reach a LAN server, and local is already fast).
+let SERVER = null;
 const SHELL = [
   "./",
   "./index.html",
@@ -40,12 +51,71 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== RUNTIME).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== RUNTIME && k !== IMG_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("message", e => { if (e.data === "skipWaiting") self.skipWaiting(); });
+self.addEventListener("message", e => {
+  if (e.data === "skipWaiting") { self.skipWaiting(); return; }
+  if (e.data && e.data.type === "server") SERVER = e.data;
+});
+
+// Token-independent cache key: the X-Plex-Token doesn't change the pixels, and
+// stripping it dedupes across token refreshes (and keeps tokens out of keys).
+function imgCacheKey(rawUrl) {
+  const u = new URL(rawUrl);
+  u.searchParams.delete("X-Plex-Token");
+  return new Request(u.toString());
+}
+
+async function trimImgCache(cache) {
+  const keys = await cache.keys();
+  if (keys.length <= IMG_MAX) return;
+  // Cache.keys() preserves insertion order → delete the oldest overflow (FIFO).
+  const remove = keys.length - IMG_MAX;
+  for (let i = 0; i < remove; i++) await cache.delete(keys[i]);
+}
+
+// Cache-first poster/art delivery. On miss we refetch in CORS mode so we can
+// read the real status and cache only genuine 200s (a no-cors opaque response
+// would hide 404/500s and we'd cache broken art). If CORS isn't available we
+// fall back to a plain pass-through so nothing ever breaks — just uncached.
+async function handleImage(req) {
+  const keyReq = imgCacheKey(req.url);
+  try {
+    const cache = await caches.open(IMG_CACHE);
+    const cached = await cache.match(keyReq);
+    if (cached) return cached;
+
+    let res = null;
+    const u = new URL(req.url);
+    const viaProxy = SERVER && !SERVER.local && SERVER.workerImg && u.hostname.endsWith(".plex.direct");
+
+    // Remote/relay: let Cloudflare transcode-once/serve-from-edge. The Worker
+    // returns a real CORS response with an accurate status.
+    if (viaProxy) {
+      try {
+        const pr = await fetch(SERVER.workerImg + "?u=" + encodeURIComponent(req.url), { mode: "cors" });
+        if (pr && pr.status === 200) res = pr;
+      } catch (_) {}
+    }
+    // Direct CORS fetch (local connections, or proxy miss/failure).
+    if (!res) {
+      try {
+        const dr = await fetch(req.url, { mode: "cors", credentials: "omit" });
+        if (dr && dr.status === 200) res = dr;
+      } catch (_) {}
+    }
+    if (res) {
+      cache.put(keyReq, res.clone());
+      trimImgCache(cache);
+      return res;
+    }
+  } catch (_) {}
+  // Last resort: original request, uncached. Opaque is fine for <img>.
+  return fetch(req);
+}
 
 self.addEventListener("fetch", e => {
   const req = e.request;
@@ -106,6 +176,14 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Everything else (Plex API, images, video streams): pass through untouched.
-  // Never cache auth'd content or large media.
+  // Plex poster/art (transcoded thumbs + composite/playlist art): cache-first
+  // on a dedicated, capped store. This is the single biggest perceived-speed
+  // win — second views paint from disk with zero network + zero transcode.
+  if (url.pathname.includes("/photo/:/transcode") || url.pathname.includes("/composite")) {
+    e.respondWith(handleImage(req));
+    return;
+  }
+
+  // Everything else (Plex API, video streams): pass through untouched.
+  // Never cache auth'd JSON or large media.
 });
