@@ -655,6 +655,22 @@
 
   .section{padding:32px var(--edge) 0;position:relative}
   .section h3{font-size:18px;font-weight:700;margin-bottom:16px;letter-spacing:-.02em}
+  /* ---- SETTINGS PAGE ---- */
+  .settings-wrap{max-width:720px;padding:0 var(--edge) 48px}
+  .settings-group{margin-bottom:8px}
+  .settings-group-head{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;
+    color:var(--faint);font-weight:700;padding:28px 0 10px}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:13px 0;border-bottom:1px solid var(--line)}
+  .settings-row:last-child{border-bottom:none}
+  .settings-label{font-size:14px;font-weight:500;min-width:0;flex:1}
+  .settings-label small{display:block;font-size:12px;color:var(--dim);font-weight:400;margin-top:2px}
+  .rail-style-btns{display:flex;gap:3px;flex-shrink:0}
+  .rail-style-btn{padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;
+    border:1px solid var(--line2);background:none;color:var(--dim);cursor:pointer;
+    transition:background .15s,color .15s,border-color .15s;white-space:nowrap}
+  .rail-style-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+  .rail-style-btn:hover:not(.active){background:var(--surface2);color:var(--text)}
   .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
   .cast-row::-webkit-scrollbar{height:0}
@@ -1296,7 +1312,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles"};
 const VIDEO_TYPES=["movie","show","season","episode","clip"];
 
 function clientId(){
@@ -1544,6 +1560,7 @@ function buildNav(){
   sections.forEach(s=> item(s.type==="show"?"svg:television":"svg:movies", s.title, ()=>navigate(`/library/${s.key}`), {lib:s.key}) );
   const lab2=el("div","nav-label"); lab2.textContent="More"; nav.appendChild(lab2);
   item("svg:playlist","Playlists",()=>navigate("/playlists"),{id:"navPlaylists"});
+  item("svg:gear","Settings",()=>navigate("/settings"),{id:"navSettings"});
 }
 
 /* ============================================================ ROUTER
@@ -1570,6 +1587,7 @@ function highlightNav(seg,key){
   if(!seg||seg==="home") sel=$("#navHome");
   else if(seg==="library") sel=document.querySelector(`.nav-item[data-lib="${key}"]`);
   else if(seg==="playlists") sel=$("#navPlaylists");
+  else if(seg==="settings") sel=$("#navSettings");
   if(sel) sel.classList.add("active");
 }
 async function metaItem(ratingKey){
@@ -1605,6 +1623,7 @@ async function route(){
       case "collection": return openCollection({...(await metaItem(parts[1])),_collection:true});
       case "playlist": return openPlaylist(await playlistMeta(parts[1]));
       case "playlists": return showPlaylists();
+      case "settings": return showSettings();
       case "actor": return openActor(parts[1]);
       case "see-all": return showSeeAll();
       case "search": {
@@ -1678,6 +1697,23 @@ function squareBoardRailSection(title,items,libLabel,numbered){
   return sec;
 }
 
+/* ---- RAIL STYLE SETTINGS ----
+   Three styles: 'poster' (2:3), 'billboard' (16:9), 'square' (1:1 + logo).
+   Stored per hub-key in localStorage. Defaults: CW → billboard, rest → poster. */
+function getRailStyles(){ return JSON.parse(localStorage.getItem(LS.railStyles)||"{}"); }
+function getRailStyle(key){
+  const s=getRailStyles()[key]; if(s) return s;
+  return /continue|on.?deck/i.test(key)?"billboard":"poster";
+}
+function setRailStyle(key,style){
+  const s=getRailStyles(); s[key]=style; localStorage.setItem(LS.railStyles,JSON.stringify(s));
+}
+function renderHubSection(hub,style){
+  if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false);
+  const wide=style==="billboard"||hub.items.every(x=>x.type==="episode");
+  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide);
+}
+
 async function showHome(){
   setTitle("Home"); clearUltraBlur(); const c=$("#content"); c.innerHTML=skeletonHome();
   try{
@@ -1691,7 +1727,8 @@ async function showHome(){
     const videoHubs=(hubs.Hub||[]).filter(h=>!isDeckHub(h))
       .map(h=>{
         const first=h.Metadata&&h.Metadata[0];
-        return {title:h.title, items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),
+        return {title:h.title, key:h.hubIdentifier||h.title,
+          items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),
           lib:(first&&first.librarySectionTitle)||""};
       })
       .filter(h=>h.items.length);
@@ -1699,22 +1736,11 @@ async function showHome(){
     c.innerHTML="";
     const hero=cw[0]||(videoHubs[0]&&videoHubs[0].items[0]);
     if(hero) c.appendChild(await heroEl(hero));
-    if(cw.length) c.appendChild(railSection("Continue Watching", cw, true, true));
-
-    // Square-board rails: one for EACH trending hub (movies + TV get their own).
-    // Falls back to first hub with any art if no hub has "trending" in its title.
-    let boardHubs=videoHubs.filter(h=>/trending/i.test(h.title));
-    if(!boardHubs.length){
-      const fb=videoHubs.find(h=>h.items.some(x=>x.art||x.grandparentArt));
-      if(fb) boardHubs=[fb];
+    if(cw.length){
+      const cwHub={title:"Continue Watching",key:"continue_watching",items:cw,lib:"",featured:true};
+      c.appendChild(renderHubSection(cwHub,getRailStyle("continue_watching")));
     }
-    boardHubs.forEach(h=>c.appendChild(squareBoardRailSection(h.title,h.items,h.lib,/trending/i.test(h.title))));
-
-    videoHubs.forEach((h,i)=>{
-      const wide = h.items.every(x=>x.type==="episode");
-      const seeAll=!wide;
-      c.appendChild(railSection(h.title,h.items,wide,false,h.lib,seeAll));
-    });
+    videoHubs.forEach(h=>c.appendChild(renderHubSection(h,getRailStyle(h.key))));
     if(!cw.length && !videoHubs.length)
       c.innerHTML=`<div class='empty'>${svgIcon("movies")}Nothing here yet. Add some media.</div>`;
   }catch(e){ c.innerHTML=errHTML(e); }
@@ -2179,6 +2205,59 @@ function renderLibGrid(){
 }
 
 /* ============================================================ PLAYLISTS */
+/* ---- SETTINGS PAGE ---- */
+async function showSettings(){
+  setTitle("Settings"); clearUltraBlur(); hideLibNav();
+  const c=$("#content");
+  c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>Settings</h2></div></div>
+    <div class="settings-wrap"><div class="settings-group">
+      <div class="settings-group-head">Rail Styles</div>
+      <div class="settings-group-head" style="font-size:12px;text-transform:none;letter-spacing:0;color:var(--dim);padding-top:0;font-weight:400">
+        Choose how each row looks on the home screen.
+      </div>
+      <div id="settingsRailRows"><div class="loading" style="padding:32px 0">Loading…</div></div>
+    </div></div>`;
+
+  // Load hubs to know what rails exist
+  try{
+    const [cwMc,hubsMc]=await Promise.all([
+      api("/hubs/continueWatching?count=1").catch(()=>null),
+      api("/hubs?count=1")
+    ]);
+    const hasCw=cwMc&&(cwMc.Metadata||[]).some(x=>VIDEO_TYPES.includes(x.type));
+    const isDeckHub=h=>{ const id=(h.hubIdentifier||"").toLowerCase(),t=(h.title||"").toLowerCase();
+      return /continue|ondeck|on.?deck/.test(id)||t==="continue watching"||t==="on deck"; };
+    const videoHubs=(hubsMc.Hub||[]).filter(h=>!isDeckHub(h))
+      .map(h=>({title:h.title, key:h.hubIdentifier||h.title,
+        items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),lib:""}))
+      .filter(h=>h.items.length);
+
+    const hubs=[];
+    if(hasCw) hubs.push({title:"Continue Watching",key:"continue_watching"});
+    videoHubs.forEach(h=>hubs.push({title:h.title,key:h.key}));
+
+    const container=$("#settingsRailRows");
+    container.innerHTML="";
+    const STYLES=[{v:"poster",l:"Poster"},{v:"billboard",l:"Billboard"},{v:"square",l:"Square"}];
+    hubs.forEach(hub=>{
+      const current=getRailStyle(hub.key);
+      const row=el("div","settings-row");
+      row.innerHTML=`<div class="settings-label">${esc(hub.title)}</div>
+        <div class="rail-style-btns">
+          ${STYLES.map(s=>`<button class="rail-style-btn${current===s.v?" active":""}" data-style="${s.v}">${s.l}</button>`).join("")}
+        </div>`;
+      row.querySelectorAll(".rail-style-btn").forEach(btn=>{
+        btn.onclick=()=>{
+          setRailStyle(hub.key,btn.dataset.style);
+          row.querySelectorAll(".rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
+        };
+      });
+      container.appendChild(row);
+    });
+    if(!hubs.length) container.innerHTML=`<div style="color:var(--dim);padding:16px 0">No hubs found.</div>`;
+  }catch(e){ $("#settingsRailRows").innerHTML=errHTML(e); }
+}
+
 async function showPlaylists(){
   setTitle("Playlists"); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Loading…</div>";
   try{
