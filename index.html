@@ -1247,7 +1247,12 @@
       mask-image:linear-gradient(to bottom,#000 44%,transparent 92%)}
     .detail-hero.full.sq .detail-bg-img{height:100vw}
     .detail-hero.full .detail-scrim{position:absolute;inset:0;
-      background:linear-gradient(to bottom,rgba(10,10,12,.28) 0%,transparent 24%)}
+      /* No top scrim — the art shows clean, same as Plex native.
+         Bottom gradient darkens only the text zone below the art fade. */
+      background:linear-gradient(to bottom,
+        transparent calc(38vw),
+        rgba(10,10,12,.55) calc(68vw),
+        rgba(10,10,12,.72) 100%)}
     .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
     /* detail-top: padding-top pushes it below the 4:3 art with a 64px overlap into the fade zone */
     .detail-hero.full .detail-top{position:relative;z-index:1;padding:calc(75vw - 64px) var(--edge) 0;max-width:100%;text-align:center}
@@ -3591,7 +3596,7 @@ function wireDetailBg(c,art,mobileArt){
   const blur=c.querySelector(".detail-bg-blur");
   if(blur) blur.style.backgroundImage=`url('${imgAmbient(src)}')`;
   const bgImg=c.querySelector(".detail-bg-img");
-  if(bgImg){ bgImg.onload=()=>bgImg.classList.add("loaded"); bgImg.src=img(src,useSq?800:1600,useSq?800:900); }
+  if(bgImg){ bgImg.onload=()=>bgImg.classList.add("loaded"); bgImg.src=img(src,useSq?800:isMobile?800:1600,useSq?800:isMobile?600:900); }
   applyBackdropContrast(c.querySelector(".detail-hero"),art);
 }
 async function openMovie(it){
