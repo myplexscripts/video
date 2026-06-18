@@ -75,15 +75,18 @@
        this mask fades their left side into the blurred echo behind them with
        soft, rounded (vignette-like) edges rather than a hard vertical line. */
     --bg-vignette:radial-gradient(ellipse 86% 95% at 100% 50%,#000 48%,transparent 100%);
-    /* ---- VIDEO FROST ----
-       The shared "Liquid Glass" recipe for every translucent surface in the
-       app — search bar, buttons, controls, nav, the rating panel, menus and
-       overlays. Each pairs a saturated backdrop blur with a stack of inset
-       shadows that catch light along the top/left edge and fall into shadow
-       along the bottom/right, like the rim of a thick glass slab, finished
-       with a soft outer drop shadow that seats it on the page. */
-    --frost-blur:24px; --frost-blur-lg:40px; --frost-sat:1.8;
-    --frost-border:var(--line2);
+    /* ---- FROST ----
+       The shared glass recipe for every translucent surface in the app —
+       search bar, buttons, controls, nav, the rating panel, menus and
+       overlays. The base recipe is a near-transparent dark tint, a wide
+       backdrop blur, and a bright 1px rim:
+         background: var(--frost-bg); backdrop-filter: blur(var(--frost-blur));
+         border: 1px solid var(--frost-border);
+       paired with a stack of inset shadows that catch light along the
+       top/left edge and a soft outer drop shadow that seats it on the page. */
+    --frost-bg:rgba(25,25,25,.1); --frost-bg-hover:rgba(55,55,55,.22);
+    --frost-blur:28px; --frost-blur-lg:40px; --frost-sat:1.8;
+    --frost-border:rgba(255,255,255,.35);
     /* A thinner, more translucent glass for panels that float directly over
        backdrop art (e.g. the rating panel) - lets the blurred/saturated
        artwork read through as a frosted tint instead of a solid card. */
@@ -180,9 +183,9 @@
     transition:filter .15s var(--ease),background-color .15s var(--ease);letter-spacing:-.01em;touch-action:manipulation}
   .btn:hover{filter:brightness(1.08)}
   .btn:active{filter:brightness(.94)}
-  .btn.glass{background:var(--surface2);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+  .btn.glass{background:var(--frost-bg);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     color:var(--text);border:1px solid var(--frost-border);box-shadow:var(--frost-shadow-sm)}
-  .btn.glass:hover{background:var(--surface3)}
+  .btn.glass:hover{background:var(--frost-bg-hover)}
   .btn i,.btn .svgi{font-size:17px;width:17px;height:17px}
   .btn.lg{padding:14px 30px;font-size:15px}
   .btn.sm{padding:8px 16px;font-size:13px}
@@ -284,20 +287,20 @@
      the page (and, on mobile, a matching nav toggle). Both stay fixed in
      place while content and color scroll beneath them. */
   .menu-toggle{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));
-    left:max(16px,env(safe-area-inset-left));z-index:15;background:var(--surface2);
+    left:max(16px,env(safe-area-inset-left));z-index:15;background:var(--frost-bg);
     backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     border:1px solid var(--frost-border);width:44px;height:44px;border-radius:50%;
     align-items:center;justify-content:center;font-size:18px;color:var(--text);
     box-shadow:var(--frost-shadow);
     transition:background-color .15s,box-shadow .15s}
-  .menu-toggle:hover{background:var(--surface3)}
+  .menu-toggle:hover{background:var(--frost-bg-hover)}
   .searchbox{position:fixed;top:max(16px,env(safe-area-inset-top));
     right:max(24px,env(safe-area-inset-right));z-index:15;display:flex;align-items:center;gap:8px;
-    background:var(--surface2);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    background:var(--frost-bg);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     border:1px solid var(--frost-border);border-radius:100px;height:44px;padding:0 14px;width:44px;
     cursor:pointer;overflow:hidden;box-shadow:var(--frost-shadow);
     transition:width .38s var(--ease),background-color .15s,box-shadow .15s}
-  .searchbox:focus-within{width:260px;cursor:default;background:var(--surface3);box-shadow:var(--frost-shadow-lg)}
+  .searchbox:focus-within{width:260px;cursor:default;background:var(--frost-bg-hover);box-shadow:var(--frost-shadow-lg)}
   .searchbox i,.searchbox .svgi{color:var(--faint);font-size:16px;width:16px;height:16px;flex:0 0 auto}
   .searchbox input{background:none;border:none;color:var(--text);font-size:13px;width:0;opacity:0;
     pointer-events:none;outline:none;font-family:var(--font);
@@ -334,7 +337,7 @@
   .hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:18px 0 14px;font-weight:500}
   .hero-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
-  .pill{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+  .pill{display:inline-flex;align-items:center;gap:5px;background:var(--frost-bg);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:8px;padding:4px 10px;
     font-size:12px;font-weight:600;box-shadow:var(--frost-shadow-sm)}
   .svgi{display:inline-block;width:1em;height:1em;flex:0 0 auto;background-color:currentColor;
@@ -378,33 +381,36 @@
   .rail-summary{color:var(--dim);font-size:13px;line-height:1.55;margin:-8px var(--edge) 12px;
     max-width:680px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   /* ---- HUB CAROUSEL STYLE ----
-     A rotating hero banner for a single hub: shows one item at a time
-     full-bleed, auto-advances every 5s, pauses on hover/touch. */
-  .hub-carousel-section{padding:0;overflow:visible}
-  .hub-carousel{position:relative;height:min(52vh,520px);min-height:300px;overflow:hidden}
-  .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);
-    pointer-events:none;will-change:transform}
+     A rotating hero banner for a single hub: shows one item at a time using
+     the SAME layout as the home hero (logo top-left, ratings + metadata,
+     summary, actions at the bottom). Auto-advances every 5s, pauses on
+     hover/touch. Each slide reuses the .hero-* content classes; .hub-cs-slide
+     carries the stacking/positioning for the wipe transition. */
+  .hub-carousel-section{padding:40px 0 10px;overflow:visible}
+  .hub-carousel{position:relative;height:min(56vh,560px);min-height:380px;overflow:hidden}
+  .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;
+    will-change:transform;display:flex;flex-direction:column;justify-content:space-between;
+    padding:36px var(--edge) 40px}
   .hub-cs-slide.active{z-index:1;pointer-events:auto}
-  .hub-cs-bg{position:absolute;inset:0;overflow:hidden}
-  .hub-cs-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
-    filter:blur(100px) saturate(1.9) brightness(1.05)}
-  .hub-cs-img{position:absolute;top:0;right:0;height:100%;width:auto;max-width:none;
-    opacity:0;transition:opacity .6s var(--ease);
-    -webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
-  .hub-cs-img.loaded{opacity:1}
-  .hub-cs-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.45) 35%,rgba(10,10,12,.08) 80%),
+  /* Keep the desktop overlay layout at every breakpoint inside the carousel,
+     so the mobile full-bleed home-hero overrides don't reshape the slides. */
+  .hub-carousel .hero-bg-img{position:absolute;top:0;right:0;left:auto;width:auto;height:100%;
+    object-fit:cover;-webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
+  .hub-carousel .hero-bg-blur{-webkit-mask-image:none;mask-image:none}
+  .hub-carousel .hero-scrim{background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.45) 35%,rgba(10,10,12,.08) 80%),
     linear-gradient(to right,rgba(10,10,12,.65) 0%,rgba(10,10,12,.22) 42%,rgba(10,10,12,.05) 65%,transparent 85%)}
-  .hub-cs-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
-    justify-content:flex-end;padding:var(--edge) var(--edge) 56px;max-width:700px}
-  .hub-cs-logo{display:block;max-width:min(60%,420px);max-height:90px;width:auto;height:auto;
-    object-fit:contain;object-position:left bottom;margin-bottom:10px}
-  .hub-cs-title{font-size:clamp(28px,5vw,52px);font-weight:900;letter-spacing:-.04em;
-    line-height:.97;margin-bottom:10px}
-  .hub-cs-meta{color:var(--dim);font-size:13px;font-weight:500;margin-bottom:18px}
-  .hub-cs-actions{display:flex;gap:12px}
+  .hub-carousel .hero-top,.hub-carousel .hero-bottom{position:relative;z-index:2;padding:0;max-width:700px;text-align:left}
+  .hub-carousel .hero-meta{justify-content:flex-start}
+  .hub-carousel .hero-actions{justify-content:flex-start}
+  /* The slides are not .hero elements, so .hero h2 / .hero p don't reach the
+     per-slide title + summary — style them directly here. */
+  .hub-carousel .hero-top h2{font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:-.04em;line-height:.98;margin-bottom:4px}
+  .hub-carousel .hero-top p{color:var(--dim);line-height:1.6;font-size:14px;max-width:560px;text-align:left;margin:0 0 22px;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .hub-carousel .title-logo{display:block;height:auto;width:auto;max-width:min(60%,420px);max-height:96px;
+    object-fit:contain;object-position:left bottom;margin:0 0 8px}
   /* Progress dots */
-  .hub-carousel-dots{position:absolute;bottom:20px;left:var(--edge);display:flex;gap:5px;z-index:3}
+  .hub-carousel-dots{position:absolute;bottom:18px;right:var(--edge);display:flex;gap:5px;z-index:3}
   .hub-cd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);
     border:none;cursor:pointer;padding:0;flex:0 0 auto;
     transition:background .2s,width .2s,border-radius .2s}
@@ -456,12 +462,12 @@
      Plex-style "Recommended" / "Library" switcher shown at the top of
      every library page. */
   .lib-tabs{display:flex;gap:8px;margin:0 var(--edge) 24px}
-  .lib-tab{background:var(--surface2);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+  .lib-tab{background:var(--frost-bg);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);
     border-radius:100px;height:38px;padding:0 20px;color:var(--dim);font-size:13px;
     font-weight:600;font-family:var(--font);cursor:pointer;box-shadow:var(--frost-shadow-sm);
     transition:background-color .15s,color .15s,border-color .15s}
-  .lib-tab:hover{background:var(--surface3);color:var(--text)}
+  .lib-tab:hover{background:var(--frost-bg-hover);color:var(--text)}
   .lib-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .lib-tab.active:hover{background:var(--accent-glass-hover)}
   #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:calc(var(--nav-w,240px) + 16px);z-index:25;align-items:center;gap:8px;flex-wrap:nowrap;transition:left .22s var(--ease)}
@@ -472,8 +478,8 @@
     color:var(--text);white-space:nowrap;align-self:center;padding-right:6px;
     text-shadow:0 1px 10px rgba(0,0,0,.75),0 0 30px rgba(0,0,0,.5)}
   .lib-nav-tabs{display:flex;gap:6px}
-  .lib-nav-tab{background:var(--surface2);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:100px;height:38px;padding:0 16px;color:var(--dim);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;box-shadow:var(--frost-shadow-sm);transition:background-color .15s,color .15s,border-color .15s;white-space:nowrap}
-  .lib-nav-tab:hover{background:var(--surface3);color:var(--text)}
+  .lib-nav-tab{background:var(--frost-bg);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:100px;height:38px;padding:0 16px;color:var(--dim);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;box-shadow:var(--frost-shadow-sm);transition:background-color .15s,color .15s,border-color .15s;white-space:nowrap}
+  .lib-nav-tab:hover{background:var(--frost-bg-hover);color:var(--text)}
   .lib-nav-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .lib-nav-tab.active:hover{background:var(--accent-glass-hover)}
   /* Adaptive text inside frost pills — same difference-blend trick as the search box */
@@ -502,16 +508,16 @@
   .search-head h2{font-size:var(--t-page);font-weight:var(--fw-black);letter-spacing:-.03em}
   .search-head .count{font-size:13px;color:var(--faint);font-weight:500}
   .lib-ctrl-wrap{position:relative}
-  .lib-ctrl{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);
+  .lib-ctrl{display:inline-flex;align-items:center;gap:8px;background:var(--frost-bg);
     backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     border:1px solid var(--frost-border);border-radius:100px;height:38px;padding:0 14px;color:var(--text);
     font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);
     box-shadow:var(--frost-shadow-sm);transition:background-color .15s,border-color .15s}
-  .lib-ctrl:hover{background:var(--surface3)}
+  .lib-ctrl:hover{background:var(--frost-bg-hover)}
   .lib-ctrl i.lead,.lib-ctrl .svgi.lead{font-size:15px;width:15px;height:15px;color:var(--faint)}
   .lib-ctrl .cap{color:var(--faint);font-weight:500}
   .lib-ctrl i.caret,.lib-ctrl .svgi.caret{font-size:12px;width:12px;height:12px;color:var(--faint);transition:transform .15s var(--ease)}
-  .lib-ctrl-wrap.open .lib-ctrl{background:var(--surface3);border-color:var(--accent)}
+  .lib-ctrl-wrap.open .lib-ctrl{background:var(--frost-bg-hover);border-color:var(--accent)}
   .lib-ctrl-wrap.open .lib-ctrl i.caret,.lib-ctrl-wrap.open .lib-ctrl .svgi.caret{transform:rotate(180deg)}
   .lib-menu{position:absolute;top:46px;right:0;z-index:14;min-width:210px;max-height:min(60vh,420px);
     overflow-y:auto;background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
@@ -695,11 +701,11 @@
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:20px;
     background:none;border:none;padding:0;cursor:pointer}
   .ep-kicker-ico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-    border-radius:50%;background:var(--surface2);border:1px solid var(--frost-border);font-size:14px;flex:0 0 auto;
+    border-radius:50%;background:var(--frost-bg);border:1px solid var(--frost-border);font-size:14px;flex:0 0 auto;
     backdrop-filter:blur(12px) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(12px) saturate(var(--frost-sat));
     box-shadow:var(--frost-shadow-sm);
     transition:background-color .15s var(--ease),transform .15s var(--ease)}
-  .ep-kicker:hover .ep-kicker-ico{background:var(--surface3);transform:translateX(-2px)}
+  .ep-kicker:hover .ep-kicker-ico{background:var(--frost-bg-hover);transform:translateX(-2px)}
   .ep-kicker-text{display:inline-flex;align-items:center;gap:10px;min-width:0;text-align:left}
   .ep-kicker .sep{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.55;flex:0 0 auto}
   .detail-info h2{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98}
@@ -733,7 +739,7 @@
 
   /* ---- RATINGS ---- */
   .ratings-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
-  .rating-badge{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);
+  .rating-badge{display:inline-flex;align-items:center;gap:8px;background:var(--frost-bg);
     backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:8px;
     padding:4px 14px 4px 4px;font-size:13px;font-weight:600;color:var(--text);
     box-shadow:var(--frost-shadow-sm)}
@@ -741,7 +747,7 @@
   .rating-badge .src img{height:100%;width:auto;display:block}
   .rating-badge b{font-weight:700}
   .rating-badge.trailer{padding:7px 16px;cursor:pointer;transition:background-color .15s var(--ease)}
-  .rating-badge.trailer:hover{background:var(--surface3)}
+  .rating-badge.trailer:hover{background:var(--frost-bg-hover)}
   .rating-badge.trailer .svgi{color:var(--accent);font-size:16px}
 
   /* ---- META STAT ROW (added / watched history) ---- */
@@ -1431,15 +1437,13 @@
     .hero-actions{justify-content:center}
     .hero-bottom{padding:16px var(--edge) 24px}
     .hero-trailer-ctrls{bottom:80px}
-    /* Hub carousel on mobile: same full-bleed top layout as home hero */
-    .hub-cs-img{position:absolute;top:0;left:0;right:0;width:100%;height:75vw;object-fit:cover;
-      -webkit-mask-image:linear-gradient(to bottom,#000 44%,transparent 92%);mask-image:linear-gradient(to bottom,#000 44%,transparent 92%)}
-    .hub-cs-blur{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
-    .hub-cs-scrim{background:linear-gradient(to bottom,transparent calc(38vw),rgba(10,10,12,.55) calc(68vw),rgba(10,10,12,.72) 100%)}
-    .hub-cs-content{padding:calc(75vw - 20px) var(--edge) 48px;text-align:center;max-width:100%}
-    .hub-cs-logo{object-position:center bottom;margin:0 auto 10px}
-    .hub-cs-actions{justify-content:center}
-    .hub-carousel-dots{left:50%;transform:translateX(-50%);bottom:14px}
+    /* Hub carousel on mobile: keep the overlaid hero layout (logo top-left,
+       ratings, summary, actions) rather than the full-bleed stacked variant. */
+    .hub-carousel{height:min(62vh,440px);min-height:320px}
+    .hub-cs-slide{padding:24px var(--edge) 28px}
+    .hub-carousel .title-logo{max-height:72px;max-width:min(70%,300px)}
+    .hub-carousel .hero-top h2{font-size:clamp(24px,7vw,34px)}
+    .hub-carousel-dots{bottom:12px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
@@ -2577,38 +2581,17 @@ function setRailStyle(key,style){
 }
 function carouselHubSection(hub){
   const sec=el("div","rail-section hub-carousel-section");
+  // Hub title header stays above the carousel, like every other rail style.
+  const head=el("div","rail-head");
+  head.innerHTML=`<div class="rail-head-text">${hub.lib?`<div class="rail-lib">${esc(hub.lib)}</div>`:""}<h3>${esc(hub.title)}</h3></div><span class="count">${hub.items.length}</span>`;
+  sec.appendChild(head);
+  if(hub.summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=hub.summary; sec.appendChild(p); }
   const car=el("div","hub-carousel");
   hub.items.forEach((it,i)=>{
     const slide=el("div","hub-cs-slide"+(i===0?" active":""));
-    const art=it.art||it.grandparentArt||it.parentArt||it.thumb;
-    const title=it.type==="episode"?(it.grandparentTitle||it.title):it.title;
-    const imgs=it.Image||[];
-    const logoImg=imgs.find(img=>img.type==="clearLogo");
-    const logoSrc=logoImg?imgLogo(logoImg.url,600,300):"";
-    const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
-    const meta=it.type==="episode"
-      ?`S${it.parentIndex||0} · E${it.index||0} · ${esc(it.title||"")}`
-      :[year,fmtDur(it.duration),it.contentRating].filter(Boolean).join(" · ");
-    slide.innerHTML=`
-      <div class="hub-cs-bg"><div class="hub-cs-blur"></div><img class="hub-cs-img" loading="lazy" decoding="async" alt=""></div>
-      <div class="hub-cs-scrim"></div>
-      <div class="hub-cs-content">
-        ${logoSrc?`<img class="hub-cs-logo" src="${logoSrc}" alt="${esc(title)}" onerror="this.nextElementSibling.style.display='';this.remove()">`:""}
-        <div class="hub-cs-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
-        <div class="hub-cs-meta">${esc(meta)}</div>
-        <div class="hub-cs-actions">
-          <button class="btn lg hub-cs-play">${svgIcon("play-fill")} ${it.viewOffset?"Resume":"Play"}</button>
-          <button class="btn glass lg hub-cs-info">${svgIcon("info")} Details</button>
-        </div>
-      </div>`;
-    const blur=slide.querySelector(".hub-cs-blur");
-    blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
-    const bgImg=slide.querySelector(".hub-cs-img");
-    bgImg.onload=()=>bgImg.classList.add("loaded");
-    bgImg.src=img(art,1200,675);
-    slide.querySelector(".hub-cs-play").onclick=()=>playItem(it,it.viewOffset||0);
-    const dest=it.type==="episode"?`/show/${it.grandparentRatingKey||it.ratingKey}`:pathForItem(it);
-    slide.querySelector(".hub-cs-info").onclick=()=>{ if(dest) navigate(dest); else openItem(it); };
+    // Each slide is a full hero (no kicker — the hub title sits above instead).
+    slide.innerHTML=heroInnerHTML(it,{kicker:false,priority:false});
+    wireHero(slide,it,{});
     car.appendChild(slide);
   });
   // Dots
@@ -2756,15 +2739,11 @@ function collectItems(mc){
 /* ---- HERO ---- */
 function getHeroStyle(){ return localStorage.getItem(LS.heroStyle)||"backdrop"; }
 function getHubSummaries(){ return localStorage.getItem(LS.hubSummaries)==="1"; }
-async function heroEl(it){
-  const heroStyle=getHeroStyle();
-  const isSquare=heroStyle==="square";
-  // Square style: prefer square background art, else poster
-  const squareImg=(it.Image||[]).find(i=>i.type==="backgroundSquare");
-  const art=isSquare
-    ? (squareImg&&squareImg.url)||it.thumb||it.parentThumb||it.art
-    : it.art||it.grandparentArt||it.parentArt||it.thumb;
-  const wrap=el("div","hero"+(isSquare?" hero-sq":""));
+/* Shared hero markup + wiring, reused by the home hero and the hub carousel
+   slides so both render the same layout (logo top-left, ratings + metadata,
+   summary, actions at the bottom). */
+function heroInnerHTML(it,opts={}){
+  const {kicker=true,priority=true}=opts;
   const isEp=it.type==="episode";
   const title=isEp?(it.grandparentTitle||it.title):it.title;
   const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
@@ -2773,11 +2752,11 @@ async function heroEl(it){
     : [year, fmtDur(it.duration), it.contentRating].filter(Boolean).join(" · ");
   const ratingBadges=ratingBadgesHTML(it);
   const ratingFallback=ratingBadges?"":(it.rating?`<span class="pill">${svgIcon("star-fill","","color:var(--accent)")} ${(+it.rating).toFixed(1)}</span>`:"");
-  wrap.innerHTML=`
-    <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" decoding="async" fetchpriority="high" alt=""></div>
+  return `
+    <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" decoding="async" ${priority?'fetchpriority="high"':'loading="lazy"'} alt=""></div>
     <div class="hero-scrim"></div>
     <div class="hero-top">
-      <div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>
+      ${kicker?`<div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>`:""}
       ${titleArtHTML(it,title)}
       <div class="hero-meta">
         ${ratingBadges}${ratingFallback}
@@ -2787,23 +2766,35 @@ async function heroEl(it){
     </div>
     <div class="hero-bottom">
       <div class="hero-actions">
-        <button class="btn lg" id="heroPlay">${svgIcon("play-fill")} ${it.viewOffset?"Resume":"Play"}</button>
-        <button class="btn glass lg" id="heroInfo">${svgIcon("info")} Details</button>
+        <button class="btn lg hero-play">${svgIcon("play-fill")} ${it.viewOffset?"Resume":"Play"}</button>
+        <button class="btn glass lg hero-info">${svgIcon("info")} Details</button>
       </div>
     </div>`;
-  setTimeout(()=>{
-    wrap.querySelector(".hero-bg-blur").style.backgroundImage=`url('${imgAmbient(art)}')`;
-    const bgImg=wrap.querySelector(".hero-bg-img");
-    bgImg.onload=()=>bgImg.classList.add("loaded");
-    bgImg.onerror=()=>bgImg.remove();
-    bgImg.src=isSquare?img(art,800,800):img(art,1600,900);
-    applyBackdropContrast(wrap,art);
-    wrap.querySelector("#heroPlay").onclick=()=>playItem(it,it.viewOffset||0);
-    wrap.querySelector("#heroInfo").onclick=()=>{
-      const target=isEp?{ratingKey:it.grandparentRatingKey,type:"show"}:it;
-      const r=pathForItem(target); if(r) navigate(r); else openItem(target);
-    };
-  },0);
+}
+function wireHero(wrap,it,opts={}){
+  const {square=false}=opts;
+  const isEp=it.type==="episode";
+  const squareImg=(it.Image||[]).find(i=>i.type==="backgroundSquare");
+  const art=square
+    ? (squareImg&&squareImg.url)||it.thumb||it.parentThumb||it.art
+    : it.art||it.grandparentArt||it.parentArt||it.thumb;
+  wrap.querySelector(".hero-bg-blur").style.backgroundImage=`url('${imgAmbient(art)}')`;
+  const bgImg=wrap.querySelector(".hero-bg-img");
+  bgImg.onload=()=>bgImg.classList.add("loaded");
+  bgImg.onerror=()=>bgImg.remove();
+  bgImg.src=square?img(art,800,800):img(art,1600,900);
+  applyBackdropContrast(wrap,art);
+  wrap.querySelector(".hero-play").onclick=()=>playItem(it,it.viewOffset||0);
+  wrap.querySelector(".hero-info").onclick=()=>{
+    const target=isEp?{ratingKey:it.grandparentRatingKey,type:"show"}:it;
+    const r=pathForItem(target); if(r) navigate(r); else openItem(target);
+  };
+}
+async function heroEl(it){
+  const isSquare=getHeroStyle()==="square";
+  const wrap=el("div","hero"+(isSquare?" hero-sq":""));
+  wrap.innerHTML=heroInnerHTML(it,{square:isSquare});
+  setTimeout(()=>wireHero(wrap,it,{square:isSquare}),0);
   setupHeroTrailer(wrap,it);
   return wrap;
 }
