@@ -377,6 +377,8 @@
   .rail-head h3{font-size:var(--t-section);font-weight:var(--fw-xbold);letter-spacing:-.02em}
   .featured .rail-head h3{font-size:var(--t-feature)}
   .rail-head .count{font-size:12px;color:var(--faint);font-weight:500;padding-bottom:3px}
+  .rail-summary{color:var(--dim);font-size:13px;line-height:1.55;margin:-8px var(--edge) 12px;
+    max-width:680px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .rail-head.with-avatar{align-items:center}
   .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
     box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--frost-border),var(--frost-shadow-sm)}
@@ -1370,8 +1372,27 @@
   }
   @media(max-width:560px){
     .p-vol{display:none}.p-status{display:none}
-    .hero h2{font-size:40px}
-    .hero-bottom{padding-bottom:6px}
+    /* ---- MOBILE FULL-BLEED HOME HERO ----
+       Mirrors .detail-hero.full on mobile: art covers full width at top,
+       text content overlaps below the fade zone, centred like the detail page. */
+    .hero{height:auto;min-height:unset;flex-direction:column;justify-content:flex-start;padding:0}
+    .hero-bg-blur{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
+    .hero-bg-img,.hero-video{position:absolute;top:0;left:0;right:0;width:100%;height:75vw;object-fit:cover;
+      -webkit-mask-image:linear-gradient(to bottom,#000 44%,transparent 92%);mask-image:linear-gradient(to bottom,#000 44%,transparent 92%)}
+    .hero-sq .hero-bg-img{height:100vw}
+    .hero-sq .hero-top{padding-top:calc(100vw - 64px)}
+    .hero-scrim{background:linear-gradient(to bottom,transparent calc(38vw),rgba(10,10,12,.55) calc(68vw),rgba(10,10,12,.72) 100%)}
+    .hero-sq .hero-scrim{background:linear-gradient(to bottom,transparent calc(55vw),rgba(10,10,12,.55) calc(78vw),rgba(10,10,12,.72) 100%)}
+    .hero-top{position:relative;z-index:1;padding:calc(75vw - 64px) var(--edge) 0;max-width:100%;text-align:center}
+    .hero h2{font-size:clamp(26px,8vw,38px)}
+    .hero .title-logo{display:block;height:73px;max-width:min(320px,80vw);width:100%;
+      object-fit:contain;object-position:center bottom;margin:0 auto}
+    .hero-kicker{display:none}
+    .hero-meta{justify-content:center}
+    .hero p{text-align:center;max-width:100%}
+    .hero-actions{justify-content:center}
+    .hero-bottom{padding:16px var(--edge) 24px}
+    .hero-trailer-ctrls{bottom:80px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
@@ -1594,7 +1615,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- FONT THEMING ---- */
@@ -2361,7 +2382,7 @@ function billboardCard(it,rank){
   b.onclick=()=>{if(dest)navigate(dest);else openItem(it);};
   return b;
 }
-function squareBoardRailSection(title,items,libLabel,numbered){
+function squareBoardRailSection(title,items,libLabel,numbered,summary){
   const sec=el("div","rail-section");
   // For episode hubs, pull art from the grandparent show
   const first=items[0];
@@ -2369,6 +2390,8 @@ function squareBoardRailSection(title,items,libLabel,numbered){
   if(firstArt){const amb=el("div","rail-ambient");amb.style.backgroundImage=`url('${imgAmbient(firstArt)}')`;sec.appendChild(amb);}
   const head=el("div","rail-head");
   head.innerHTML=`<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div>`;
+  sec.appendChild(head);
+  if(summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=summary; sec.appendChild(p); }
   const viewport=el("div","rail-viewport");
   const row=el("div","carousel");
   const bfrag=document.createDocumentFragment();
@@ -2380,7 +2403,7 @@ function squareBoardRailSection(title,items,libLabel,numbered){
   next.innerHTML=svgIcon("caret-down");next.firstChild.style.transform="rotate(-90deg)";
   viewport.appendChild(prev);viewport.appendChild(row);viewport.appendChild(next);
   wireRailArrows(viewport,row,prev,next);
-  sec.appendChild(head);sec.appendChild(viewport);
+  sec.appendChild(viewport);
   return sec;
 }
 
@@ -2494,9 +2517,10 @@ function setRailStyle(key,style){
   pushRemoteSettings(); toast("Settings saved");
 }
 function renderHubSection(hub,style){
-  if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false);
+  const sum=hub.summary||"";
+  if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false,sum);
   const wide=style==="billboard"||hub.items.every(x=>x.type==="episode");
-  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide);
+  return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum);
 }
 
 async function showHome(gen){
@@ -2515,7 +2539,8 @@ async function showHome(gen){
         const first=h.Metadata&&h.Metadata[0];
         return {title:h.title, key:h.hubIdentifier||h.title,
           items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),
-          lib:(first&&first.librarySectionTitle)||""};
+          lib:(first&&first.librarySectionTitle)||"",
+          summary:h.summary||""};
       })
       .filter(h=>h.items.length);
 
@@ -2556,9 +2581,17 @@ function collectItems(mc){
 }
 
 /* ---- HERO ---- */
+function getHeroStyle(){ return localStorage.getItem(LS.heroStyle)||"backdrop"; }
+function getHubSummaries(){ return localStorage.getItem(LS.hubSummaries)==="1"; }
 async function heroEl(it){
-  const art=it.art||it.grandparentArt||it.parentArt||it.thumb;
-  const wrap=el("div","hero");
+  const heroStyle=getHeroStyle();
+  const isSquare=heroStyle==="square";
+  // Square style: prefer square background art, else poster
+  const squareImg=(it.Image||[]).find(i=>i.type==="backgroundSquare");
+  const art=isSquare
+    ? (squareImg&&squareImg.url)||it.thumb||it.parentThumb||it.art
+    : it.art||it.grandparentArt||it.parentArt||it.thumb;
+  const wrap=el("div","hero"+(isSquare?" hero-sq":""));
   const isEp=it.type==="episode";
   const title=isEp?(it.grandparentTitle||it.title):it.title;
   const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
@@ -2590,7 +2623,7 @@ async function heroEl(it){
     const bgImg=wrap.querySelector(".hero-bg-img");
     bgImg.onload=()=>bgImg.classList.add("loaded");
     bgImg.onerror=()=>bgImg.remove();
-    bgImg.src=img(art,1600,900);
+    bgImg.src=isSquare?img(art,800,800):img(art,1600,900);
     applyBackdropContrast(wrap,art);
     wrap.querySelector("#heroPlay").onclick=()=>playItem(it,it.viewOffset||0);
     wrap.querySelector("#heroInfo").onclick=()=>{
@@ -2664,7 +2697,7 @@ async function setupHeroTrailer(wrap,it){
 /* ---- RAIL SECTION ----
    Each rail gets its own subtle UltraBlur color wash, derived from its
    first item's art, plus an optional small "library" kicker label. */
-function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb){
+function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summary){
   const sec=el("div","rail-section"+(featured?" featured":""));
   const firstArt=items[0]&&(items[0].art||items[0].grandparentArt||items[0].thumb||items[0].parentThumb);
   if(firstArt){
@@ -2675,6 +2708,8 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb){
   const head=el("div","rail-head"+(actorThumb?" with-avatar":""));
   head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${seeAll?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
   if(seeAll) head.querySelector(".see-all").onclick=()=>{ seeAllCache={title,items,wide,libLabel}; navigate("/see-all"); };
+  sec.appendChild(head);
+  if(summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=summary; sec.appendChild(p); }
   const viewport=el("div","rail-viewport");
   const row=el("div","carousel");
   const rfrag=document.createDocumentFragment();
@@ -2686,7 +2721,7 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb){
   next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
   viewport.appendChild(prev); viewport.appendChild(row); viewport.appendChild(next);
   wireRailArrows(viewport,row,prev,next);
-  sec.appendChild(head); sec.appendChild(viewport);
+  sec.appendChild(viewport);
   return sec;
 }
 // Show/scroll a rail's prev/next arrows. Arrows only appear when the rail
@@ -3056,8 +3091,10 @@ async function showSettings(){
   const c=$("#content");
   const cf=localStorage.getItem(LS.font)||"circular";
   const da=localStorage.getItem(LS.detailArt)||"backdrop";
+  const hs=getHeroStyle();
   const fBtn=(id,label)=>`<button class="rail-style-btn${cf===id?" active":""}" data-font="${id}">${label}</button>`;
   const daBtn=(id,label)=>`<button class="rail-style-btn${da===id?" active":""}" data-detailart="${id}">${label}</button>`;
+  const hsBtn=(id,label)=>`<button class="rail-style-btn${hs===id?" active":""}" data-herostyle="${id}">${label}</button>`;
   c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>Settings</h2></div></div>
     <div class="settings-wrap">
     <div class="settings-group">
@@ -3078,13 +3115,27 @@ async function showSettings(){
           ${daBtn("backdrop","Backdrop")}${daBtn("square","Square")}
         </div>
       </div>
+      <div class="settings-row">
+        <div class="settings-label">Featured Hero
+          <small>Art style for the hero banner at the top of the home screen.</small>
+        </div>
+        <div class="rail-style-btns" id="settingsHeroStyleBtns">
+          ${hsBtn("backdrop","Backdrop")}${hsBtn("square","Square")}
+        </div>
+      </div>
     </div>
     <div class="settings-group">
-      <div class="settings-group-head">Rail Styles</div>
+      <div class="settings-group-head">Hubs</div>
       <div class="settings-group-head" style="font-size:12px;text-transform:none;letter-spacing:0;color:var(--dim);padding-top:0;font-weight:400">
-        Choose how each row looks on the home screen.
+        Choose how each hub looks on the home screen.
       </div>
-      <div id="settingsRailRows"><div class="loading" style="padding:32px 0">Loading…</div></div>
+      <div class="settings-row">
+        <div class="settings-label">Hub Descriptions
+          <small>Show the description below each hub title when available.</small>
+        </div>
+        <button class="toggle-btn${getHubSummaries()?" active":""}" id="hubSummariesToggle">${getHubSummaries()?"On":"Off"}</button>
+      </div>
+      <div id="settingsRailRows"><div class="loading" style="padding:24px 0">Loading hubs…</div></div>
     </div>
     <div class="settings-group">
       <div class="settings-group-head">Playback</div>
@@ -3119,6 +3170,23 @@ async function showSettings(){
       c.querySelectorAll("#settingsDetailArtBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
     };
   });
+  // Wire hero style picker
+  c.querySelectorAll("#settingsHeroStyleBtns .rail-style-btn").forEach(btn=>{
+    btn.onclick=()=>{
+      localStorage.setItem(LS.heroStyle,btn.dataset.herostyle);
+      toast("Settings saved");
+      c.querySelectorAll("#settingsHeroStyleBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
+    };
+  });
+  // Wire hub summaries toggle
+  const hubSumBtn=$("#hubSummariesToggle");
+  if(hubSumBtn) hubSumBtn.onclick=()=>{
+    const on=localStorage.getItem(LS.hubSummaries)!=="1";
+    localStorage.setItem(LS.hubSummaries,on?"1":"0");
+    hubSumBtn.textContent=on?"On":"Off";
+    hubSumBtn.classList.toggle("active",on);
+    toast(on?"Hub descriptions on":"Hub descriptions off");
+  };
   // Wire TV mode toggle
   const tvBtn=$("#tvModeToggle");
   if(tvBtn) tvBtn.onclick=()=>{
