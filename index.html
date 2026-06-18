@@ -382,8 +382,9 @@
      full-bleed, auto-advances every 5s, pauses on hover/touch. */
   .hub-carousel-section{padding:0;overflow:visible}
   .hub-carousel{position:relative;height:min(52vh,520px);min-height:300px;overflow:hidden}
-  .hub-cs-slide{position:absolute;inset:0;opacity:0;transition:opacity .7s var(--ease);pointer-events:none}
-  .hub-cs-slide.active{opacity:1;z-index:1;pointer-events:auto}
+  .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);
+    pointer-events:none;will-change:transform}
+  .hub-cs-slide.active{z-index:1;pointer-events:auto}
   .hub-cs-bg{position:absolute;inset:0;overflow:hidden}
   .hub-cs-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
     filter:blur(100px) saturate(1.9) brightness(1.05)}
@@ -2618,21 +2619,50 @@ function carouselHubSection(hub){
   const next=el("button","hub-ca next"); next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
   car.appendChild(dots); car.appendChild(prev); car.appendChild(next);
   sec.appendChild(car);
-  // Wire auto-advance
+  // Wire auto-advance with directional screen-wipe transitions
   const slides=Array.from(car.querySelectorAll(".hub-cs-slide"));
   const dotEls=Array.from(dots.querySelectorAll(".hub-cd"));
-  let cur=0;
-  function goTo(i){
-    slides[cur].classList.remove("active"); dotEls[cur].classList.remove("active");
-    cur=((i%slides.length)+slides.length)%slides.length;
-    slides[cur].classList.add("active"); dotEls[cur].classList.add("active");
+  const total=slides.length;
+  const WIPE_DUR=500;
+  const WIPE_EASE="cubic-bezier(.4,0,.2,1)";
+  let cur=0, wiping=false;
+  // Park all slides at translateX(0) initially; first slide is .active
+  function goTo(i,fwd){
+    if(wiping) return;
+    const next=((i%total)+total)%total;
+    if(next===cur) return;
+    // Determine wipe direction: explicit > index comparison, with wrap overrides
+    if(fwd===undefined) fwd=next>cur;
+    if(cur===total-1&&next===0) fwd=true;   // last→first = forward
+    if(cur===0&&next===total-1) fwd=false;  // first→last = backward
+    wiping=true;
+    const entering=slides[next], exiting=slides[cur];
+    // Park entering slide offscreen with no transition
+    entering.style.transition="none";
+    entering.style.transform=`translateX(${fwd?100:-100}%)`;
+    entering.classList.add("active");
+    entering.offsetWidth; // force reflow
+    // Animate both slides simultaneously
+    const t=`transform ${WIPE_DUR}ms ${WIPE_EASE}`;
+    entering.style.transition=t; exiting.style.transition=t;
+    entering.style.transform="translateX(0)";
+    exiting.style.transform=`translateX(${fwd?-100:100}%)`;
+    dotEls[cur].classList.remove("active");
+    cur=next;
+    dotEls[cur].classList.add("active");
+    setTimeout(()=>{
+      exiting.classList.remove("active");
+      exiting.style.transition="none";
+      exiting.style.transform="translateX(0)"; // reset for next use
+      wiping=false;
+    },WIPE_DUR);
   }
-  let timer=setInterval(()=>goTo(cur+1),5000);
+  let timer=setInterval(()=>goTo(cur+1,true),5000);
   const stop=()=>clearInterval(timer);
-  const start=()=>{ stop(); timer=setInterval(()=>goTo(cur+1),5000); };
+  const start=()=>{ stop(); timer=setInterval(()=>goTo(cur+1,true),5000); };
   _carouselCleanups.add(stop);
-  prev.onclick=()=>{ stop(); goTo(cur-1); start(); };
-  next.onclick=()=>{ stop(); goTo(cur+1); start(); };
+  prev.onclick=()=>{ stop(); goTo(cur-1,false); start(); };
+  next.onclick=()=>{ stop(); goTo(cur+1,true); start(); };
   dotEls.forEach((d,i)=>{ d.onclick=()=>{ stop(); goTo(i); start(); }; });
   car.addEventListener("mouseenter",stop); car.addEventListener("mouseleave",start);
   car.addEventListener("touchstart",stop,{passive:true});
