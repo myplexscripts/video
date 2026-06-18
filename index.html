@@ -1283,6 +1283,12 @@
     border-top:1px solid rgba(255,255,255,.07);
     padding-bottom:env(safe-area-inset-bottom);
     align-items:stretch}
+  /* Solid fill for the home-indicator strip — prevents the semi-transparent
+     frosted glass from rendering as near-black over the void below the app */
+  #tabBar::after{
+    content:'';position:absolute;left:0;right:0;bottom:0;
+    height:env(safe-area-inset-bottom);
+    background:var(--bg);pointer-events:none}
   .tab-btn{
     flex:1;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:4px;
