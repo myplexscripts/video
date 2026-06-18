@@ -490,13 +490,17 @@
   /* Gradient scrim — heavier at bottom for logo legibility */
   .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.5) 40%,transparent 70%)}
-  /* Logo wrapper: 14px inset on each side — logo fills this width, height scales */
+  /* Logo wrapper: 14px inset each side */
   .bill-logo-wrap{position:absolute;bottom:14px;left:14px;right:14px;z-index:2;
     display:flex;justify-content:center;align-items:flex-end}
-  /* Logo fills wrapper width, height is unconstrained (aspect-ratio preserved).
-     width:100% on a block img inside a positioned wrapper always fits exactly. */
-  .bill-logo{display:block;width:100%;height:auto;
+  /* Logo rule: never cover more than 1/3 of the square card.
+     Card = 280px wide = 280px tall (1:1), so 1/3 = 93px max-height.
+     max-width:100% caps wide logos at the wrapper bounds.
+     width:auto + height:auto = proportional — no cropping ever.
+     Whichever axis hits its limit first, the other scales down to match. */
+  .bill-logo{display:block;width:auto;height:auto;max-width:100%;max-height:93px;
     filter:drop-shadow(0 1px 8px rgba(0,0,0,.9)) drop-shadow(0 0 24px rgba(0,0,0,.6))}
+  @media(max-width:680px){.bill-logo{max-height:73px}} /* 1/3 of 220px mobile card */
   /* Text fallback when no clearLogo is available */
   .bill-title{font-size:22px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
     color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.7);text-align:center;
