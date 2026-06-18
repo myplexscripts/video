@@ -723,16 +723,16 @@
     transition:transform .2s var(--ease),box-shadow .2s var(--ease);text-align:left}
   .genre-card:hover{transform:scale(1.032);box-shadow:var(--shadow-lg)}
   .genre-card:active{transform:scale(.97)}
-  .genre-art{position:relative;overflow:hidden;flex-shrink:0}
-  .genre-art img{width:100%;height:100%;object-fit:cover;display:block}
-  .genre-hue,.genre-fade{position:absolute;inset:0;pointer-events:none}
-  .genre-hue{background:var(--gc,#333);opacity:.24}
-  .genre-fade{background:linear-gradient(to bottom,transparent 30%,var(--gc,#333) 96%)}
-  .genre-label{background:var(--gc,#333);color:var(--gt,#FFFBF8);font-size:13.5px;font-weight:700;
+  /* Duotone: container bg is the genre color; img desaturated + multiply-blended over it.
+     Dark image areas → near-black; light areas → pure genre color. */
+  .genre-art{position:relative;overflow:hidden;flex-shrink:0;background:var(--gc,#333)}
+  .genre-art img{width:100%;height:100%;object-fit:cover;display:block;
+    filter:grayscale(1) contrast(1.15) brightness(1.05);mix-blend-mode:multiply}
+  .genre-fade{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to bottom,transparent 30%,var(--gc,#333) 96%)}
+  .genre-label{background:var(--gc,#333);color:#FFFBF8;font-size:13.5px;font-weight:700;
     text-align:center;padding:10px 14px 13px;letter-spacing:.01em;line-height:1.2;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .genre-card--poster{width:144px}
-  .genre-card--poster .genre-art{aspect-ratio:2/3}
   .genre-card--billboard{width:252px}
   .genre-card--billboard .genre-art{aspect-ratio:16/9}
   .genre-card--square{width:160px}
@@ -1407,27 +1407,25 @@ function applyFont(name,save=true){
 applyFont(localStorage.getItem(LS.font)||"circular",false);
 
 /* ---- GENRE COLOURS ---- */
+// Gold (#F7C600) and Sea Green (#69DD58) darkened so all palette entries pass
+// white-text contrast — no need for per-card text-color calculation.
 const GENRE_COLORS={
-  action:"#C14F30",adventure:"#F7C600",animation:"#69DD58",
-  comedy:"#F7C600",crime:"#5B2244",documentary:"#0A372C",
+  action:"#C14F30",adventure:"#BF8E00",animation:"#3B9430",
+  comedy:"#BF8E00",crime:"#5B2244",documentary:"#0A372C",
   drama:"#322D5B",fantasy:"#322D5B",history:"#C14F30",
   horror:"#191919",music:"#15A9FC",mystery:"#5B2244",
   romance:"#F74366","science fiction":"#15A9FC","sci-fi":"#15A9FC",
-  sport:"#69DD58",sports:"#69DD58",thriller:"#5B2244",
+  sport:"#3B9430",sports:"#3B9430",thriller:"#5B2244",
   war:"#0A372C",western:"#C14F30",family:"#15A9FC",
   kids:"#F74366",anime:"#F74366",biography:"#322D5B",
   reality:"#F74366",suspense:"#5B2244",short:"#0A372C",
 };
-const _GENRE_CLR_POOL=["#C14F30","#15A9FC","#F74366","#322D5B","#0A372C","#5B2244","#F7C600","#69DD58"];
+const _GENRE_CLR_POOL=["#C14F30","#15A9FC","#F74366","#322D5B","#0A372C","#5B2244","#BF8E00","#3B9430"];
 function genreColor(name){
   const k=(name||"").toLowerCase();
   if(GENRE_COLORS[k]) return GENRE_COLORS[k];
   let h=0; for(let i=0;i<k.length;i++) h=(h*31+k.charCodeAt(i))&0xFF;
   return _GENRE_CLR_POOL[h%_GENRE_CLR_POOL.length];
-}
-function genreTextColor(hex){
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return (r*299+g*587+b*114)/1000>155?"#191919":"#FFFBF8";
 }
 
 /* ---- CROSS-DEVICE SETTINGS SYNC (Cloudflare Worker + KV) ----
@@ -1941,8 +1939,12 @@ async function fetchGenreData(){
     const candidates=byGenre.get(g.title)||[];
     if(!candidates.length) continue;
     const pick=candidates[Math.floor(Math.random()*Math.min(candidates.length,5))];
+    const imgs=pick.Image||[];
+    const sqImg=imgs.find(i=>i.type==="backgroundSquare");
     result.push({name:g.title,key:g.key,sectionKey:sec.key,
-      thumb:pick.thumb||pick.parentThumb,art:pick.art||pick.grandparentArt||pick.thumb});
+      thumb:pick.thumb||pick.parentThumb,
+      art:pick.art||pick.grandparentArt||pick.thumb,
+      squareArt:(sqImg&&sqImg.url)||pick.thumb||pick.parentThumb});
     if(result.length>=16) break;
   }
   _genreRailCache=result;
@@ -1950,12 +1952,11 @@ async function fetchGenreData(){
 }
 function genreCard(g,style){
   const gc=genreColor(g.name);
-  const gt=genreTextColor(gc);
-  const artSrc=style==="billboard"?(g.art||g.thumb):g.thumb;
-  const [w,h]=style==="billboard"?[560,315]:style==="square"?[400,400]:[300,450];
+  const artSrc=style==="billboard"?(g.art||g.thumb):(g.squareArt||g.thumb);
+  const [w,h]=style==="billboard"?[560,315]:[400,400];
   const b=el("button","genre-card genre-card--"+style);
-  b.style.setProperty("--gc",gc); b.style.setProperty("--gt",gt);
-  b.innerHTML=`<div class="genre-art">${artSrc?`<img loading="lazy" alt="${esc(g.name)}" src="${img(artSrc,w,h)}" onerror="this.remove()">`:""}<div class="genre-hue"></div><div class="genre-fade"></div></div><div class="genre-label">${esc(g.name)}</div>`;
+  b.style.setProperty("--gc",gc);
+  b.innerHTML=`<div class="genre-art">${artSrc?`<img loading="lazy" alt="${esc(g.name)}" src="${img(artSrc,w,h)}" onerror="this.remove()">`:""}<div class="genre-fade"></div></div><div class="genre-label">${esc(g.name)}</div>`;
   b.onclick=()=>{ _genrePageData={title:g.name,key:g.key,sectionKey:g.sectionKey}; navigate("/genre"); };
   return b;
 }
@@ -2001,8 +2002,9 @@ async function showGenrePage(){
    Stored per hub-key in localStorage. Defaults: CW → billboard, rest → poster. */
 function getRailStyles(){ return JSON.parse(localStorage.getItem(LS.railStyles)||"{}"); }
 function getRailStyle(key){
-  const s=getRailStyles()[key]; if(s) return s;
-  if(key==="__genres__") return "poster";
+  const s=getRailStyles()[key];
+  if(key===GENRE_CARDS_KEY) return (s==="billboard"||s==="square")?s:"square";
+  if(s) return s;
   return /continue|on.?deck/i.test(key)?"billboard":"poster";
 }
 function setRailStyle(key,style){
@@ -2619,13 +2621,15 @@ async function showSettings(){
 
     const container=$("#settingsRailRows");
     container.innerHTML="";
-    const STYLES=[{v:"poster",l:"Poster"},{v:"billboard",l:"Billboard"},{v:"square",l:"Square"}];
+    const ALL_STYLES=[{v:"poster",l:"Poster"},{v:"billboard",l:"Billboard"},{v:"square",l:"Square"}];
+    const GENRE_STYLES=[{v:"billboard",l:"Billboard"},{v:"square",l:"Square"}];
     hubs.forEach(hub=>{
       const current=getRailStyle(hub.key);
+      const styles=hub.key===GENRE_CARDS_KEY?GENRE_STYLES:ALL_STYLES;
       const row=el("div","settings-row");
       row.innerHTML=`<div class="settings-label">${esc(hub.title)}</div>
         <div class="rail-style-btns">
-          ${STYLES.map(s=>`<button class="rail-style-btn${current===s.v?" active":""}" data-style="${s.v}">${s.l}</button>`).join("")}
+          ${styles.map(s=>`<button class="rail-style-btn${current===s.v?" active":""}" data-style="${s.v}">${s.l}</button>`).join("")}
         </div>`;
       row.querySelectorAll(".rail-style-btn").forEach(btn=>{
         btn.onclick=()=>{
