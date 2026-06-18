@@ -1696,6 +1696,7 @@ function selectServer(c){ server=c; localStorage.setItem(LS.server,JSON.stringif
    for the subsequent render. */
 const _apiCache=new Map();
 const _apiBg=new Set();
+const _apiInflight=new Map(); // dedup concurrent requests for the same path
 /* Persistent API cache (IndexedDB).
    The in-memory Map above dies on reload; persisting it means a cold start
    paints from the last session's data, then stale-while-revalidate quietly
@@ -1751,11 +1752,11 @@ async function pruneIdb(){
 }
 async function api(path,{_bg=false}={}){
   let hit=_apiCache.get(path);
-  // Lazy disk hydration: first time we touch a path this session, fall back to
-  // the persisted copy so the screen can paint instantly while we revalidate.
+  // Lazy disk hydration: race IDB against a 25ms timeout so a cold-cache miss
+  // never delays the network fetch by more than one tick.
   if(!hit&&!_bg&&!_idbTried.has(path)){
     _idbTried.add(path);
-    const disk=await idbGet(path);
+    const disk=await Promise.race([idbGet(path),new Promise(r=>setTimeout(()=>r(null),25))]);
     if(disk&&disk.ts&&Date.now()-disk.ts<IDB_TTL){ _apiCache.set(path,disk); hit=disk; }
     else if(disk){ idbDel([path]); }
   }
@@ -1768,21 +1769,28 @@ async function api(path,{_bg=false}={}){
     }
     return hit.data;
   }
+  // Dedup: if a fetch for this path is already in-flight (e.g. from a prefetch),
+  // attach to it rather than firing a second identical request.
+  if(_apiInflight.has(path)) return _apiInflight.get(path);
   const sep=path.includes("?")?"&":"?";
-  let r;
-  try{
-    r=await fetch(`${server.uri}${path}${sep}X-Plex-Token=${server.token}`,{headers:plexHeaders(server.token)});
-  }catch(_){
-    if(hit) return hit.data; // offline: serve stale indefinitely
-    const err=new Error(`Can't reach ${(server&&server.name)||"your Plex server"}. Check that it's online and try again.`);
-    err.offline=true; throw err;
-  }
-  if(!r.ok) throw new Error(`Server error ${r.status}`);
-  const data=(await r.json()).MediaContainer||{};
-  const entry={data,ts:Date.now()};
-  _apiCache.set(path,entry);
-  idbSet(path,entry);   // persist for instant cold-start next session
-  return data;
+  const promise=(async()=>{
+    let r;
+    try{
+      r=await fetch(`${server.uri}${path}${sep}X-Plex-Token=${server.token}`,{headers:plexHeaders(server.token)});
+    }catch(_){
+      if(hit) return hit.data; // offline: serve stale indefinitely
+      const err=new Error(`Can't reach ${(server&&server.name)||"your Plex server"}. Check that it's online and try again.`);
+      err.offline=true; throw err;
+    }
+    if(!r.ok) throw new Error(`Server error ${r.status}`);
+    const data=(await r.json()).MediaContainer||{};
+    const entry={data,ts:Date.now()};
+    _apiCache.set(path,entry);
+    idbSet(path,entry);   // persist for instant cold-start next session
+    return data;
+  })();
+  _apiInflight.set(path,promise);
+  try{ return await promise; }finally{ _apiInflight.delete(path); }
 }
 /* Skeleton helpers — shown instantly before data arrives so the screen
    never flashes blank during navigation. */
@@ -2243,6 +2251,10 @@ async function showHome(gen){
     const saved=_scrollPos.get(location.href);
     if(saved) requestAnimationFrame(()=>{c.scrollTop=saved; _scrollPos.delete(location.href);});
     navDone();
+    // Background-prefetch the first visible items so tapping any of them
+    // renders from cache instead of hitting the network cold.
+    const allItems=[...cw,...videoHubs.flatMap(h=>h.items)].slice(0,8);
+    (window.requestIdleCallback||setTimeout)(()=>allItems.forEach(it=>prefetchItem(it)));
   }catch(e){ if(gen===undefined||gen===_routeGen) c.innerHTML=errHTML(e); }
 }
 function collectItems(mc){
@@ -2409,10 +2421,19 @@ const _prefetched=new Set();
 function prefetchItem(it){
   if(!it||!it.ratingKey||!server) return;
   if(!(it._collection||/^(movie|show|episode|collection)$/.test(it.type||""))) return;
-  const path=`/library/metadata/${it.ratingKey}`;
+  const key=it.ratingKey, path=`/library/metadata/${key}`;
   if(_prefetched.has(path)) return;
   _prefetched.add(path);
-  api(path).catch(()=>_prefetched.delete(path));   // warm cache; allow retry on failure
+  // Warm metadata + the supporting rails openMovie/openShow need, so the
+  // detail page renders from cache when the user taps instead of waiting.
+  api(path,{_bg:true}).catch(()=>_prefetched.delete(path));
+  if(it.type==="movie"){
+    api(`/library/metadata/${key}/extras`,{_bg:true}).catch(()=>{});
+    api(`/library/metadata/${key}/related?count=24`,{_bg:true}).catch(()=>{});
+  }else if(it.type==="show"||it.type==="episode"){
+    const showKey=it.type==="episode"?(it.grandparentRatingKey||key):key;
+    api(`/library/metadata/${showKey}/children`,{_bg:true}).catch(()=>{});
+  }
 }
 function wireCardPrefetch(b,it){
   let t=null;
