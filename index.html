@@ -1229,19 +1229,16 @@
     .detail-hero.full{min-height:unset;padding:0;flex-direction:column;justify-content:flex-start}
     .detail-hero.full .detail-bg{position:relative;width:100%;aspect-ratio:4/3;flex-shrink:0;overflow:hidden;background:transparent}
     .detail-hero.full.sq .detail-bg{aspect-ratio:1}
-    /* suppress blur echo — ultraBlur ambient (in detail-mode) is colour-matched */
+    /* suppress blur echo — ultraBlur is sourced from the same art as the image */
     .detail-hero.full .detail-bg-blur{display:none}
-    /* crisp image fades to transparent so the detail-mode ultraBlur shows through */
+    /* crisp image fades to transparent so the colour-matched ultraBlur shows through */
     .detail-hero.full .detail-bg-img{position:absolute;inset:0;right:0;width:100%;height:100%;object-fit:cover;
       -webkit-mask-image:linear-gradient(to bottom,black 35%,transparent 75%);
       mask-image:linear-gradient(to bottom,black 35%,transparent 75%)}
-    /* minimal top-only scrim for pill readability; transparent at bottom to expose ultraBlur */
+    /* minimal top-only scrim for pill readability; transparent at bottom exposes ultraBlur */
     .detail-hero.full .detail-scrim{position:absolute;inset:0;
       background:linear-gradient(to bottom,rgba(0,0,0,.22) 0%,transparent 35%)}
     .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
-    /* detail-mode: nearly-bare scrim so ultraBlur colour matches the image it underlies */
-    #ultraBlur.detail-mode .ub-scrim{background:linear-gradient(180deg,rgba(10,10,12,.02) 0%,rgba(10,10,12,.15) 55%,rgba(10,10,12,.5) 100%)}
-    #ultraBlur.detail-mode .ub-layer.show{opacity:.88}
     .detail-hero.full .detail-top{position:relative;z-index:1;padding:16px var(--edge) 0;max-width:100%;margin-top:-80px;text-align:center}
     .detail-hero.full .detail-top h2{font-size:clamp(26px,8vw,38px)}
     .detail-hero.full .title-logo{max-height:56px;max-width:min(270px,72vw);margin:0 auto;display:block}
@@ -1752,7 +1749,7 @@ function setUltraBlur(art){
   requestAnimationFrame(()=>{ next.classList.add("show"); prev.classList.remove("show"); });
   ubActive = ubActive==="A" ? "B" : "A";
 }
-function clearUltraBlur(){ $("#ubA").classList.remove("show"); $("#ubB").classList.remove("show"); ubActive=null; $("#ultraBlur").classList.remove("detail-mode"); }
+function clearUltraBlur(){ $("#ubA").classList.remove("show"); $("#ubB").classList.remove("show"); ubActive=null; }
 
 /* ============================================================ BOOT */
 async function afterLogin(){
@@ -3564,8 +3561,10 @@ function wireRateFloat(c,m){
   group.onmouseleave=()=>paintStars(root,current());
 }
 function wireBackdrop(c,art,mobileArt){
-  setUltraBlur(art);
-  if(window.innerWidth<=560) $("#ultraBlur").classList.add("detail-mode");
+  const isMobile=window.innerWidth<=560;
+  const pref=localStorage.getItem(LS.detailArt)||"backdrop";
+  const ubSrc=isMobile&&pref==="square"&&mobileArt?mobileArt:art;
+  setUltraBlur(ubSrc);
   wireDetailBg(c,art,mobileArt);
 }
 function wireDetailBg(c,art,mobileArt){
