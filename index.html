@@ -408,7 +408,7 @@
   .hub-carousel .title-logo{display:block;height:auto;width:auto;max-width:min(60%,420px);max-height:96px;
     object-fit:contain;object-position:left bottom;margin:0 0 8px}
   /* Progress dots */
-  .hub-carousel-dots{position:absolute;bottom:18px;right:var(--edge);display:flex;gap:5px;z-index:3}
+  .hub-carousel-dots{position:absolute;bottom:26px;right:var(--edge);display:flex;gap:6px;z-index:3}
   .hub-cd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);
     border:none;cursor:pointer;padding:0;flex:0 0 auto;
     transition:background .2s,width .2s,border-radius .2s}
@@ -606,6 +606,7 @@
      into it and the meta strip rides on it, so there's no hard seam between them. */
   .card.billboard::before{content:'';position:absolute;inset:0;z-index:0;
     background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
+    border-radius:var(--radius);
     filter:blur(30px) saturate(1.7) brightness(.32)}
   /* Art: square, rounded only at top; transparent bg + above the wash */
   .card.billboard .art{aspect-ratio:1/1;border-radius:var(--radius) var(--radius) 0 0;flex:0 0 auto;
@@ -1473,7 +1474,7 @@
     .hub-carousel .hero-actions{justify-content:center}
     .hub-carousel .title-logo{max-height:100px;max-width:min(72%,320px);object-position:center bottom;margin:0 auto 8px}
     .hub-carousel .hero-top h2{font-size:clamp(22px,7vw,34px)}
-    .hub-carousel-dots{bottom:14px;left:0;right:0;justify-content:center}
+    .hub-carousel-dots{bottom:22px;left:0;right:0;justify-content:center}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
