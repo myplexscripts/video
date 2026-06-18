@@ -74,6 +74,42 @@
     --frost-shadow-sm:var(--frost-edge-sm),0 1px 3px rgba(0,0,0,.3);
     --frost-shadow:var(--frost-edge),0 1px 4px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.32);
     --frost-shadow-lg:var(--frost-edge),0 4px 24px rgba(0,0,0,.4),0 16px 48px rgba(0,0,0,.42);
+    /* ====================================================================
+       DESIGN SYSTEM — SOURCE OF TRUTH
+       All new UI work must reference these tokens. Do not hard-code values
+       that exist here; add new steps to the nearest scale instead.
+       ==================================================================== */
+    /* TYPE SCALE
+       label   → 11 px uppercase metadata/kickers   (--t-label)
+       sm      → 12 px secondary counts/captions    (--t-sm)
+       base    → 13 px body text, button labels     (--t-base)
+       body    → 14 px descriptions, list text      (--t-body)
+       ui      → 15 px prominent UI labels          (--t-ui)
+       section → 21 px rail / grid section headings (--t-section)
+       feature → 27 px featured-rail heading        (--t-feature)
+       page    → 28 px page-level heading           (--t-page)
+       display → clamp(28,3.8vw,48px) detail title  (--t-display)
+       hero    → clamp(40,7.5vw,92px) hero / top    (--t-hero) */
+    --t-label:11px; --t-sm:12px; --t-base:13px; --t-body:14px; --t-ui:15px;
+    --t-section:21px; --t-feature:27px; --t-page:28px;
+    --t-display:clamp(28px,3.8vw,48px); --t-hero:clamp(40px,7.5vw,92px);
+    /* FONT WEIGHTS */
+    --fw-normal:400; --fw-medium:500; --fw-semi:600; --fw-bold:700; --fw-xbold:800; --fw-black:900;
+    /* COMPONENT HEIGHTS — every glass chrome element uses one of these */
+    --h-nav:44px;   /* search box, menu-toggle, libNav title height alignment */
+    --h-tab:38px;   /* secondary tab pills (lib-nav-tab, lib-tab) */
+    /* CARD DIMENSIONS
+       portrait cards (movies/shows): --card-w wide, 3:2 ratio (height auto)
+       wide cards (episodes/extras):  --card-w-wide */
+    --card-w:170px; --card-w-wide:280px; --grid-gap:24px; --rail-gap:20px;
+    /* FLOATING NAV RULES
+       Library page title → pure typography, no glass pill.
+         font-size: 19px / weight 800 / letter-spacing -.025em
+         text-shadow for legibility over any backdrop
+       Tab buttons → glass pill, height var(--h-tab), frost styling.
+       Search box / menu-toggle → glass pill, height var(--h-nav).
+       All glass elements → backdrop-filter + var(--frost-*) tokens. */
+    --nav-title-size:19px;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -270,9 +306,9 @@
     filter:blur(70px) saturate(1.8);pointer-events:none;transform:scale(1.25)}
   .rail-head{display:flex;align-items:flex-end;gap:12px;margin:0 var(--edge) 16px;position:relative}
   .rail-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
-  .rail-lib{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:700}
-  .rail-head h3{font-size:21px;font-weight:800;letter-spacing:-.02em}
-  .featured .rail-head h3{font-size:27px}
+  .rail-lib{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:var(--fw-bold)}
+  .rail-head h3{font-size:var(--t-section);font-weight:var(--fw-xbold);letter-spacing:-.02em}
+  .featured .rail-head h3{font-size:var(--t-feature)}
   .rail-head .count{font-size:12px;color:var(--faint);font-weight:500;padding-bottom:3px}
   .rail-head.with-avatar{align-items:center}
   .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
@@ -323,7 +359,11 @@
   .lib-tab.active:hover{background:var(--accent-glass-hover)}
   #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:calc(240px + 16px);z-index:25;align-items:center;gap:8px;flex-wrap:nowrap}
   #libNav.visible{display:flex}
-  #libNavName{background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:100px;height:44px;padding:0 18px;font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;white-space:nowrap;box-shadow:var(--frost-shadow);letter-spacing:-.01em}
+  /* Library title: pure typography — not a glass pill. Glass is for actions;
+     a section label is identity text and should read as a heading. */
+  #libNavName{font-size:var(--nav-title-size);font-weight:var(--fw-xbold);letter-spacing:-.025em;
+    color:var(--text);white-space:nowrap;align-self:center;padding-right:6px;
+    text-shadow:0 1px 10px rgba(0,0,0,.75),0 0 30px rgba(0,0,0,.5)}
   .lib-nav-tabs{display:flex;gap:6px}
   .lib-nav-tab{background:var(--surface2);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:100px;height:38px;padding:0 16px;color:var(--dim);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;box-shadow:var(--frost-shadow-sm);transition:background-color .15s,color .15s,border-color .15s;white-space:nowrap}
   .lib-nav-tab:hover{background:var(--surface3);color:var(--text)}
@@ -338,7 +378,7 @@
      A "Liquid Glass" control strip for the library grid: live, client-side
      sort / watch-state filter / genre filter — no round-trip, no reload. */
   .lib-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 var(--edge) 6px}
-  .lib-toolbar .lib-title{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .lib-toolbar .lib-title{font-size:var(--t-section);font-weight:var(--fw-xbold);letter-spacing:-.02em}
   .lib-toolbar .lib-count{font-size:12px;color:var(--faint);font-weight:500}
   .lib-toolbar .spacer{flex:1 1 auto}
 
@@ -347,12 +387,12 @@
      pages so it's always clear what the user is looking at. */
   .page-head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 var(--edge) 18px}
   .page-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
-  .page-head h2{font-size:28px;font-weight:900;letter-spacing:-.03em}
+  .page-head h2{font-size:var(--t-page);font-weight:var(--fw-black);letter-spacing:-.03em}
   .page-head .count{font-size:13px;color:var(--faint);font-weight:500;padding-bottom:3px}
 
   /* ---- SEARCH RESULTS HEADER ---- */
   .search-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 var(--edge) 8px}
-  .search-head h2{font-size:28px;font-weight:900;letter-spacing:-.03em}
+  .search-head h2{font-size:var(--t-page);font-weight:var(--fw-black);letter-spacing:-.03em}
   .search-head .count{font-size:13px;color:var(--faint);font-weight:500}
   .lib-ctrl-wrap{position:relative}
   .lib-ctrl{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);
@@ -1740,7 +1780,7 @@ function libTabsHTML(section,active){
 function wireLibTabs(c){ c.querySelectorAll(".lib-tab[data-href]").forEach(b=>{ b.onclick=()=>navigate(b.dataset.href); }); }
 function showLibNav(section,active){
   const nav=$("#libNav"); if(!nav) return;
-  nav.innerHTML=`<span id="libNavName"><span class="frost-text">${esc(section.title)}</span></span><div class="lib-nav-tabs">`
+  nav.innerHTML=`<span id="libNavName">${esc(section.title)}</span><div class="lib-nav-tabs">`
     +[{k:"recommended",l:"Recommended",h:`/library/${section.key}`},
       {k:"all",l:"Library",h:`/library/${section.key}/all`},
       {k:"collections",l:"Collections",h:`/library/${section.key}/collections`},
