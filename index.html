@@ -484,12 +484,25 @@
   /* ---- BILLBOARD CARD ----
      Secondary showcase card: square art + centered logo + blurred-art
      metadata panel beneath. Rules: only in billboard rails. */
-  .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column}
-  /* Art: square, rounded only at top — bottom edge merges into bill-meta */
-  .card.billboard .art{aspect-ratio:1/1;border-radius:var(--radius) var(--radius) 0 0;flex:0 0 auto}
-  /* Gradient scrim — heavier at bottom for logo legibility */
+  .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column;
+    position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate}
+  /* Shared blurred-art wash behind the whole card: the art's bottom dissolves
+     into it and the meta strip rides on it, so there's no hard seam between them. */
+  .card.billboard::before{content:'';position:absolute;inset:0;z-index:0;
+    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
+    filter:blur(30px) saturate(1.7) brightness(.32)}
+  /* Art: square, rounded only at top; transparent bg + above the wash */
+  .card.billboard .art{aspect-ratio:1/1;border-radius:var(--radius) var(--radius) 0 0;flex:0 0 auto;
+    z-index:1;background:transparent}
+  /* Scrim for logo legibility; faded out at the very bottom with the image */
   .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.5) 40%,transparent 70%)}
+    background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.45) 42%,transparent 72%);
+    -webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent 99%);
+    mask-image:linear-gradient(to bottom,#000 70%,transparent 99%)}
+  /* Dissolve the art image's bottom edge into the wash */
+  .card.billboard .art img:not(.bill-logo){
+    -webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent 99%);
+    mask-image:linear-gradient(to bottom,#000 70%,transparent 99%)}
   /* Logo wrapper: fixed height = 1/3 of card; object-fit:contain scales logo proportionally */
   .bill-logo-wrap{position:absolute;bottom:14px;left:14px;right:14px;height:93px;z-index:2;
     display:flex;justify-content:center;align-items:flex-end}
@@ -504,16 +517,11 @@
   .bill-title{font-size:22px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
     color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.7);text-align:center;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  /* Metadata panel: blurred continuation of the art behind it */
-  .bill-meta{position:relative;overflow:hidden;flex:0 0 auto;
-    border-radius:0 0 var(--radius) var(--radius);
-    padding:11px 12px 13px;text-align:center}
-  .bill-meta::before{content:'';position:absolute;inset:-30%;z-index:0;
-    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
-    filter:blur(28px) saturate(1.7) brightness(.28)}
-  /* Dark tint over the blur so text stays readable */
-  .bill-meta::after{content:'';position:absolute;inset:0;z-index:0;
-    background:rgba(0,0,0,.25)}
+  /* Metadata strip: rides the shared wash — no own blur, just a readability tint */
+  .bill-meta{position:relative;z-index:1;flex:0 0 auto;
+    padding:6px 12px 13px;text-align:center}
+  .bill-meta::before{content:'';position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(to bottom,transparent,rgba(0,0,0,.32) 55%)}
   .bill-meta .cs{position:relative;z-index:1;font-size:var(--t-sm);font-weight:500;
     color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
   /* Suppress legacy card text rows — all metadata lives in .bill-meta */
@@ -1572,9 +1580,11 @@ function billboardCard(it,rank){
         <div class="bill-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
       </div>
     </div>
-    <div class="bill-meta" style="--bill-bg:url('${artSrc.replace(/'/g,"\\'")}')">
+    <div class="bill-meta">
       <span class="cs">${esc(meta)}</span>
     </div>`;
+  // Wash behind the whole card uses the same art; guarded so broken art falls back
+  if(artSrc) b.style.setProperty("--bill-bg",`url('${artSrc.replace(/'/g,"\\'")}')`);
   // Episodes: link to the show page, not the individual episode
   const dest=it.type==="episode"?`/show/${it.grandparentRatingKey||it.ratingKey}`:pathForItem(it);
   b.onclick=()=>{if(dest)navigate(dest);else openItem(it);};
