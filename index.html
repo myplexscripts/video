@@ -495,8 +495,11 @@
     background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.48) 38%,transparent 68%)}
   /* title rendered inside the art, above the scrim */
   /* logo image: natural scaling so it never overflows the card */
+  /* Logo: natural proportional scaling. max-width caps wide logos,
+     max-height caps tall ones — whichever is hit first, the other
+     axis scales automatically. No object-fit needed on a raw <img>. */
   .bill-logo{position:absolute;bottom:12px;left:12px;z-index:2;display:block;
-    height:auto;width:auto;max-height:52px;max-width:calc(100% - 24px);
+    max-width:calc(100% - 24px);max-height:50px;
     filter:drop-shadow(0 1px 6px rgba(0,0,0,.8)) drop-shadow(0 0 24px rgba(0,0,0,.5))}
   .bill-title{position:absolute;bottom:13px;left:14px;right:14px;z-index:2;
     font-size:20px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
@@ -1533,12 +1536,12 @@ window.addEventListener("hashchange", route);
    Logo: clearLogo from it.Image; falls back to bold text title. */
 function billboardCard(it){
   const b=el("button","card billboard");
-  // Try every known Plex type name for the dedicated square art
-  const SQUARE_TYPES=["squareCover","squarePosterArt","coverSquare","squareThumb"];
-  const squareImg=(it.Image||[]).find(i=>SQUARE_TYPES.includes(i.type));
-  // Fallback order: dedicated square → portrait poster (crops from top) → backdrop
+  // Plex image types: backgroundSquare=1:1 art, background=backdrop,
+  // coverPoster=portrait poster, clearLogo=transparent title logo
+  const imgs=it.Image||[];
+  const squareImg=imgs.find(i=>i.type==="backgroundSquare");
   const artSrc=img((squareImg&&squareImg.url)||it.thumb||it.art,560,560);
-  const logoImg=(it.Image||[]).find(i=>i.type==="clearLogo");
+  const logoImg=imgs.find(i=>i.type==="clearLogo");
   const logoSrc=logoImg?img(logoImg.url,600,200):"";
   const title=it.title||"";
   const type=it.type==="movie"?"Movie":it.type==="show"?"TV Show":(it.type||"");
