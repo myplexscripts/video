@@ -1911,7 +1911,9 @@ function card(it,wide,square){
   const ep=it.type==="episode";
   const useWide = wide || ep;
   const thumb = square ? (it.thumb||it.composite||it.parentThumb)
-    : useWide ? (it.thumb||it.grandparentThumb||it.parentThumb) : (it.thumb||it.parentThumb);
+    : ep ? (it.thumb||it.parentThumb)
+    : useWide ? (it.art||it.grandparentArt||it.thumb||it.parentThumb)
+    : (it.thumb||it.parentThumb);
   const pct = it.viewOffset&&it.duration ? (it.viewOffset/it.duration*100) : 0;
   const title = ep ? (it.title||it.grandparentTitle||"") : (it.title||"");
   const sub = ep ? `${it.grandparentTitle||""} · S${it.parentIndex||0}E${it.index||0}`
