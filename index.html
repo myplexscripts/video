@@ -1274,21 +1274,17 @@
     .p-pause-logo{max-height:104px}
   }
   /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
-  /* #tabBarBg fills the home-indicator safe area BELOW the tab bar with a
-     solid colour that matches the frosted bar above it. This avoids the
-     "black strip" that appears when backdrop-filter has nothing colourful to
-     blur in the void below the flex content (just html background). */
-  #tabBarBg{
-    display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
-    height:env(safe-area-inset-bottom);
-    background:rgba(10,10,14,1)}   /* fully-opaque match for tab bar */
+  /* SOLID background (no backdrop-filter): a frosted bar must re-blur the
+     content behind it on every scroll frame, which is expensive on phones and
+     made scrolling janky. A solid fill is free and, because padding-bottom
+     extends the SAME solid colour through the home-indicator safe area, there
+     is no "black strip" — the bar and the safe area are one continuous block. */
   #tabBar{
     display:none;       /* shown only inside @media(max-width:680px) */
     position:fixed;bottom:0;left:0;right:0;z-index:100;
-    background:rgba(10,10,14,.88);
-    backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    background:#0d0d12;
     border-top:1px solid rgba(255,255,255,.07);
+    padding-bottom:env(safe-area-inset-bottom);
     align-items:stretch}
   .tab-btn{
     flex:1;display:flex;flex-direction:column;
@@ -1347,16 +1343,25 @@
      off-canvas drawer over a scrim instead. */
   @media(max-width:680px){
     :root{--edge:24px}
-    .shell{grid-template-columns:1fr}
+    /* ── DOCUMENT SCROLL (not inner-container scroll) ──────────────────────
+       The desktop layout scrolls .main (an inner overflow:auto element) inside
+       a fixed-height shell. iOS Safari only shrinks its address bar when the
+       ROOT DOCUMENT scrolls — an inner scroll container never triggers it, so
+       the toolbar stayed full-size and the usable viewport never grew. Here we
+       unwind every height/overflow lock so the page itself is the scroller:
+       html scrolls, the bar collapses, and the layout uses the real viewport. */
+    html{height:auto;overflow-x:clip}
+    body{height:auto;overflow:visible}
+    #app{height:auto;min-height:100svh}
+    .shell{display:block;height:auto;min-height:100svh}
+    .main{overflow:visible;height:auto;scroll-behavior:auto}
     /* Tab bar replaces sidebar + hamburger entirely on mobile */
-    #tabBarBg{display:block}
-    #tabBar{display:flex;bottom:env(safe-area-inset-bottom)}
+    #tabBar{display:flex}
     #menuToggle{display:none}
     .searchbox{display:none}
     .sidebar{display:none !important}
     .scrim-nav{display:none !important}
-    .shell{grid-template-columns:1fr}
-    /* Content must scroll above the fixed tab bar */
+    /* Content clears the fixed tab bar at the bottom of the scroll */
     .content{padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px)}
     /* Collapse toggle is desktop-only */
     .nav-collapse-btn{display:none}
@@ -1477,7 +1482,6 @@
 <!-- APP -->
 <div id="app">
   <div class="scrim-nav" id="scrimNav"></div>
-  <div id="tabBarBg" aria-hidden="true"></div>
   <div id="tabBar" role="tablist" aria-label="Main navigation">
     <button class="tab-btn" id="tabHome"     role="tab" aria-label="Home"></button>
     <button class="tab-btn" id="tabLib"      role="tab" aria-label="Library"></button>
@@ -2259,8 +2263,21 @@ async function playlistMeta(ratingKey){
 }
 let _routeGen=0;
 const _scrollPos=new Map();
+/* On mobile the document scrolls (so iOS collapses its toolbar); on desktop the
+   inner .main element scrolls. These helpers read/write whichever is active so
+   scroll save/restore works in both modes. */
+function _docScrolls(){ return window.matchMedia("(max-width:680px)").matches; }
+function getScrollY(){
+  if(_docScrolls()) return window.scrollY||document.documentElement.scrollTop||0;
+  const m=document.getElementById("main"); return m?m.scrollTop:0;
+}
+function setScrollY(y){
+  if(_docScrolls()){ window.scrollTo(0,y); return; }
+  const m=document.getElementById("main"); if(m) m.scrollTop=y;
+}
 async function route(){
   const gen=++_routeGen;
+  setScrollY(0);   // fresh navigation starts at top; pages that restore a saved position override this in their render
   closeSidebar(); closeLibMenus(); cleanupHeroVideo(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
@@ -2301,9 +2318,7 @@ async function route(){
   }catch(e){ if(gen===_routeGen) $("#content").innerHTML=errHTML(e); }
 }
 window.addEventListener("hashchange", e=>{
-  const key=e.oldURL;
-  const c=document.getElementById("content");
-  if(c) _scrollPos.set(key,c.scrollTop);
+  _scrollPos.set(e.oldURL,getScrollY());
   route();
 });
 
@@ -2526,7 +2541,7 @@ async function showHome(gen){
     if(!cw.length && !videoHubs.length)
       c.innerHTML=`<div class='empty'>${svgIcon("movies")}Nothing here yet. Add some media.</div>`;
     const saved=_scrollPos.get(location.href);
-    if(saved) requestAnimationFrame(()=>{c.scrollTop=saved; _scrollPos.delete(location.href);});
+    if(saved) requestAnimationFrame(()=>{setScrollY(saved); _scrollPos.delete(location.href);});
     navDone();
     // Background-prefetch the first visible items so tapping any of them
     // renders from cache instead of hitting the network cold.
@@ -2860,7 +2875,7 @@ async function showLibraryRecommended(section,gen){
       });
     }
     const saved=_scrollPos.get(location.href);
-    if(saved) requestAnimationFrame(()=>{c.scrollTop=saved; _scrollPos.delete(location.href);});
+    if(saved) requestAnimationFrame(()=>{setScrollY(saved); _scrollPos.delete(location.href);});
   }catch(e){ if(gen===undefined||gen===_routeGen) c.innerHTML=errHTML(e); }
 }
 async function showLibrary(section,gen){
