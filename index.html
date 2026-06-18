@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#09090b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -149,10 +149,12 @@
      painted by the html/viewport layer, not body) is app-coloured not black. */
   html,body{height:100%;background:var(--bg)}
   body{color:var(--text);font-family:var(--font);
-    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow:hidden}
+    -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow:hidden;
+    -webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+  input,textarea{user-select:text;-webkit-user-select:text}
   button,input{font-family:inherit;color:inherit}
   button{cursor:pointer}
-  img{display:block}
+  img{display:block;-webkit-touch-callout:none;-webkit-user-drag:none;user-drag:none}
   .hidden{display:none !important}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
     clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -554,7 +556,8 @@
      Secondary showcase card: square art + centered logo + blurred-art
      metadata panel beneath. Rules: only in billboard rails. */
   .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column;
-    position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate}
+    position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate;
+    background:var(--bg2);transform:translateZ(0)}
   /* Shared blurred-art wash behind the whole card: the art's bottom dissolves
      into it and the meta strip rides on it, so there's no hard seam between them. */
   .card.billboard::before{content:'';position:absolute;inset:0;z-index:0;
@@ -1318,7 +1321,7 @@
     .shell{grid-template-columns:1fr}
     /* Tab bar replaces sidebar + hamburger entirely on mobile */
     #tabBar{display:flex}
-    .menu-toggle{display:none}
+    #menuToggle{display:none}
     .searchbox{display:none}
     .sidebar{display:none !important}
     .scrim-nav{display:none !important}
@@ -1462,6 +1465,7 @@
     </aside>
     <main class="main" id="main">
       <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/list.svg')" aria-hidden="true"></span></button>
+      <button class="menu-toggle" id="mobileBack" aria-label="Go back" style="display:none" onclick="history.back()"><span class="svgi" style="--i:url('assets/images/icons/ui/back.svg')" aria-hidden="true"></span></button>
       <div id="libNav" aria-label="Library navigation"></div>
       <div class="searchbox" id="searchBox" role="search">
         <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
@@ -2210,6 +2214,8 @@ async function route(){
   const parts=pathPart.split("/").filter(Boolean).map(p=>{ try{return decodeURIComponent(p);}catch(_){return p;} });
   const params=new URLSearchParams(queryPart||"");
   const seg=parts[0];
+  const mb=$("#mobileBack");
+  if(mb) mb.style.display=(!seg||seg==="home")?"none":"flex";
   highlightNav(seg,parts[1]);
   try{
     switch(seg){
