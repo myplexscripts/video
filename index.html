@@ -571,6 +571,11 @@
     display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
   .actor-info .actor-sub{font-size:13px;color:var(--faint);margin-top:6px}
   .actor-born{font-size:13px;color:var(--faint);margin-top:3px}
+  .actor-bio.expanded{-webkit-line-clamp:unset;overflow:visible}
+  .bio-toggle{background:none;border:none;color:var(--faint);font-size:12.5px;font-weight:600;cursor:pointer;padding:3px 0 0;margin:0;display:block;font-family:var(--font);text-align:left}
+  .bio-toggle:hover{color:var(--text)}
+  .tmdb-card .art{opacity:.65}
+  .tmdb-card:hover .art{opacity:.9;transition:opacity .15s}
   /* ---- FILMOGRAPHY LIST ---- */
   .filmog-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
   .filmog-tab{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15);
@@ -2358,6 +2363,45 @@ function filmogSection(acting,directing,producing){
   return wrap;
 }
 
+function knownForSectionTmdb(tmdbCast,libByNorm,libByRk){
+  if(!tmdbCast||!tmdbCast.length) return null;
+  const normT=t=>t.toLowerCase().replace(/[^a-z0-9]/g,"");
+  const sorted=[...tmdbCast].sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+  const top=sorted.slice(0,8);
+  const sec=el("div","rail-section");
+  const head=el("div","rail-head");
+  head.innerHTML=`<div class="rail-head-text"><h3>Known For</h3></div><span class="count">${top.length}</span>`;
+  const viewport=el("div","rail-viewport");
+  const row=el("div","carousel");
+  top.forEach(cr=>{
+    const title=cr.title||cr.name||"";
+    const libItem=libByNorm.get(normT(title));
+    if(libItem){
+      row.appendChild(card(libItem,false));
+    } else {
+      const b=el("button","card tmdb-card");
+      const posterUrl=cr.poster_path?`https://image.tmdb.org/t/p/w342${cr.poster_path}`:"";
+      const year=cr.release_date?cr.release_date.slice(0,4):cr.first_air_date?cr.first_air_date.slice(0,4):"";
+      const mediaLabel=cr.media_type==="tv"?"TV Show":"Movie";
+      const sub=[year,mediaLabel].filter(Boolean).join(" · ");
+      b.innerHTML=`<div class="art${posterUrl?"":" broken"}">`
+        +(posterUrl?`<img loading="lazy" alt="${esc(title)}" src="${posterUrl}" onerror="this.closest('.art').classList.add('broken')">`:"") 
+        +`<span class="art-fallback">${svgIcon(cr.media_type==="tv"?"television":"movies")}</span></div>`
+        +`<div class="ct">${esc(title)}</div><div class="cs">${esc(sub)}</div>`;
+      b.onclick=()=>window.open(`https://www.themoviedb.org/${cr.media_type==="tv"?"tv":"movie"}/${cr.id}`,"_blank");
+      row.appendChild(b);
+    }
+  });
+  const prev=el("button","rail-arrow prev edge"); prev.type="button"; prev.setAttribute("aria-label","Scroll left");
+  prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
+  const next=el("button","rail-arrow next"); next.type="button"; next.setAttribute("aria-label","Scroll right");
+  next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
+  viewport.appendChild(prev); viewport.appendChild(row); viewport.appendChild(next);
+  wireRailArrows(viewport,row,prev,next);
+  sec.appendChild(head); sec.appendChild(viewport);
+  return sec;
+}
+
 const TMDB_KEY="a9263943cdfdc2dd3d836e06a2cdb10b";
 const TMDB_BASE="https://api.themoviedb.org/3";
 async function tmdbFetch(path){
@@ -2439,37 +2483,36 @@ async function openActor(id){
         ].sort((a,b)=>(b.year||0)-(a.year||0));
       }
     }
-    // Guest appearances: episodes from shows not in type=2 results
+    // Guest appearances: episodes where actor has ≥3 eps → recurring/main (not guest).
+    // The heuristic always applies, supplementing whatever type=2 returns.
     const mainShowKeys=new Set(shows.map(s=>String(s.ratingKey)));
-    if(mainShowKeys.size===0&&allEpisodes.length>0){
+    if(allEpisodes.length>0){
       const epCount={};
       allEpisodes.forEach(ep=>{const k=String(ep.grandparentRatingKey);epCount[k]=(epCount[k]||0)+1;});
       Object.entries(epCount).forEach(([k,n])=>{if(n>=3)mainShowKeys.add(k);});
     }
     const guestEps=allEpisodes.filter(ep=>!mainShowKeys.has(String(ep.grandparentRatingKey)));
-    // Known For: filmography order (TMDB popularity) limited to library items
-    let knownFor;
-    if(actingCredits.length){
-      knownFor=actingCredits.filter(cr=>cr.ratingKey&&libByRk.has(String(cr.ratingKey)))
-        .map(cr=>libByRk.get(String(cr.ratingKey))).filter(Boolean).slice(0,8);
-    } else {
-      knownFor=allTitles.length>1?[...allTitles].sort((a,b)=>(b.audienceRating||b.rating||0)-(a.audienceRating||a.rating||0)).slice(0,8):[];
-    }
     const seenTitles=allTitles.filter(t=>t.type==="movie"?t.viewCount>0:t.viewedLeafCount>0);
     const totalItems=movies.length+shows.length+guestEps.length;
     const photoSrc=thumb?img(thumb,280,280):"";
+    const moviesSorted=[...movies].sort((a,b)=>(b.year||0)-(a.year||0));
+    const showsSorted=[...shows].sort((a,b)=>(b.year||0)-(a.year||0));
     c.innerHTML=`<div class="actor-head">
-      <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}
-      </div><div class="actor-info"><h1>${esc(name)}</h1>
-      ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}
-      ${bornAt?`<div class="actor-born">${fmtBornDied(bornAt,diedAt)}${birthPlace?` · ${esc(birthPlace)}`:""}</div>`:""}
-      <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"} on this server</div>
-      </div></div>`;
-    if(knownFor.length) c.appendChild(railSection("Known For",knownFor,false,false));
-    if(seenTitles.length) c.appendChild(railSection("You've Seen Them In",seenTitles,false,false));
-    if(movies.length) c.appendChild(railSection("Movies",movies,false,false));
-    if(shows.length) c.appendChild(railSection("TV Shows",shows,false,false));
+      <div class="actor-photo">${photoSrc?`<img src="${photoSrc}" alt="" onerror="this.style.visibility='hidden'">`:""}\n      </div><div class="actor-info"><h1>${esc(name)}</h1>\n      ${bio?`<p class="actor-bio">${esc(bio)}</p>`:""}\n      ${bornAt?`<div class="actor-born">${fmtBornDied(bornAt,diedAt)}${birthPlace?` · ${esc(birthPlace)}`:""}</div>`:""}\n      <div class="actor-sub">${totalItems} title${totalItems===1?"":"s"} on this server</div>\n      </div></div>`;
+    const bioEl=c.querySelector(".actor-bio");
+    if(bioEl){
+      const toggle=el("button","bio-toggle"); toggle.textContent="Read more";
+      toggle.onclick=()=>{const exp=bioEl.classList.toggle("expanded");toggle.textContent=exp?"Read less":"Read more";};
+      bioEl.insertAdjacentElement("afterend",toggle);
+      requestAnimationFrame(()=>{if(bioEl.scrollHeight<=bioEl.clientHeight+4) toggle.remove();});
+    }
+    if(moviesSorted.length) c.appendChild(railSection("Movies",moviesSorted,false,false));
+    if(showsSorted.length) c.appendChild(railSection("TV Shows",showsSorted,false,false));
+    const kfSec=tmdbCredits?knownForSectionTmdb(tmdbCredits.cast,libByNorm,libByRk)
+      :(allTitles.length?railSection("Known For",[...allTitles].sort((a,b)=>(b.audienceRating||b.rating||0)-(a.audienceRating||a.rating||0)).slice(0,8),false,false):null);
+    if(kfSec) c.appendChild(kfSec);
     if(guestEps.length) c.appendChild(railSection("Guest Appearances",guestEps,true,false));
+    if(seenTitles.length) c.appendChild(railSection("You've Seen Them In",seenTitles,false,false));
     const filmog=filmogSection(actingCredits,directingCredits,producingCredits);
     if(filmog) c.appendChild(filmog);
     if(!totalItems&&!actingCredits.length) c.insertAdjacentHTML("beforeend","<div class='empty'>No titles found for this person.</div>");
