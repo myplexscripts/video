@@ -1014,6 +1014,41 @@
   .art-btn:active{opacity:.72;transform:scale(.96);transition:opacity .08s,transform .08s}
   button.cast[data-actor-id]:active{opacity:.72;transform:scale(.96);transition:opacity .08s,transform .08s}
   .p-spinner span{font-size:13px;color:#cfcfd6;letter-spacing:.3px;font-weight:500}
+  /* ── D-pad / keyboard focus: gold frosted glass
+     :focus-visible fires only on keyboard/D-pad — never on touch taps — so
+     the ring never appears for mouse or touchscreen users. */
+  :focus-visible{outline:none}
+  button.card:focus-visible,.genre-card:focus-visible{
+    outline:none;z-index:4;position:relative;
+    transform:scale(1.06);
+    box-shadow:0 0 0 2.5px var(--accent),0 0 0 6px rgba(232,184,37,.18),0 16px 48px rgba(232,184,37,.2);
+    transition:transform .14s var(--ease),box-shadow .14s var(--ease)}
+  button.cast[data-actor-id]:focus-visible{
+    outline:none;z-index:4;position:relative;
+    transform:scale(1.06);
+    box-shadow:0 0 0 2.5px var(--accent),0 0 0 5px rgba(232,184,37,.18),0 12px 32px rgba(232,184,37,.2);
+    transition:transform .14s var(--ease),box-shadow .14s var(--ease)}
+  /* Primary (solid gold) buttons: bright white outer ring + gold corona */
+  .btn:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 2.5px #fff,0 0 0 5.5px rgba(232,184,37,.5),0 0 28px rgba(232,184,37,.28)}
+  /* Everything else (nav items, settings toggles, see-all, icon buttons):
+     gold-tinted frosted glass — the accent colour shines through the blur */
+  button:focus-visible:not(.card):not(.genre-card):not([data-actor-id]):not(.btn){
+    outline:none;
+    background:rgba(232,184,37,.13);
+    box-shadow:var(--frost-edge),0 0 0 1.5px var(--accent),0 0 20px rgba(232,184,37,.18);
+    backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    transition:background .12s var(--ease),box-shadow .12s var(--ease)}
+  /* TV mode: hide pointer cursor (navigating by D-pad, not mouse) */
+  body.tv-mode{cursor:none}
+  /* TV mode toggle button in Settings */
+  .toggle-btn{padding:8px 22px;border-radius:var(--radius-sm);background:var(--surface2);
+    color:var(--dim);font-size:14px;font-weight:500;border:1px solid var(--line2);
+    transition:all .14s var(--ease);cursor:pointer}
+  .toggle-btn.active{background:rgba(232,184,37,.13);color:var(--accent);
+    border-color:rgba(232,184,37,.38);
+    box-shadow:0 0 0 1px rgba(232,184,37,.18),0 0 16px rgba(232,184,37,.1)}
 
   /* ---- PAUSE SCREEN ----
      Bottom-left ultrablur info panel shown while paused: the show's main
@@ -1450,7 +1485,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- FONT THEMING ---- */
@@ -1474,6 +1509,8 @@ function applyFont(name,save=true){
 }
 // Set font before first content render so there's no flash of wrong typeface
 applyFont(localStorage.getItem(LS.font)||"circular",false);
+// Restore TV mode (applies body class before paint so cursor:none is immediate)
+if(localStorage.getItem(LS.tvMode)==="1") document.body.classList.add("tv-mode");
 
 /* ---- GENRE COLOURS ---- */
 // All palette entries calibrated for:
@@ -1959,12 +1996,89 @@ function navDone(){
   clearTimeout(_navDoneTimer);
   const bar=document.getElementById("navBar");
   if(bar){ bar.className="done"; setTimeout(()=>{ if(bar.className==="done") bar.className=""; },500); }
+  if(document.body.classList.contains("tv-mode")){
+    setTimeout(()=>{
+      const first=document.querySelector("#content button:not([disabled])");
+      if(first&&document.activeElement===document.body) first.focus({preventScroll:true});
+    },120);
+  }
 }
 function navigate(path){
   navStart();
   if(location.hash.slice(1)===path){ route(); return; }
   location.hash=path;
 }
+
+/* ── TV / D-pad spatial navigation ────────────────────────────────────────
+   Arrow keys move focus to the nearest focusable element in that direction
+   using a weighted-distance algorithm (primary axis cheap, cross axis costly
+   so the cursor doesn't jump diagonally when moving along a rail).
+   Works for TV remotes, game controllers, and keyboard users equally. */
+function _tvFocusables(){
+  return Array.from(document.querySelectorAll(
+    "#content button:not([disabled]),#content a[href],.nav-item"
+  )).filter(el=>{
+    const r=el.getBoundingClientRect();
+    return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight+200;
+  });
+}
+function _tvNav(dir){
+  const cur=document.activeElement;
+  const all=_tvFocusables();
+  if(!all.length) return;
+  if(!cur||cur===document.body||!all.includes(cur)){
+    all[0].focus({preventScroll:true}); return;
+  }
+  const cr=cur.getBoundingClientRect();
+  const cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
+  const horiz=dir==="left"||dir==="right";
+  const cands=all.filter(el=>{
+    if(el===cur) return false;
+    const r=el.getBoundingClientRect();
+    if(dir==="right") return r.left   >cr.right -8;
+    if(dir==="left")  return r.right  <cr.left  +8;
+    if(dir==="down")  return r.top    >cr.bottom-8;
+    if(dir==="up")    return r.bottom <cr.top   +8;
+  });
+  if(!cands.length) return;
+  const best=cands.sort((a,b)=>{
+    const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+    const ax=ra.left+ra.width/2, ay=ra.top+ra.height/2;
+    const bx=rb.left+rb.width/2, by=rb.top+rb.height/2;
+    // Primary-axis distance × 1, cross-axis × 4 to prefer straight movement
+    const da=horiz?Math.abs(ax-cx)+Math.abs(ay-cy)*4:Math.abs(ay-cy)+Math.abs(ax-cx)*4;
+    const db=horiz?Math.abs(bx-cx)+Math.abs(by-cy)*4:Math.abs(by-cy)+Math.abs(bx-cx)*4;
+    return da-db;
+  })[0];
+  best.focus({preventScroll:true});
+  // Scroll the horizontal carousel if the card would go off-screen
+  const row=best.closest(".carousel,.cast-row,.season-rail");
+  if(row){
+    const br=best.getBoundingClientRect(), rr=row.getBoundingClientRect();
+    if(br.right>rr.right-20) row.scrollLeft+=br.right-rr.right+52;
+    else if(br.left<rr.left+20) row.scrollLeft-=rr.left-br.left+52;
+  }
+  best.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
+}
+function applyTvMode(on){
+  document.body.classList.toggle("tv-mode",on);
+  localStorage.setItem(LS.tvMode,on?"1":"0");
+}
+// Arrow/D-pad keys always active (even without TV mode) for keyboard users
+document.addEventListener("keydown",e=>{
+  const dir={ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down"}[e.key];
+  if(dir){ e.preventDefault(); _tvNav(dir); return; }
+  // Back button (Android TV sends Escape; some remotes send BrowserBack)
+  if((e.key==="Escape"||e.key==="BrowserBack")&&!document.querySelector(".modal.open")){
+    e.preventDefault(); history.back(); return;
+  }
+  // Media play/pause key and spacebar-on-player
+  if(e.key==="MediaPlayPause"){
+    const vid=document.querySelector("#player video");
+    if(vid){ e.preventDefault(); vid.paused?vid.play():vid.pause(); }
+  }
+},true);
+
 function highlightNav(seg,key){
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
   let sel=null;
@@ -2795,6 +2909,15 @@ async function showSettings(){
       <div id="settingsRailRows"><div class="loading" style="padding:32px 0">Loading…</div></div>
     </div>
     <div class="settings-group">
+      <div class="settings-group-head">Playback</div>
+      <div class="settings-row">
+        <div class="settings-label">TV / D-pad Mode
+          <small>Enables arrow-key spatial navigation and auto-focus for TV remotes, game controllers, and D-pads. Hides the mouse cursor.</small>
+        </div>
+        <button class="toggle-btn${document.body.classList.contains("tv-mode")?" active":""}" id="tvModeToggle">${document.body.classList.contains("tv-mode")?"On":"Off"}</button>
+      </div>
+    </div>
+    <div class="settings-group">
       <div class="settings-group-head">Sync</div>
       <div class="settings-row">
         <div class="settings-label">Cross-device settings
@@ -2818,6 +2941,15 @@ async function showSettings(){
       c.querySelectorAll("#settingsDetailArtBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
     };
   });
+  // Wire TV mode toggle
+  const tvBtn=$("#tvModeToggle");
+  if(tvBtn) tvBtn.onclick=()=>{
+    const on=!document.body.classList.contains("tv-mode");
+    applyTvMode(on);
+    tvBtn.textContent=on?"On":"Off";
+    tvBtn.classList.toggle("active",on);
+    toast(on?"TV mode on — use arrow keys or D-pad to navigate":"TV mode off");
+  };
   // Reflect live sync status so failures are visible, not silent.
   (async()=>{
     const txt=$("#syncStatusText"), dot=$("#syncDot"); if(!txt) return;
