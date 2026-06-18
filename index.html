@@ -265,8 +265,9 @@
   .searchbox:not(:focus-within) input::placeholder{color:#fff;opacity:1}
 
   /* ---- HERO ---- */
-  .hero{position:relative;height:min(64vh,600px);min-height:420px;display:flex;align-items:flex-end;
-    overflow:hidden}
+  .hero{position:relative;height:min(64vh,600px);min-height:420px;display:flex;overflow:hidden;
+    flex-direction:column;justify-content:space-between;
+    padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
   /* Backdrop: a heavily blurred, saturated "echo" of the artwork fills the
      whole hero; the crisp image sits on top, scaled to the hero's full
      height (no cropping) and pinned to the right, with its left edge
@@ -281,7 +282,7 @@
   .hero-scrim{position:absolute;inset:0;
     background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.55) 35%,rgba(10,10,12,.15) 80%),
     linear-gradient(to right,rgba(10,10,12,.8) 0%,rgba(10,10,12,.35) 42%,rgba(10,10,12,.1) 65%,transparent 85%)}
-  .hero-inner{position:relative;padding:0 var(--edge) 50px;max-width:700px}
+  .hero-top,.hero-bottom{position:relative;max-width:700px}
   .hero-kicker{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:1px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
   .hero-kicker i,.hero-kicker .svgi{font-size:16px}
@@ -1103,7 +1104,7 @@
   @media(max-width:560px){
     .p-vol{display:none}.p-status{display:none}
     .hero h2{font-size:40px}
-    .hero-inner{padding-bottom:36px}
+    .hero-bottom{padding-bottom:6px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
@@ -1683,7 +1684,7 @@ async function heroEl(it){
   wrap.innerHTML=`
     <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" alt=""></div>
     <div class="hero-scrim"></div>
-    <div class="hero-inner">
+    <div class="hero-top">
       <div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>
       ${titleArtHTML(it,title)}
       <div class="hero-meta">
@@ -1691,6 +1692,8 @@ async function heroEl(it){
         <span>${esc(meta)}</span>
       </div>
       <p>${esc(it.summary||"")}</p>
+    </div>
+    <div class="hero-bottom">
       <div class="hero-actions">
         <button class="btn lg" id="heroPlay">${svgIcon("play-fill")} ${it.viewOffset?"Resume":"Play"}</button>
         <button class="btn glass lg" id="heroInfo">${svgIcon("info")} Details</button>
