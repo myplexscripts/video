@@ -348,8 +348,7 @@
   .hero-trailer-ctrls.show{opacity:1}
   .hero-trailer-ctrls .pbtn{width:40px;height:40px;font-size:17px;border-radius:10px}
   .title-logo{display:block;max-width:min(72%,560px);max-height:120px;width:auto;height:auto;
-    object-fit:contain;object-position:left bottom;margin-bottom:2px;
-    filter:drop-shadow(0 6px 28px rgba(0,0,0,.55)) drop-shadow(0 0 2px rgba(0,0,0,.5))}
+    object-fit:contain;object-position:left bottom;margin-bottom:2px}
   /* Adaptive legibility: a localized dark veil behind the title block, switched
      on only when applyBackdropContrast() finds the artwork bright enough to
      wash out a white logo/headline. Lives on the scrim's ::after so no markup
@@ -359,7 +358,6 @@
     background:linear-gradient(102deg,rgba(6,6,8,.82) 0%,rgba(6,6,8,.56) 24%,rgba(6,6,8,.22) 48%,transparent 68%),
     linear-gradient(to top,rgba(6,6,8,.55) 0%,transparent 44%)}
   .bright-bg .hero-scrim::after,.bright-bg .detail-scrim::after{opacity:1}
-  .bright-bg .title-logo{filter:drop-shadow(0 2px 12px rgba(0,0,0,.92)) drop-shadow(0 0 3px rgba(0,0,0,.85))}
   .bright-bg .hero-top h2,.bright-bg .detail-top h2,.bright-bg .detail-info h2{
     text-shadow:0 2px 18px rgba(0,0,0,.85),0 1px 4px rgba(0,0,0,.72)}
 
@@ -379,6 +377,45 @@
   .rail-head .count{font-size:12px;color:var(--faint);font-weight:500;padding-bottom:3px}
   .rail-summary{color:var(--dim);font-size:13px;line-height:1.55;margin:-8px var(--edge) 12px;
     max-width:680px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* ---- HUB CAROUSEL STYLE ----
+     A rotating hero banner for a single hub: shows one item at a time
+     full-bleed, auto-advances every 5s, pauses on hover/touch. */
+  .hub-carousel-section{padding:0;overflow:visible}
+  .hub-carousel{position:relative;height:min(52vh,520px);min-height:300px;overflow:hidden}
+  .hub-cs-slide{position:absolute;inset:0;opacity:0;transition:opacity .7s var(--ease);pointer-events:none}
+  .hub-cs-slide.active{opacity:1;z-index:1;pointer-events:auto}
+  .hub-cs-bg{position:absolute;inset:0;overflow:hidden}
+  .hub-cs-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
+    filter:blur(100px) saturate(1.9) brightness(1.05)}
+  .hub-cs-img{position:absolute;top:0;right:0;height:100%;width:auto;max-width:none;
+    opacity:0;transition:opacity .6s var(--ease);
+    -webkit-mask-image:var(--bg-vignette);mask-image:var(--bg-vignette)}
+  .hub-cs-img.loaded{opacity:1}
+  .hub-cs-scrim{position:absolute;inset:0;
+    background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,12,.45) 35%,rgba(10,10,12,.08) 80%),
+    linear-gradient(to right,rgba(10,10,12,.65) 0%,rgba(10,10,12,.22) 42%,rgba(10,10,12,.05) 65%,transparent 85%)}
+  .hub-cs-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
+    justify-content:flex-end;padding:var(--edge) var(--edge) 56px;max-width:700px}
+  .hub-cs-logo{display:block;max-width:min(60%,420px);max-height:90px;width:auto;height:auto;
+    object-fit:contain;object-position:left bottom;margin-bottom:10px}
+  .hub-cs-title{font-size:clamp(28px,5vw,52px);font-weight:900;letter-spacing:-.04em;
+    line-height:.97;margin-bottom:10px}
+  .hub-cs-meta{color:var(--dim);font-size:13px;font-weight:500;margin-bottom:18px}
+  .hub-cs-actions{display:flex;gap:12px}
+  /* Progress dots */
+  .hub-carousel-dots{position:absolute;bottom:20px;left:var(--edge);display:flex;gap:5px;z-index:3}
+  .hub-cd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);
+    border:none;cursor:pointer;padding:0;flex:0 0 auto;
+    transition:background .2s,width .2s,border-radius .2s}
+  .hub-cd.active{background:#fff;width:18px;border-radius:3px}
+  /* Prev/next arrows (appear on hover) */
+  .hub-ca{position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+    width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.4);
+    border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--text);opacity:0;transition:opacity .2s var(--ease)}
+  .hub-carousel:hover .hub-ca{opacity:1}
+  .hub-ca.prev{left:14px}.hub-ca.next{right:14px}
+  .hub-ca .svgi{width:14px;height:14px}
   .rail-head.with-avatar{align-items:center}
   .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
     box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--frost-border),var(--frost-shadow-sm)}
@@ -1393,6 +1430,15 @@
     .hero-actions{justify-content:center}
     .hero-bottom{padding:16px var(--edge) 24px}
     .hero-trailer-ctrls{bottom:80px}
+    /* Hub carousel on mobile: same full-bleed top layout as home hero */
+    .hub-cs-img{position:absolute;top:0;left:0;right:0;width:100%;height:75vw;object-fit:cover;
+      -webkit-mask-image:linear-gradient(to bottom,#000 44%,transparent 92%);mask-image:linear-gradient(to bottom,#000 44%,transparent 92%)}
+    .hub-cs-blur{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
+    .hub-cs-scrim{background:linear-gradient(to bottom,transparent calc(38vw),rgba(10,10,12,.55) calc(68vw),rgba(10,10,12,.72) 100%)}
+    .hub-cs-content{padding:calc(75vw - 20px) var(--edge) 48px;text-align:center;max-width:100%}
+    .hub-cs-logo{object-position:center bottom;margin:0 auto 10px}
+    .hub-cs-actions{justify-content:center}
+    .hub-carousel-dots{left:50%;transform:translateX(-50%);bottom:14px}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
@@ -1721,6 +1767,14 @@ async function loadRemoteSettings(){
         const next=remote[LS.detailArt];
         if(next!==localStorage.getItem(LS.detailArt)){ localStorage.setItem(LS.detailArt,next); changed=true; }
       }
+      if(remote[LS.heroStyle]==="backdrop"||remote[LS.heroStyle]==="square"){
+        const next=remote[LS.heroStyle];
+        if(next!==localStorage.getItem(LS.heroStyle)){ localStorage.setItem(LS.heroStyle,next); changed=true; }
+      }
+      if(remote[LS.hubSummaries]==="0"||remote[LS.hubSummaries]==="1"){
+        const next=remote[LS.hubSummaries];
+        if(next!==localStorage.getItem(LS.hubSummaries)){ localStorage.setItem(LS.hubSummaries,next); changed=true; }
+      }
     }
     _syncState="ok";
     return changed;
@@ -1737,6 +1791,8 @@ function pushRemoteSettings(){
         [LS.navCollapsed]:localStorage.getItem(LS.navCollapsed)||"0",
         [LS.font]:localStorage.getItem(LS.font)||"circular",
         [LS.detailArt]:localStorage.getItem(LS.detailArt)||"backdrop",
+        [LS.heroStyle]:localStorage.getItem(LS.heroStyle)||"backdrop",
+        [LS.hubSummaries]:localStorage.getItem(LS.hubSummaries)||"0",
       };
       const r=await fetch(`${SETTINGS_WORKER}/?token=${key}`,{method:"PUT",body:JSON.stringify(payload)});
       _syncState=r.ok?"ok":"unavailable";
@@ -2284,6 +2340,8 @@ async function playlistMeta(ratingKey){
 }
 let _routeGen=0;
 const _scrollPos=new Map();
+const _carouselCleanups=new Set();
+function cleanupCarousels(){ _carouselCleanups.forEach(fn=>fn()); _carouselCleanups.clear(); }
 /* On mobile the document scrolls (so iOS collapses its toolbar); on desktop the
    inner .main element scrolls. These helpers read/write whichever is active so
    scroll save/restore works in both modes. */
@@ -2299,7 +2357,7 @@ function setScrollY(y){
 async function route(){
   const gen=++_routeGen;
   setScrollY(0);   // fresh navigation starts at top; pages that restore a saved position override this in their render
-  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
+  closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
   const parts=pathPart.split("/").filter(Boolean).map(p=>{ try{return decodeURIComponent(p);}catch(_){return p;} });
@@ -2516,8 +2574,73 @@ function setRailStyle(key,style){
   const s=getRailStyles(); s[key]=style; localStorage.setItem(LS.railStyles,JSON.stringify(s));
   pushRemoteSettings(); toast("Settings saved");
 }
+function carouselHubSection(hub){
+  const sec=el("div","rail-section hub-carousel-section");
+  const car=el("div","hub-carousel");
+  hub.items.forEach((it,i)=>{
+    const slide=el("div","hub-cs-slide"+(i===0?" active":""));
+    const art=it.art||it.grandparentArt||it.parentArt||it.thumb;
+    const title=it.type==="episode"?(it.grandparentTitle||it.title):it.title;
+    const imgs=it.Image||[];
+    const logoImg=imgs.find(img=>img.type==="clearLogo");
+    const logoSrc=logoImg?imgLogo(logoImg.url,600,300):"";
+    const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
+    const meta=it.type==="episode"
+      ?`S${it.parentIndex||0} · E${it.index||0} · ${esc(it.title||"")}`
+      :[year,fmtDur(it.duration),it.contentRating].filter(Boolean).join(" · ");
+    slide.innerHTML=`
+      <div class="hub-cs-bg"><div class="hub-cs-blur"></div><img class="hub-cs-img" loading="lazy" decoding="async" alt=""></div>
+      <div class="hub-cs-scrim"></div>
+      <div class="hub-cs-content">
+        ${logoSrc?`<img class="hub-cs-logo" src="${logoSrc}" alt="${esc(title)}" onerror="this.nextElementSibling.style.display='';this.remove()">`:""}
+        <div class="hub-cs-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
+        <div class="hub-cs-meta">${esc(meta)}</div>
+        <div class="hub-cs-actions">
+          <button class="btn lg hub-cs-play">${svgIcon("play-fill")} ${it.viewOffset?"Resume":"Play"}</button>
+          <button class="btn glass lg hub-cs-info">${svgIcon("info")} Details</button>
+        </div>
+      </div>`;
+    const blur=slide.querySelector(".hub-cs-blur");
+    blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
+    const bgImg=slide.querySelector(".hub-cs-img");
+    bgImg.onload=()=>bgImg.classList.add("loaded");
+    bgImg.src=img(art,1200,675);
+    slide.querySelector(".hub-cs-play").onclick=()=>playItem(it,it.viewOffset||0);
+    const dest=it.type==="episode"?`/show/${it.grandparentRatingKey||it.ratingKey}`:pathForItem(it);
+    slide.querySelector(".hub-cs-info").onclick=()=>{ if(dest) navigate(dest); else openItem(it); };
+    car.appendChild(slide);
+  });
+  // Dots
+  const dots=el("div","hub-carousel-dots");
+  hub.items.forEach((_,i)=>{ const d=el("button","hub-cd"+(i===0?" active":"")); d.setAttribute("aria-label",`Slide ${i+1}`); dots.appendChild(d); });
+  // Arrows
+  const prev=el("button","hub-ca prev"); prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
+  const next=el("button","hub-ca next"); next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
+  car.appendChild(dots); car.appendChild(prev); car.appendChild(next);
+  sec.appendChild(car);
+  // Wire auto-advance
+  const slides=Array.from(car.querySelectorAll(".hub-cs-slide"));
+  const dotEls=Array.from(dots.querySelectorAll(".hub-cd"));
+  let cur=0;
+  function goTo(i){
+    slides[cur].classList.remove("active"); dotEls[cur].classList.remove("active");
+    cur=((i%slides.length)+slides.length)%slides.length;
+    slides[cur].classList.add("active"); dotEls[cur].classList.add("active");
+  }
+  let timer=setInterval(()=>goTo(cur+1),5000);
+  const stop=()=>clearInterval(timer);
+  const start=()=>{ stop(); timer=setInterval(()=>goTo(cur+1),5000); };
+  _carouselCleanups.add(stop);
+  prev.onclick=()=>{ stop(); goTo(cur-1); start(); };
+  next.onclick=()=>{ stop(); goTo(cur+1); start(); };
+  dotEls.forEach((d,i)=>{ d.onclick=()=>{ stop(); goTo(i); start(); }; });
+  car.addEventListener("mouseenter",stop); car.addEventListener("mouseleave",start);
+  car.addEventListener("touchstart",stop,{passive:true});
+  return sec;
+}
 function renderHubSection(hub,style){
   const sum=hub.summary||"";
+  if(style==="carousel") return carouselHubSection(hub);
   if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,false,sum);
   const wide=style==="billboard"||hub.items.every(x=>x.type==="episode");
   return railSection(hub.title,hub.items,wide,hub.featured||false,hub.lib,style==="poster"&&!wide,null,sum);
@@ -2538,6 +2661,7 @@ async function showHome(gen){
       .map(h=>{
         const first=h.Metadata&&h.Metadata[0];
         return {title:h.title, key:h.hubIdentifier||h.title,
+          plexKey:h.key||"",
           items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),
           lib:(first&&first.librarySectionTitle)||"",
           summary:h.summary||""};
@@ -2549,12 +2673,12 @@ async function showHome(gen){
     if(hero) c.appendChild(await heroEl(hero));
     if(gen!==undefined&&gen!==_routeGen) return;
     if(cw.length){
-      const cwHub={title:"Continue Watching",key:"continue_watching",items:cw,lib:"",featured:true};
+      const cwHub={title:"Continue Watching",key:"continue_watching",plexKey:"",items:cw,lib:"",featured:true,summary:""};
       c.appendChild(renderHubSection(cwHub,getRailStyle("continue_watching")));
     }
     const movieHubs=videoHubs.filter(h=>h.items[0]&&h.items[0].type==="movie");
     const tvHubs=videoHubs.filter(h=>!h.items[0]||h.items[0].type!=="movie");
-    movieHubs.forEach(h=>c.appendChild(renderHubSection(h,getRailStyle(h.key))));
+    movieHubs.forEach(h=>{ const sec=renderHubSection(h,getRailStyle(h.key)); sec.dataset.hubId=h.key; c.appendChild(sec); });
     // Genre rail: loads async between movie and TV rails
     const genrePlaceholder=el("div");
     c.appendChild(genrePlaceholder);
@@ -2562,7 +2686,26 @@ async function showHome(gen){
       if(!genres.length||gen!==_routeGen){genrePlaceholder.remove();return;}
       genrePlaceholder.replaceWith(genreRailSection(genres,getRailStyle(GENRE_CARDS_KEY)));
     }).catch(()=>genrePlaceholder.remove());
-    tvHubs.forEach(h=>c.appendChild(renderHubSection(h,getRailStyle(h.key))));
+    tvHubs.forEach(h=>{ const sec=renderHubSection(h,getRailStyle(h.key)); sec.dataset.hubId=h.key; c.appendChild(sec); });
+    // Async: fill in collection descriptions for hubs whose summaries are empty
+    if(getHubSummaries()){
+      [...movieHubs,...tvHubs].filter(h=>!h.summary&&h.plexKey.includes("/collections/")).forEach(async h=>{
+        try{
+          const m=h.plexKey.match(/\/library\/collections\/(\d+)/);
+          if(!m) return;
+          const coll=await api(`/library/collections/${m[1]}`);
+          const s=(coll.Metadata&&coll.Metadata[0]&&coll.Metadata[0].summary)||"";
+          if(!s||gen!==_routeGen) return;
+          const section=c.querySelector(`[data-hub-id="${h.key}"]`);
+          if(!section) return;
+          const head=section.querySelector(".rail-head");
+          if(head&&!section.querySelector(".rail-summary")){
+            const p=el("p","rail-summary"); p.textContent=s;
+            head.insertAdjacentElement("afterend",p);
+          }
+        }catch(_){}
+      });
+    }
     if(!cw.length && !videoHubs.length)
       c.innerHTML=`<div class='empty'>${svgIcon("movies")}Nothing here yet. Add some media.</div>`;
     const saved=_scrollPos.get(location.href);
@@ -3224,7 +3367,7 @@ async function showSettings(){
 
     const container=$("#settingsRailRows");
     container.innerHTML="";
-    const ALL_STYLES=[{v:"poster",l:"Poster"},{v:"billboard",l:"Billboard"},{v:"square",l:"Square"}];
+    const ALL_STYLES=[{v:"poster",l:"Poster"},{v:"billboard",l:"Billboard"},{v:"square",l:"Square"},{v:"carousel",l:"Carousel"}];
     const GENRE_STYLES=[{v:"billboard",l:"Billboard"},{v:"square",l:"Square"}];
     hubs.forEach(hub=>{
       const current=getRailStyle(hub.key);
