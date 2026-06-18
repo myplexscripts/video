@@ -2070,14 +2070,17 @@ async function showHome(gen){
       const cwHub={title:"Continue Watching",key:"continue_watching",items:cw,lib:"",featured:true};
       c.appendChild(renderHubSection(cwHub,getRailStyle("continue_watching")));
     }
-    videoHubs.forEach(h=>c.appendChild(renderHubSection(h,getRailStyle(h.key))));
-    // Genre rail: loads async so it never delays the main home render
+    const movieHubs=videoHubs.filter(h=>h.items[0]&&h.items[0].type==="movie");
+    const tvHubs=videoHubs.filter(h=>!h.items[0]||h.items[0].type!=="movie");
+    movieHubs.forEach(h=>c.appendChild(renderHubSection(h,getRailStyle(h.key))));
+    // Genre rail: loads async between movie and TV rails
     const genrePlaceholder=el("div");
     c.appendChild(genrePlaceholder);
     fetchGenreData().then(genres=>{
       if(!genres.length||gen!==_routeGen){genrePlaceholder.remove();return;}
       genrePlaceholder.replaceWith(genreRailSection(genres,getRailStyle(GENRE_CARDS_KEY)));
     }).catch(()=>genrePlaceholder.remove());
+    tvHubs.forEach(h=>c.appendChild(renderHubSection(h,getRailStyle(h.key))));
     if(!cw.length && !videoHubs.length)
       c.innerHTML=`<div class='empty'>${svgIcon("movies")}Nothing here yet. Add some media.</div>`;
     const saved=_scrollPos.get(location.href);
