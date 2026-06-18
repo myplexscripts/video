@@ -384,8 +384,8 @@
      summary, actions at the bottom). Auto-advances every 5s, pauses on
      hover/touch. Each slide reuses the .hero-* content classes; .hub-cs-slide
      carries the stacking/positioning for the wipe transition. */
-  .hub-carousel-section{padding:40px 0 10px;overflow:visible}
-  .hub-carousel{position:relative;height:min(56vh,560px);min-height:380px;overflow:hidden}
+  .hub-carousel-section{padding:40px 0 22px;overflow:visible}
+  .hub-carousel{position:relative;height:min(56vh,560px);min-height:380px;overflow:hidden;touch-action:none}
   .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;visibility:hidden;
     will-change:transform;display:flex;flex-direction:column;justify-content:space-between;
     padding:36px var(--edge) 40px}
@@ -432,7 +432,7 @@
   .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
   .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
-    scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch;touch-action:pan-x}
+    scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
   .carousel::-webkit-scrollbar{height:0}
   /* ---- RAIL ARROWS ----
      Mouse/keyboard affordance for scrolling a rail (touch already swipes).
@@ -613,13 +613,7 @@
     z-index:1;background:transparent}
   /* Scrim for logo legibility; faded out at the very bottom with the image */
   .card.billboard .art::after{content:'';position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.45) 42%,transparent 72%);
-    -webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent 99%);
-    mask-image:linear-gradient(to bottom,#000 70%,transparent 99%)}
-  /* Dissolve the art image's bottom edge into the wash */
-  .card.billboard .art img:not(.bill-logo){
-    -webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent 99%);
-    mask-image:linear-gradient(to bottom,#000 70%,transparent 99%)}
+    background:linear-gradient(to top,rgba(0,0,0,.7) 0%,rgba(0,0,0,.25) 28%,transparent 52%)}
   /* Logo wrapper: fixed height = 1/3 of card; object-fit:contain scales logo proportionally */
   .bill-logo-wrap{position:absolute;bottom:14px;left:14px;right:14px;height:93px;z-index:2;
     display:flex;justify-content:center;align-items:flex-end}
@@ -637,8 +631,9 @@
   /* Metadata strip: rides the shared wash — no own blur, just a readability tint */
   .bill-meta{position:relative;z-index:1;flex:0 0 auto;
     padding:6px 12px 13px;text-align:center;border-radius:0 0 var(--radius) var(--radius);overflow:hidden}
-  .bill-meta::before{content:'';position:absolute;inset:0;z-index:-1;
-    background:linear-gradient(to bottom,transparent,rgba(0,0,0,.32) 55%)}
+  .bill-meta::before{content:'';position:absolute;inset:-24px;z-index:-1;
+    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
+    filter:blur(48px) saturate(1.8) brightness(.52)}
   .bill-meta .cs{position:relative;z-index:1;font-size:var(--t-sm);font-weight:500;
     color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
   /* Suppress legacy card text rows — all metadata lives in .bill-meta */
@@ -807,7 +802,7 @@
   .genre-card--square .genre-art{aspect-ratio:1/1}
   .genre-card--square .genre-fade{display:none}
   .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
-    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
   .cast-row::-webkit-scrollbar{height:0}
   .cast{flex:0 0 auto;width:112px;text-align:center;background:none;border:none;
     padding:0;cursor:default;font-family:var(--font);color:var(--text)}
@@ -917,7 +912,7 @@
   .trailer-state i,.trailer-state .svgi{font-size:28px;width:28px;height:28px;color:var(--faint)}
 
   /* ---- SEASON SWITCHER (artwork, not pill tabs) ---- */
-  .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
   .season-rail::-webkit-scrollbar{height:0}
   .season-card{width:150px}
   .season-card .art{aspect-ratio:2/3;outline:2px solid transparent;outline-offset:2px;
@@ -1464,7 +1459,7 @@
     /* Hub carousel on mobile: keep the overlaid hero layout (logo top-left,
        ratings, summary, actions) rather than the full-bleed stacked variant. */
     .hub-carousel{height:calc(100vw + 190px);min-height:unset}
-    .hub-cs-slide{padding:0 var(--edge) 28px;justify-content:flex-end;align-items:center}
+    .hub-cs-slide{padding:0 var(--edge) 54px;justify-content:flex-end;align-items:center}
     .hub-carousel .hero-bg-img{position:absolute;top:0;left:0;right:0;width:100%;height:100vw;object-fit:cover;
       -webkit-mask-image:linear-gradient(to bottom,#000 50%,transparent 90%);mask-image:linear-gradient(to bottom,#000 50%,transparent 90%)}
     .hub-carousel .hero-bg-blur{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
@@ -1474,7 +1469,7 @@
     .hub-carousel .hero-actions{justify-content:center}
     .hub-carousel .title-logo{max-height:100px;max-width:min(72%,320px);object-position:center bottom;margin:0 auto 8px}
     .hub-carousel .hero-top h2{font-size:clamp(22px,7vw,34px)}
-    .hub-carousel-dots{bottom:22px;left:0;right:0;justify-content:center}
+    .hub-carousel-dots{bottom:18px;left:0;right:0;justify-content:center;padding:6px 0}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
