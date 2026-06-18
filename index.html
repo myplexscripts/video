@@ -1141,17 +1141,20 @@
   .p-pause-resume:active{transform:scale(.97)}
 
   .p-top,.p-bottom{position:absolute;left:0;right:0;z-index:4;transition:opacity .25s,transform .25s}
-  .p-top{top:0;padding:18px 24px;display:flex;align-items:center;gap:12px;
-    background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent)}
-  .p-bottom{bottom:0;padding:8px 24px 20px;
-    background:linear-gradient(to top,rgba(0,0,0,.75),transparent)}
+  /* 3-column grid: left group | centered title | right group */
+  .p-top{top:0;padding:20px 20px 16px;display:grid;grid-template-columns:auto 1fr auto;
+    align-items:center;gap:12px;
+    background:linear-gradient(to bottom,rgba(0,0,0,.8) 0%,rgba(0,0,0,.3) 60%,transparent 100%)}
+  .p-bottom{bottom:0;padding:0 20px 20px;
+    background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.4) 55%,transparent 100%)}
   #player.idle .p-top{opacity:0;transform:translateY(-8px);pointer-events:none}
   #player.idle .p-bottom{opacity:0;transform:translateY(8px);pointer-events:none}
-  .p-top .pt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .p-top-left{display:flex;gap:6px;align-items:center}
+  .p-top .pt{min-width:0;text-align:center;display:flex;flex-direction:column;gap:2px}
   .p-top .pt .pt-main{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .p-top .pt .pt-sub{font-size:11.5px;color:var(--dim);font-weight:500;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap}
-  .p-top-right{display:flex;align-items:center;gap:8px;position:relative}
+  .p-top-right{display:flex;align-items:center;gap:6px;position:relative;justify-content:flex-end}
 
   .pbtn{background:rgba(255,255,255,.1);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     border:1px solid rgba(255,255,255,.14);box-shadow:var(--frost-edge-sm);
@@ -1184,10 +1187,12 @@
   .p-hover-time{position:absolute;bottom:20px;transform:translateX(-50%);background:rgba(0,0,0,.9);
     padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;pointer-events:none;display:none}
 
-  .p-controls{display:flex;align-items:center;gap:6px}
-  .p-controls .spacer{flex:1}
-  .p-controls .p-divider{width:1px;height:22px;background:rgba(255,255,255,.12);flex:0 0 auto;margin:0 2px}
-  .p-time{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums;margin:0 10px;white-space:nowrap;
+  /* 3-group control row: time+vol | center transport | chapters+pip+full */
+  .p-ctrl-wrap{display:flex;align-items:center;gap:4px;padding:8px 2px 0}
+  .p-ctl-left{display:flex;align-items:center;gap:4px;flex:1}
+  .p-ctl-center{display:flex;align-items:center;gap:6px}
+  .p-ctl-right{display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end}
+  .p-time{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums;margin:0 8px;white-space:nowrap;
     font-weight:500}
   .p-time .slash{color:var(--faint);margin:0 4px}
   .p-vol{display:flex;align-items:center;gap:2px}
@@ -1319,8 +1324,8 @@
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
     .p-pause{padding:0 44px 120px}
-    .p-pause-title{font-size:32px}
-    .p-pause-logo{max-height:104px}
+    .p-pause-title{font-size:36px}
+    .p-pause-logo{max-height:110px}
   }
   /* ── Always-on status-bar dark veil (mobile only) ──────────────────────── */
   #topFrost{display:none;position:fixed;top:0;left:0;right:0;z-index:8;
@@ -1431,7 +1436,7 @@
     body:has(#libNav.visible) #mobileBack{display:none !important}
   }
   @media(max-width:560px){
-    .p-vol{display:none}.p-status{display:none}
+    .p-vol{display:none}
     /* ---- MOBILE FULL-BLEED HOME HERO ----
        Mirrors .detail-hero.full on mobile: art covers full width at top,
        text content overlaps below the fade zone, centred like the detail page. */
@@ -1538,19 +1543,43 @@
     .ms-field input::placeholder{color:var(--dim)}
 
     /* Player chrome: tighten controls so nothing overflows narrow screens. */
-    .pbtn{width:38px;height:38px;font-size:16px;border-radius:10px}
-    .p-top{padding:14px 12px}
-    .p-bottom{padding:8px 12px max(16px,env(safe-area-inset-bottom))}
-    .p-controls{gap:2px}
-    .p-pause{padding:0 22px 108px;gap:8px}
-    .p-pause-logo{max-height:72px;max-width:60vw}
-    .p-pause-title{font-size:22px}
-    .p-pause-sub{font-size:12px}
-    .p-pause-desc{font-size:13px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
-    .p-pause-resume{padding:10px 20px;font-size:14px}
-    .p-controls .p-divider{display:none}
-    .p-time{font-size:12px;margin:0 4px}
+    /* ---- Mobile player redesign ---- */
+    /* Top bar: centered title, hide minimize */
+    #minPlayer{display:none}
+    .p-top{padding:max(env(safe-area-inset-top),14px) 14px 12px;gap:10px}
+    .p-top .pt .pt-main{font-size:14px}
+    .p-top .pt .pt-sub{font-size:11px}
+    /* Bottom: stack seek → time → transport → options */
+    .p-bottom{padding:0 16px max(env(safe-area-inset-bottom),20px)}
+    .p-seek{padding:10px 2px 4px}
+    .p-seek-track{height:4px}
+    .p-seek-track:hover,.p-seek-track:focus-visible{height:6px}
+    .p-ctrl-wrap{flex-direction:column;align-items:stretch;gap:0;padding:0}
+    /* Time row: current left, duration right */
+    .p-ctl-left{justify-content:space-between;padding:8px 2px 12px}
+    .p-time{margin:0;font-size:12px;color:var(--dim)}
+    /* Transport row: large centered buttons */
+    .p-ctl-center{justify-content:center;gap:12px;padding:0 0 14px}
+    .pbtn.play-main{width:64px;height:64px;border-radius:20px;font-size:26px}
+    .pbtn.bare.skip{width:50px;height:50px;border-radius:14px;font-size:20px}
+    #prevEpBtn,#nextEpBtn{width:44px;height:44px}
+    /* Options row: centered secondary controls */
+    .p-ctl-right{justify-content:center;gap:18px;padding-bottom:6px}
     #pipBtn{display:none}
+    /* Pause overlay: centered on mobile */
+    .p-pause{align-items:center;text-align:center;
+      padding:0 24px max(env(safe-area-inset-bottom),130px);
+      background:linear-gradient(0deg,rgba(8,8,12,.72) 0%,transparent 50%)}
+    .p-pause-logo{max-height:72px;max-width:min(72vw,280px);object-position:center bottom}
+    .p-pause-title{font-size:24px}
+    .p-pause-sub{font-size:12px}
+    .p-pause-desc{font-size:13px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .p-pause-resume{align-self:center;padding:10px 24px;font-size:14px}
+    /* Skip intro: slightly higher to clear the transport row */
+    .skip-marker{right:50%;transform:translateX(50%);bottom:160px}
+    #player.idle .skip-marker{bottom:100px}
+    /* Next up: full width on mobile */
+    .next-up{left:16px;right:16px;width:auto;bottom:180px}
     .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
   }
 </style>
@@ -1648,15 +1677,20 @@
   </div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div class="p-spinner hidden" id="pSpinner" role="status" aria-live="polite"><div class="ring"></div><span id="pSpinnerText">Loading</span></div>
+  <!-- Top bar: [close + minimize] | [title centered] | [status + settings] -->
   <div class="p-top" id="pTop">
-    <button class="pbtn" id="closePlayer" title="Close" aria-label="Close player"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button>
-    <button class="pbtn" id="minPlayer" title="Minimize" aria-label="Minimize player"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-in.svg')" aria-hidden="true"></span></button>
+    <div class="p-top-left">
+      <button class="pbtn" id="closePlayer" title="Close" aria-label="Close player"><span class="svgi" style="--i:url('assets/images/icons/ui/back.svg')" aria-hidden="true"></span></button>
+      <button class="pbtn" id="minPlayer" title="Minimize" aria-label="Minimize player"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-in.svg')" aria-hidden="true"></span></button>
+    </div>
     <div class="pt" id="pTitle"></div>
     <div class="p-top-right">
+      <div class="p-status hidden" id="pStatus" role="status"><span class="dot" aria-hidden="true"></span><span id="pStatusText"></span></div>
       <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/gear.svg')" aria-hidden="true"></span></button>
       <div class="p-menu" id="pMenu" role="menu" aria-label="Playback settings"></div>
     </div>
   </div>
+  <!-- Bottom: seek + 3-group control row -->
   <div class="p-bottom" id="pBottom">
     <div class="p-seek"><div class="p-seek-track" id="seekTrack" role="slider" tabindex="0"
         aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00 of 0:00">
@@ -1664,21 +1698,24 @@
       <div class="p-chapter-marks" id="chapterMarks"></div>
       <div class="p-knob" id="knob"></div><div class="p-hover-time" id="hoverTime"></div>
     </div></div>
-    <div class="p-controls">
-      <button class="pbtn bare hidden" id="prevEpBtn" aria-label="Previous episode" title="Previous episode"><span class="svgi flip" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-counter-clockwise.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn play-main" id="playBtn" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-clockwise.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare hidden" id="nextEpBtn" aria-label="Next episode" title="Next episode"><span class="svgi" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
-      <div class="p-divider" aria-hidden="true"></div>
-      <div class="p-time"><span id="curTime">0:00</span><span class="slash">/</span><span id="durTime">0:00</span></div>
-      <div class="p-vol"><button class="pbtn bare" id="muteBtn" aria-label="Mute"><span class="svgi" style="--i:url('assets/images/icons/ui/speaker-high.svg')" aria-hidden="true"></span></button>
-        <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume"></div>
-      <div class="spacer"></div>
-      <div class="p-status hidden" id="pStatus" role="status"><span class="dot" aria-hidden="true"></span><span id="pStatusText"></span></div>
-      <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters & play queue" title="Chapters & play queue" aria-haspopup="true" aria-expanded="false" aria-controls="pPanel"><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><span class="svgi" style="--i:url('assets/images/icons/ui/frame-corners.svg')" aria-hidden="true"></span></button>
-      <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
+    <div class="p-ctrl-wrap">
+      <div class="p-ctl-left">
+        <div class="p-time"><span id="curTime">0:00</span><span class="slash">/</span><span id="durTime">0:00</span></div>
+        <div class="p-vol"><button class="pbtn bare" id="muteBtn" aria-label="Mute"><span class="svgi" style="--i:url('assets/images/icons/ui/speaker-high.svg')" aria-hidden="true"></span></button>
+          <input type="range" id="volSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume"></div>
+      </div>
+      <div class="p-ctl-center">
+        <button class="pbtn bare hidden" id="prevEpBtn" aria-label="Previous episode" title="Previous episode"><span class="svgi flip" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn bare skip" id="back10" aria-label="Back 10 seconds" title="Back 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-counter-clockwise.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn play-main" id="playBtn" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn bare skip" id="fwd10" aria-label="Forward 10 seconds" title="Forward 10 seconds"><span class="svgi" style="--i:url('assets/images/icons/ui/arrow-clockwise.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn bare hidden" id="nextEpBtn" aria-label="Next episode" title="Next episode"><span class="svgi" style="--i:url('assets/images/icons/ui/skip.svg')" aria-hidden="true"></span></button>
+      </div>
+      <div class="p-ctl-right">
+        <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters & play queue" title="Chapters & play queue" aria-haspopup="true" aria-expanded="false" aria-controls="pPanel"><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><span class="svgi" style="--i:url('assets/images/icons/ui/frame-corners.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
+      </div>
     </div>
   </div>
   <div class="p-panel" id="pPanel" aria-hidden="true">
@@ -4889,7 +4926,7 @@ async function selectStream(kind,s){
     startStream(t);   // restart in place; server muxes/burns the chosen tracks
   }catch(_){ toast("Couldn't switch track"); }
 }
-$("#settingsBtn").onclick=e=>{ e.stopPropagation(); $("#chaptersMenu").classList.remove("open"); $("#chaptersBtn").setAttribute("aria-expanded","false");
+$("#settingsBtn").onclick=e=>{ e.stopPropagation(); closePanel(); $("#chaptersBtn").setAttribute("aria-expanded","false");
   const open=$("#pMenu").classList.toggle("open"); $("#settingsBtn").setAttribute("aria-expanded",String(open));
   if(open) $("#pMenu").querySelector("button")?.focus(); };
 document.addEventListener("click",e=>{
