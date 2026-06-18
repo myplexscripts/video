@@ -203,7 +203,9 @@
 
   /* ---- APP SHELL ---- */
   #app{display:none;height:100%;position:relative;z-index:1}
-  .shell{display:grid;grid-template-columns:240px 1fr;height:100%}
+  .shell{--nav-w:240px;display:grid;grid-template-columns:var(--nav-w) 1fr;height:100%;
+    transition:grid-template-columns .22s var(--ease)}
+  .shell.nav-collapsed{--nav-w:74px}
   .sidebar{background:rgba(15,15,19,.6);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
     display:flex;flex-direction:column;overflow-y:auto;z-index:20}
@@ -227,6 +229,23 @@
   .nav-item.active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);
     width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent)}
   .sidebar-foot{margin-top:auto;padding:10px;border-top:1px solid var(--line)}
+  .nav-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-collapse-btn .svgi{transition:transform .22s var(--ease)}
+  /* ---- COLLAPSED SIDEBAR (desktop only): icons-only rail, persisted per-user.
+     Guarded to >680px so the mobile off-canvas drawer always keeps its labels. */
+  @media(min-width:681px){
+    .nav-collapsed .nav-text,
+    .nav-collapsed .brand b,
+    .nav-collapsed .brand .ver{display:none}
+    .nav-collapsed .brand{justify-content:center;padding-left:0;padding-right:0;gap:0}
+    .nav-collapsed .nav{padding-left:8px;padding-right:8px}
+    .nav-collapsed .nav-item{justify-content:center;padding-left:0;padding-right:0;gap:0}
+    .nav-collapsed .sidebar-foot{padding-left:8px;padding-right:8px}
+    /* Section labels ("Libraries", "More") collapse to a thin divider rule */
+    .nav-collapsed .nav-label{font-size:0;padding:10px 12px;letter-spacing:0}
+    .nav-collapsed .nav-label::after{content:"";display:block;height:1px;background:var(--line)}
+    .nav-collapsed .nav-collapse-btn .svgi{transform:rotate(180deg)}
+  }
 
   .main{overflow-y:auto;position:relative;scroll-behavior:smooth}
   .content{padding:0 0 max(80px,env(safe-area-inset-bottom));position:relative}
@@ -309,7 +328,19 @@
   .hero-trailer-ctrls .pbtn{width:40px;height:40px;font-size:17px;border-radius:10px}
   .title-logo{display:block;max-width:min(72%,560px);max-height:120px;width:auto;height:auto;
     object-fit:contain;object-position:left bottom;margin-bottom:2px;
-    filter:drop-shadow(0 6px 28px rgba(0,0,0,.55))}
+    filter:drop-shadow(0 6px 28px rgba(0,0,0,.55)) drop-shadow(0 0 2px rgba(0,0,0,.5))}
+  /* Adaptive legibility: a localized dark veil behind the title block, switched
+     on only when applyBackdropContrast() finds the artwork bright enough to
+     wash out a white logo/headline. Lives on the scrim's ::after so no markup
+     change is needed; transitions in to avoid a hard flash. */
+  .hero-scrim::after,.detail-scrim::after{content:"";position:absolute;inset:0;opacity:0;pointer-events:none;
+    transition:opacity .45s var(--ease);
+    background:linear-gradient(102deg,rgba(6,6,8,.82) 0%,rgba(6,6,8,.56) 24%,rgba(6,6,8,.22) 48%,transparent 68%),
+    linear-gradient(to top,rgba(6,6,8,.55) 0%,transparent 44%)}
+  .bright-bg .hero-scrim::after,.bright-bg .detail-scrim::after{opacity:1}
+  .bright-bg .title-logo{filter:drop-shadow(0 2px 12px rgba(0,0,0,.92)) drop-shadow(0 0 3px rgba(0,0,0,.85))}
+  .bright-bg .hero-top h2,.bright-bg .detail-top h2,.bright-bg .detail-info h2{
+    text-shadow:0 2px 18px rgba(0,0,0,.85),0 1px 4px rgba(0,0,0,.72)}
 
   /* ---- SECTION / RAIL ----
      Each rail can carry its own ambient color wash (.rail-ambient), a
@@ -372,7 +403,7 @@
   .lib-tab:hover{background:var(--surface3);color:var(--text)}
   .lib-tab.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .lib-tab.active:hover{background:var(--accent-glass-hover)}
-  #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:calc(240px + 16px);z-index:25;align-items:center;gap:8px;flex-wrap:nowrap}
+  #libNav{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));left:calc(var(--nav-w,240px) + 16px);z-index:25;align-items:center;gap:8px;flex-wrap:nowrap;transition:left .22s var(--ease)}
   #libNav.visible{display:flex}
   /* Library title: pure typography — not a glass pill. Glass is for actions;
      a section label is identity text and should read as a heading. */
@@ -1135,6 +1166,8 @@
     .scrim-nav{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:19;display:none}
     .scrim-nav.show{display:block}
     .menu-toggle{display:flex}
+    /* Collapse toggle is desktop-only; on phones the sidebar is a drawer */
+    .nav-collapse-btn{display:none}
     /* On mobile the sidebar is off-canvas; start libNav after the menu-toggle (44px + 8px gap) */
     #libNav{left:max(68px,calc(env(safe-area-inset-left) + 60px))}
   }
@@ -1222,7 +1255,8 @@
       <div class="brand"><span class="svgi" style="--i:url('assets/images/icons/ui/popcorn-duotone.svg')" aria-hidden="true"></span><b>Hume</b><span class="ver">v0.4</span></div>
       <nav class="nav" id="nav" aria-label="Main"></nav>
       <div class="sidebar-foot">
-        <button class="nav-item" id="logoutBtn"><span class="svgi" style="--i:url('assets/images/icons/ui/sign-out.svg')" aria-hidden="true"></span> Sign out</button>
+        <button class="nav-item nav-collapse-btn" id="navCollapse" aria-label="Collapse sidebar" title="Collapse sidebar" aria-expanded="true"><span class="svgi" style="--i:url('assets/images/icons/ui/back.svg')" aria-hidden="true"></span><span class="nav-text">Collapse</span></button>
+        <button class="nav-item" id="logoutBtn" aria-label="Sign out" title="Sign out"><span class="svgi" style="--i:url('assets/images/icons/ui/sign-out.svg')" aria-hidden="true"></span><span class="nav-text">Sign out</span></button>
       </div>
     </aside>
     <main class="main" id="main">
@@ -1313,7 +1347,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed"};
 const VIDEO_TYPES=["movie","show","season","episode","clip"];
 
 function clientId(){
@@ -1552,7 +1586,8 @@ function buildNav(){
     if(opts.id) b.id=opts.id;
     if(opts.lib!=null) b.dataset.lib=opts.lib;
     const iconHTML=svgIcon(icon.replace(/^svg:/,""));
-    b.innerHTML=`${iconHTML} ${esc(label)}`;
+    b.innerHTML=`${iconHTML}<span class="nav-text">${esc(label)}</span>`;
+    b.title=label; b.setAttribute("aria-label",label);
     b.onclick=()=>{ fn(); closeSidebar(); };
     nav.appendChild(b); return b;
   };
@@ -1802,6 +1837,7 @@ async function heroEl(it){
     bgImg.onload=()=>bgImg.classList.add("loaded");
     bgImg.onerror=()=>bgImg.remove();
     bgImg.src=img(art,1600,900);
+    applyBackdropContrast(wrap,art);
     wrap.querySelector("#heroPlay").onclick=()=>playItem(it,it.viewOffset||0);
     wrap.querySelector("#heroInfo").onclick=()=>{
       const target=isEp?{ratingKey:it.grandparentRatingKey,type:"show"}:it;
@@ -2510,6 +2546,39 @@ function titleArtHTML(item,fallbackTitle){
   const logo=(item.Image||[]).find(i=>i.type==="clearLogo");
   return logo?`<img class="title-logo" src="${imgLogo(logo.url,800,300)}" alt="${esc(title)}">`:`<h2>${esc(title)}</h2>`;
 }
+/* ---- BACKDROP CONTRAST DETECTION ----
+   White title logos/headlines wash out over bright artwork (snow, sky, sand).
+   Sample the luminance of the region the title sits over (left ~62% of the
+   backdrop) from a small CORS probe; if it's bright, flag the hero so an
+   extra legibility veil + stronger title shadow kick in. Falls back silently
+   when the server doesn't allow canvas reads — the baseline scrim still holds. */
+const _bgContrast=new Map();   // art url -> true(bright)/false(dark)
+function applyBackdropContrast(heroEl,art){
+  if(!heroEl||!art) return;
+  const finish=bright=>{ if(heroEl.isConnected) heroEl.classList.toggle("bright-bg",bright); };
+  if(_bgContrast.has(art)){ finish(_bgContrast.get(art)); return; }
+  const probe=new Image();
+  probe.crossOrigin="anonymous";
+  probe.onload=()=>{
+    let bright=false;
+    try{
+      const w=72,h=40,cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+      const ctx=cv.getContext("2d",{willReadFrequently:true});
+      ctx.drawImage(probe,0,0,w,h);
+      const cols=Math.max(1,Math.round(w*0.62));
+      const d=ctx.getImageData(0,0,cols,h).data;
+      let sum=0,n=0;
+      for(let i=0;i<d.length;i+=4){
+        const a=d[i+3]/255;
+        sum+=(0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2])*a; n++;
+      }
+      bright = n ? (sum/n/255)>0.52 : false;
+    }catch(_){ bright=false; }   // tainted canvas (no CORS) — skip, keep baseline
+    _bgContrast.set(art,bright); finish(bright);
+  };
+  probe.onerror=()=>{ _bgContrast.set(art,false); };
+  probe.src=img(art,192,108);
+}
 function detailHero(m,isMovie,actionsHTML,extras){
   const art=m.art||m.thumb;
   const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
@@ -3108,6 +3177,7 @@ function wireDetailBg(c,art){
   if(blur) blur.style.backgroundImage=`url('${imgAmbient(art)}')`;
   const bgImg=c.querySelector(".detail-bg-img");
   if(bgImg){ bgImg.onload=()=>bgImg.classList.add("loaded"); bgImg.src=img(art,1600,900); }
+  applyBackdropContrast(c.querySelector(".detail-hero"),art);
 }
 async function openMovie(it){
   setTitle(it.title); const c=$("#content"); c.innerHTML=skeletonDetail();
@@ -4134,6 +4204,31 @@ function errHTML(e,retry){
 $("#menuToggle").onclick=()=>{ $("#sidebar").classList.add("open"); $("#scrimNav").classList.add("show"); };
 $("#scrimNav").onclick=closeSidebar;
 function closeSidebar(){ $("#sidebar").classList.remove("open"); $("#scrimNav").classList.remove("show"); }
+
+/* ---- COLLAPSIBLE SIDEBAR ----
+   Desktop-only: shrink the nav to an icon rail. Persisted in localStorage so
+   the choice sticks across sessions. The shell drives width via --nav-w. */
+function applyNavCollapsed(collapsed){
+  const shell=document.querySelector(".shell"); if(!shell) return;
+  shell.classList.toggle("nav-collapsed",collapsed);
+  const btn=$("#navCollapse");
+  if(btn){
+    const label=collapsed?"Expand sidebar":"Collapse sidebar";
+    btn.title=label; btn.setAttribute("aria-label",label);
+    btn.setAttribute("aria-expanded",String(!collapsed));
+  }
+}
+function initNavCollapse(){
+  applyNavCollapsed(localStorage.getItem(LS.navCollapsed)==="1");
+  const btn=$("#navCollapse"); if(!btn) return;
+  btn.onclick=()=>{
+    const shell=document.querySelector(".shell");
+    const next=!shell.classList.contains("nav-collapsed");
+    applyNavCollapsed(next);
+    localStorage.setItem(LS.navCollapsed,next?"1":"0");
+  };
+}
+initNavCollapse();
 $("#searchBox").addEventListener("click",()=>$("#search").focus());
 // Dismiss any open library dropdown when clicking elsewhere or pressing Escape.
 document.addEventListener("click",()=>{ closeLibMenus(); closeEpMenus(); });
