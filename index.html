@@ -755,8 +755,15 @@
   .cast[data-actor-id]:hover .nm{color:var(--accent)}
   .cast .art{width:112px;height:112px;border-radius:50%;overflow:hidden;
     background:var(--bg2);border:1px solid var(--line);margin:0 auto;
-    transition:border-color .15s}
-  .cast .art img{width:100%;height:100%;object-fit:cover;display:block}
+    transition:border-color .15s;position:relative}
+  .cast .art::before{content:"";position:absolute;border-radius:50%;
+    width:34%;height:34%;top:18%;left:50%;transform:translateX(-50%);
+    background:rgba(255,255,255,.15)}
+  .cast .art::after{content:"";position:absolute;
+    width:60%;height:33%;bottom:0;left:50%;transform:translateX(-50%);
+    border-radius:50% 50% 0 0;background:rgba(255,255,255,.11)}
+  .cast .art img{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:1}
+  .cast .art.no-img img{display:none}
   .cast .nm{font-size:12.5px;font-weight:600;line-height:1.3;margin-top:9px;
     transition:color .15s}
   .cast .rl{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.25}
@@ -986,6 +993,20 @@
   .sk-card.wide .sk-art{aspect-ratio:16/9}
   .sk-line{height:12px;border-radius:4px;margin-bottom:5px}
   .sk-line.short{width:60%}
+  /* ── Navigation progress bar ── */
+  #navBar{position:fixed;top:0;left:0;width:100%;height:2px;z-index:9999;pointer-events:none;
+    background:var(--accent);transform:scaleX(0);transform-origin:left;opacity:0;
+    will-change:transform,opacity}
+  #navBar.going{opacity:1;transform:scaleX(.72);
+    transition:transform 1.6s cubic-bezier(.05,.8,.05,1),opacity .1s}
+  #navBar.done{transform:scaleX(1);opacity:0;
+    transition:transform .12s var(--ease),opacity .3s .1s}
+  /* ── Page crossfade ── */
+  #content{transition:opacity .14s var(--ease)}
+  #content.nav-out{opacity:.35;pointer-events:none}
+  /* ── Card tap feedback ── */
+  .art-btn:active{opacity:.72;transform:scale(.96);transition:opacity .08s,transform .08s}
+  button.cast[data-actor-id]:active{opacity:.72;transform:scale(.96);transition:opacity .08s,transform .08s}
   .p-spinner span{font-size:13px;color:#cfcfd6;letter-spacing:.3px;font-weight:500}
 
   /* ---- PAUSE SCREEN ----
@@ -1306,6 +1327,7 @@
   <div class="ub-layer" id="ubB"></div>
   <div class="ub-scrim"></div>
 </div>
+<div id="navBar" aria-hidden="true"></div>
 
 <!-- LOGIN -->
 <div id="login">
@@ -1832,7 +1854,21 @@ function pathForItem(it){
   if(it.type==="person") return `/actor/${it.ratingKey}`;
   return null;
 }
+let _navDoneTimer;
+function navStart(){
+  const bar=document.getElementById("navBar"),c=document.getElementById("content");
+  clearTimeout(_navDoneTimer);
+  if(bar){ bar.className=""; void bar.offsetWidth; bar.className="going"; }
+  if(c){ c.classList.add("nav-out"); setTimeout(()=>c.classList.remove("nav-out"),130); }
+  _navDoneTimer=setTimeout(navDone,8000);
+}
+function navDone(){
+  clearTimeout(_navDoneTimer);
+  const bar=document.getElementById("navBar");
+  if(bar){ bar.className="done"; setTimeout(()=>{ if(bar.className==="done") bar.className=""; },500); }
+}
 function navigate(path){
+  navStart();
   if(location.hash.slice(1)===path){ route(); return; }
   location.hash=path;
 }
@@ -2121,6 +2157,7 @@ async function showHome(gen){
       c.innerHTML=`<div class='empty'>${svgIcon("movies")}Nothing here yet. Add some media.</div>`;
     const saved=_scrollPos.get(location.href);
     if(saved) requestAnimationFrame(()=>{c.scrollTop=saved; _scrollPos.delete(location.href);});
+    navDone();
   }catch(e){ if(gen===undefined||gen===_routeGen) c.innerHTML=errHTML(e); }
 }
 function collectItems(mc){
@@ -3256,7 +3293,7 @@ function castRailHTML(m){
       else if(r.key){const km=r.key.match(/^\/library\/metadata\/(\d+)/);if(km) personRk=km[1];}
       else if(r.thumb){const tm=r.thumb.match(/^\/library\/metadata\/(\d+)\/thumb/);if(tm) personRk=tm[1];}
       return `<button class="cast"${r.id?` data-actor-id="${r.id}"`:""} data-actor-name="${esc(r.tag)}" data-actor-thumb="${esc(r.thumb||"")}"${personRk?` data-actor-rk="${personRk}"`:""}>`
-        +`<div class="art"><img loading="lazy" alt="" src="${r.thumb?img(r.thumb,224,224):""}" onerror="this.style.visibility='hidden'"></div>`
+        +`<div class="art${r.thumb?"":" no-img"}">${r.thumb?`<img loading="lazy" alt="" src="${img(r.thumb,224,224)}" onerror="this.closest('.art').classList.add('no-img')">`:""}</div>`
         +`<div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></button>`;
     }).join("")+`</div></div>`;
 }
@@ -3617,6 +3654,7 @@ async function openMovie(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+    navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 /* ---- SEASON SWITCHER (artwork cards, not pill tabs) ---- */
@@ -3676,6 +3714,7 @@ async function openShow(it,jumpSeasonKey){
       const eps=mc2.Metadata||[]; if(eps.length) playItem(eps[Math.floor(Math.random()*eps.length)],0);
     };
     wireWatchedToggle(c,show,false,()=>{ if(activeSeason) loadEpisodes(activeSeason); });
+    navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 /* ---- EPISODE WATCHED ICON ---- */
@@ -3825,6 +3864,7 @@ async function openEpisode(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+    navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
