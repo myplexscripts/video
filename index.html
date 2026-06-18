@@ -564,6 +564,8 @@
   .art .watch-prog > i{display:block;height:100%;background:var(--accent);border-radius:3px}
   .art .unwatched-dot{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;
     background:var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.45)}
+  .art .watched-check{position:absolute;top:7px;right:7px;font-size:17px;line-height:1;
+    color:var(--accent);filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));pointer-events:none}
   .art .unwatched-badge{position:absolute;top:8px;right:8px;min-width:22px;height:22px;padding:0 6px;
     border-radius:11px;background:var(--accent);color:#141005;font-size:12px;font-weight:800;
     display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(0,0,0,.45)}
@@ -1059,8 +1061,10 @@
   #navBar.done{transform:scaleX(1);opacity:0;
     transition:transform .12s var(--ease),opacity .3s .1s}
   /* ── Page crossfade ── */
+  @keyframes pgIn{from{opacity:0}}
+  #content>*{animation:pgIn .18s var(--ease) both}
   #content{transition:opacity .14s var(--ease)}
-  #content.nav-out{opacity:.35;pointer-events:none}
+  #content.nav-out{opacity:0;pointer-events:none}
   /* ── Card tap feedback ── */
   .art-btn:active{opacity:.72;transform:scale(.96);transition:opacity .08s,transform .08s}
   button.cast[data-actor-id]:active{opacity:.72;transform:scale(.96);transition:opacity .08s,transform .08s}
@@ -1743,7 +1747,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries",watchedBadges:"hume_watched_badges"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- FONT THEMING ---- */
@@ -1906,6 +1910,7 @@ function plexHeaders(token){
 const $=s=>document.querySelector(s);
 const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 
+document.addEventListener('click',e=>{if(e.target.closest('button')&&navigator.vibrate)navigator.vibrate(1);},{capture:true,passive:true});
 /* ============================================================ STATE */
 let accountToken=localStorage.getItem(LS.token)||null;
 let server=JSON.parse(localStorage.getItem(LS.server)||"null");
@@ -2830,6 +2835,7 @@ function collectItems(mc){
 /* ---- HERO ---- */
 function getHeroStyle(){ return localStorage.getItem(LS.heroStyle)||"backdrop"; }
 function getHubSummaries(){ return localStorage.getItem(LS.hubSummaries)==="1"; }
+function getWatchedBadges(){ return localStorage.getItem(LS.watchedBadges)!=="0"; }
 /* Shared hero markup + wiring, reused by the home hero and the hub carousel
    slides so both render the same layout (logo top-left, ratings + metadata,
    summary, actions at the bottom). */
@@ -3061,8 +3067,11 @@ function card(it,wide,square){
     if(it.type==="show"){
       const unseen=(it.leafCount||0)-(it.viewedLeafCount||0);
       if(unseen>0) badge=`<div class="unwatched-badge">${unseen}</div>`;
+      else if(getWatchedBadges()&&(it.viewedLeafCount||0)>0) badge=`<div class="watched-check" aria-hidden="true">${svgIcon("check-circle-fill")}</div>`;
     }else if(!it.viewCount){
       badge=`<div class="unwatched-dot" aria-hidden="true"></div>`;
+    }else if(getWatchedBadges()){
+      badge=`<div class="watched-check" aria-hidden="true">${svgIcon("check-circle-fill")}</div>`;
     }
   }
   b.innerHTML=`
@@ -3390,6 +3399,12 @@ async function showSettings(){
         Choose how each hub looks on the home screen.
       </div>
       <div class="settings-row">
+        <div class="settings-label">Watched Indicators
+          <small>Show a check badge on fully-watched movies and TV shows.</small>
+        </div>
+        <button class="toggle-btn${getWatchedBadges()?" active":""}" id="watchedBadgesToggle">${getWatchedBadges()?"On":"Off"}</button>
+      </div>
+      <div class="settings-row">
         <div class="settings-label">Hub Descriptions
           <small>Show the description below each hub title when available.</small>
         </div>
@@ -3438,6 +3453,15 @@ async function showSettings(){
       c.querySelectorAll("#settingsHeroStyleBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
     };
   });
+  // Wire watched badges toggle
+  const wbBtn=$("#watchedBadgesToggle");
+  if(wbBtn) wbBtn.onclick=()=>{
+    const on=localStorage.getItem(LS.watchedBadges)==="0";
+    localStorage.setItem(LS.watchedBadges,on?"1":"0");
+    wbBtn.textContent=on?"On":"Off";
+    wbBtn.classList.toggle("active",on);
+    toast(on?"Watched indicators on":"Watched indicators off");
+  };
   // Wire hub summaries toggle
   const hubSumBtn=$("#hubSummariesToggle");
   if(hubSumBtn) hubSumBtn.onclick=()=>{
@@ -4575,6 +4599,19 @@ async function loadEpisodes(season){
       list.appendChild(card);
     });
     if(!eps.length) list.innerHTML="<div class='empty'>No episodes.</div>";
+    // Update Play button to reflect resume point or next unwatched episode
+    const inProgress=eps.find(e=>(e.viewOffset||0)>0);
+    const firstUnwatched=eps.find(e=>!e.viewCount);
+    const upNext=inProgress||firstUnwatched;
+    if(upNext){
+      const playBtn=$("#playShow");
+      if(playBtn){
+        const epLabel=`S${upNext.parentIndex||""}E${upNext.index||""}`;
+        const timeStr=upNext.viewOffset?` · ${fmtClock(upNext.viewOffset/1000)}`:"";
+        playBtn.innerHTML=`${svgIcon("play-fill")} ${upNext.viewOffset?"Resume":"Play"} ${epLabel}${timeStr}`;
+        playBtn.onclick=()=>playItem(upNext,upNext.viewOffset||0);
+      }
+    }
   }catch(e){ list.innerHTML=errHTML(e); }
 }
 /* ---- EPISODE DETAIL PAGE ---- */
