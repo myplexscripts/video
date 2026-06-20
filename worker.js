@@ -49,6 +49,49 @@ export default {
       return new Response(res.body, { status: res.status, headers: h });
     }
 
+    // ---- 1b. Plex image edge-cache proxy ------------------------------
+    //   GET /img?u=<full Plex transcode URL>
+    //   The Plex server transcodes each poster once; Cloudflare then serves it
+    //   from the edge to every device/user. Big win for remote/relay clients
+    //   and it offloads the server's transcoder. Cache key drops the token so
+    //   the same art is shared regardless of who requested it.
+    if (url.pathname === "/img") {
+      const u = url.searchParams.get("u");
+      if (!u) return new Response("missing u", { status: 400, headers: cors });
+      let target;
+      try { target = new URL(u); } catch (_) { return new Response("bad url", { status: 400, headers: cors }); }
+      // Lock the proxy down to Plex image endpoints so it can't be abused as a
+      // general-purpose open proxy.
+      const okHost = target.hostname.endsWith(".plex.direct") || target.hostname.endsWith(".plex.tv");
+      const okPath = target.pathname.includes("/photo/:/transcode") || target.pathname.includes("/composite");
+      if (!okHost || !okPath) return new Response("forbidden", { status: 403, headers: cors });
+
+      const cache = caches.default;
+      const keyUrl = new URL(u);
+      keyUrl.searchParams.delete("X-Plex-Token");
+      const cacheKey = new Request("https://img.cache/" + encodeURIComponent(keyUrl.toString()));
+      let res = await cache.match(cacheKey);
+
+      if (!res) {
+        let upstream;
+        try { upstream = await fetch(u); } catch (_) { return new Response("upstream unreachable", { status: 502, headers: cors }); }
+        if (!upstream.ok) return new Response("upstream error", { status: upstream.status, headers: cors });
+        const buf = await upstream.arrayBuffer();
+        res = new Response(buf, {
+          status: 200,
+          headers: {
+            "Content-Type": upstream.headers.get("Content-Type") || "image/jpeg",
+            "Cache-Control": "public, max-age=2592000, immutable",
+          },
+        });
+        ctx.waitUntil(cache.put(cacheKey, res.clone()));
+      }
+
+      const h = new Headers(res.headers);
+      for (const [k, v] of Object.entries(cors)) h.set(k, v);
+      return new Response(res.body, { status: res.status, headers: h });
+    }
+
     // ---- 2. Per-user settings store -----------------------------------
     const token = url.searchParams.get("token");
     if (!token) return new Response("missing token", { status: 400, headers: cors });
