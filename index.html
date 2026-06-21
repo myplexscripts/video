@@ -836,7 +836,7 @@
   .cast .rl{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.25}
   .crew{display:flex;gap:28px;flex-wrap:wrap;color:var(--dim);font-size:13px;margin-top:4px}
   .crew b{color:var(--text);font-weight:600}
-  .person-card .person-art{border-radius:50%;overflow:hidden;background:var(--bg2);border:1px solid var(--line)}
+  .person-card .person-art{aspect-ratio:1/1;border-radius:50%;overflow:hidden;background:var(--bg2);border:1px solid var(--line)}
   .person-card .person-art img{border-radius:50%}
   /* ---- ACTOR DETAIL PAGE ---- */
   .actor-head{display:flex;align-items:flex-end;gap:28px;padding:120px var(--edge) 32px;
@@ -1549,7 +1549,7 @@
 
     .searchbox:focus-within{width:min(72vw,260px)}
     /* Mobile search landing page */
-    .mobile-search-landing{padding:calc(env(safe-area-inset-top) + 16px) 16px 0}
+    .mobile-search-landing{padding:var(--pill-clear) 16px 0}
     .search-head{margin:0 16px 8px}
     .ms-field{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);
       border-radius:14px;padding:13px 16px;margin-top:12px}
@@ -2499,7 +2499,8 @@ async function route(){
       case "search": {
         const q=params.get("q")||"";
         if($("#search")) $("#search").value=q;
-        return q ? runSearch(q) : (window.innerWidth<=680 ? showMobileSearch() : showHome(gen));
+        if(window.innerWidth<=680) return showMobileSearch(q||undefined);
+        return q ? runSearch(q) : showHome(gen);
       }
       default: return showHome(gen);
     }
@@ -4740,27 +4741,52 @@ async function openEpisode(it){
 }
 
 /* ============================================================ SEARCH */
-function showMobileSearch(){
+function showMobileSearch(prefill){
   setTitle("Search"); clearUltraBlur();
   const c=$("#content");
-  c.innerHTML=`<div class="mobile-search-landing">
+  c.innerHTML=`<div class="mobile-search-landing" id="mobileSearchPage">
     <div class="ms-field">
       <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
       <input id="mobileSearchInput" type="search" placeholder="Movies, shows, people…"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
+    <div id="mobileSearchResults"></div>
   </div>`;
   const inp=c.querySelector("#mobileSearchInput");
   if(!inp) return;
-  requestAnimationFrame(()=>inp.focus());
+  if(prefill){ inp.value=prefill; runMobileSearch(prefill); }
+  else requestAnimationFrame(()=>inp.focus());
   let st=null;
   inp.addEventListener("input",e=>{
     clearTimeout(st);
     const q=e.target.value.trim();
+    const res=document.getElementById("mobileSearchResults");
+    if(!q){ if(res) res.innerHTML=""; history.replaceState(null,"",location.pathname+location.search+"#/search"); return; }
     st=setTimeout(()=>{
-      if(q.length>=2) location.hash=`/search?q=${encodeURIComponent(q)}`;
-    },350);
+      if(q.length>=2){
+        history.replaceState(null,"",location.pathname+location.search+`#/search?q=${encodeURIComponent(q)}`);
+        runMobileSearch(q);
+      }
+    },500);
   });
+}
+async function runMobileSearch(q){
+  const container=document.getElementById("mobileSearchResults");
+  if(!container) return;
+  container.innerHTML="<div class='loading' style='margin:24px 0'>Searching…</div>";
+  try{
+    const mc=await api(`/hubs/search?query=${encodeURIComponent(q)}&limit=40`);
+    const hubs=(mc.Hub||[]).map(h=>{
+      const isPeopleHub=/people|actor|cast/i.test(h.title)||h.type==="person";
+      const items=[...(h.Metadata||[]),...(h.Directory||[])]
+        .map(x=>{const isPerson=x.type==="person"||isPeopleHub;return isPerson?{...x,type:"person",title:x.tag||x.title||x.name||""}:x;})
+        .filter(x=>["movie","show","episode","season","person"].includes(x.type));
+      return {title:h.title,items};
+    }).filter(h=>h.items.length);
+    if(!hubs.length){ container.innerHTML=`<div class="empty" style="padding:40px 0">${svgIcon("magnifying-glass")}No results for "${esc(q)}"</div>`; return; }
+    container.innerHTML="";
+    hubs.forEach(h=>container.appendChild(railSection(h.title,h.items,h.items.every(i=>i.type==="episode"),false)));
+  }catch(e){ container.innerHTML=errHTML(e); }
 }
 let searchTimer=null;
 $("#search").addEventListener("input",e=>{
