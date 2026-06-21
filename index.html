@@ -375,6 +375,7 @@
     width:100%;transition:background-color .15s var(--ease)}
   .hub-grid-item:hover,.hub-grid-item:focus-visible{background:var(--surface3)}
   .hub-grid-thumb{width:72px;height:72px;flex:0 0 72px;object-fit:cover}
+  .hub-grid-art{width:72px;height:72px;flex:0 0 72px;overflow:hidden}
   .hub-grid-title{font-size:13px;font-weight:700;padding:0 12px;line-height:1.35;
     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .rail-ambient{position:absolute;top:-90px;left:6%;right:6%;height:260px;
@@ -1509,6 +1510,7 @@
     .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(10,10,12,.72) 0%,rgba(10,10,12,.22) 45%,transparent 68%)}
     .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:center;width:100%}
     .hub-carousel .hero-meta{justify-content:center}
+    .hub-carousel .ratings-row{justify-content:center;gap:12px}
     .hub-carousel .hero-actions{justify-content:center}
     .hub-carousel .title-logo{max-height:100px;max-width:min(72%,320px);object-position:center bottom;margin:0 auto 8px}
     .hub-carousel .hero-top h2{font-size:clamp(22px,7vw,34px)}
@@ -2649,7 +2651,7 @@ async function fetchGenreData(){
     .slice(0,10);
   const result=[];
   for(const {g,candidates} of ranked){
-    const pick=candidates[Math.floor(Math.random()*Math.min(candidates.length,5))];
+    const pick=candidates[Math.floor(Math.random()*candidates.length)];
     const imgs=pick.Image||[];
     const sqImg=imgs.find(i=>i.type==="backgroundSquare");
     // Extract numeric genre ID from key (e.g. "/library/sections/1/all?genre=9" or
@@ -2689,7 +2691,7 @@ function genreRailSection(genreItems,style){
       const src=img(g.squareArt||g.thumb,144,144);
       const btn=el("button","hub-grid-item");
       btn.style.setProperty("--gc",gc);
-      btn.innerHTML=`<img class="hub-grid-thumb" loading="lazy" alt="${esc(g.name)}" src="${src}" style="background:${gc}" onerror="this.style.opacity=0"><span class="hub-grid-title">${esc(g.name)}</span>`;
+      btn.innerHTML=`<div class="genre-art hub-grid-art">${src?`<img loading="lazy" alt="" src="${src}" onerror="this.remove()">`:""}</div><span class="hub-grid-title">${esc(g.name)}</span>`;
       btn.onclick=()=>{_genrePageData={title:g.name,genreId:g.genreId,sectionKey:g.sectionKey};navigate("/genre");};
       grid.appendChild(btn);
     });
@@ -3984,23 +3986,30 @@ function episodeHero(m,actionsHTML){
    the detail-page ratings row and the home hero's meta line. */
 function ratingBadgesHTML(m){
   const out=[];
-  (m.Rating||[]).forEach(r=>{
-    const src=r.image||"", val=r.value; if(val==null) return;
+  const addBadge=(src,val)=>{
+    if(!src||val==null) return;
+    const v=+val;
     if(src.includes("imdb")){
-      out.push(`<span class="rating-badge" aria-label="IMDb rating ${(+val).toFixed(1)} out of 10"><span class="src"><img src="assets/images/icons/ui/IMDB.svg" alt=""></span><b>${(+val).toFixed(1)}</b></span>`);
+      out.push(`<span class="rating-badge" aria-label="IMDb rating ${v.toFixed(1)} out of 10"><span class="src"><img src="assets/images/icons/ui/IMDB.svg" alt=""></span><b>${v.toFixed(1)}</b></span>`);
     }else if(src.includes("rottentomatoes")){
       const variant=src.split(".").pop();
       const audience=variant==="upright"||variant==="spilled";
-      const pct=Math.round(val*10);
+      const pct=Math.round(v*10);
       let icon;
       if(audience) icon=variant==="spilled"?"Rotten_Tomatoes_Popcorn_tipped":"Rotten_Tomatoes_Popcorn";
-      else if(variant==="certified") icon="Certified_Fresh";
+      else if(variant==="certified"||variant==="certified_fresh") icon="Certified_Fresh";
       else icon=(variant==="rotten"||pct<60)?"Rotten_Tomatoes_rotten":"Rotten_Tomatoes";
       out.push(`<span class="rating-badge" aria-label="Rotten Tomatoes ${audience?"audience":"critic"} score ${pct}%"><span class="src"><img src="assets/images/icons/ui/${icon}.svg" alt=""></span><b>${pct}%</b></span>`);
     }else if(src.includes("themoviedb")){
-      out.push(`<span class="rating-badge" aria-label="TMDB rating ${(+val).toFixed(1)} out of 10"><span class="src"><img src="assets/images/icons/ui/TMDB.svg" alt=""></span><b>${(+val).toFixed(1)}</b></span>`);
+      out.push(`<span class="rating-badge" aria-label="TMDB rating ${v.toFixed(1)} out of 10"><span class="src"><img src="assets/images/icons/ui/TMDB.svg" alt=""></span><b>${v.toFixed(1)}</b></span>`);
     }
-  });
+  };
+  (m.Rating||[]).forEach(r=>addBadge(r.image,r.value));
+  // Fallback for hub items that omit the Rating[] array but carry top-level fields
+  if(!out.length){
+    addBadge(m.ratingImage,m.rating);
+    addBadge(m.audienceRatingImage,m.audienceRating);
+  }
   return out.join("");
 }
 function ratingsRowHTML(m,extras){
