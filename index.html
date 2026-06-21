@@ -1549,7 +1549,8 @@
 
     .searchbox:focus-within{width:min(72vw,260px)}
     /* Mobile search landing page */
-    .mobile-search-landing{padding:calc(env(safe-area-inset-top) + 16px) var(--edge) 0}
+    .mobile-search-landing{padding:calc(env(safe-area-inset-top) + 16px) 16px 0}
+    .search-head{margin:0 16px 8px}
     .ms-field{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);
       border-radius:14px;padding:13px 16px;margin-top:12px}
     .ms-field .svgi{width:18px;height:18px;color:var(--dim);flex:0 0 auto}
@@ -4777,11 +4778,16 @@ async function runSearch(q){
   setTitle(`Results for "${q}"`); clearUltraBlur(); const c=$("#content"); c.innerHTML="<div class='loading'>Searching…</div>";
   try{
     const mc=await api(`/hubs/search?query=${encodeURIComponent(q)}&limit=40`);
-    const hubs=(mc.Hub||[]).map(h=>({title:h.title,
-      items:(h.Metadata||[])
-        .map(x=>x.type==="person"?{...x,title:x.tag||x.title}:x)
-        .filter(x=>["movie","show","episode","season","person"].includes(x.type))}))
-      .filter(h=>h.items.length);
+    const hubs=(mc.Hub||[]).map(h=>{
+      const isPeopleHub=/people|actor|cast/i.test(h.title)||h.type==="person";
+      const items=[...(h.Metadata||[]),...(h.Directory||[])]
+        .map(x=>{
+          const isPerson=x.type==="person"||isPeopleHub;
+          return isPerson?{...x,type:"person",title:x.tag||x.title||x.name||""}:x;
+        })
+        .filter(x=>["movie","show","episode","season","person"].includes(x.type));
+      return {title:h.title,items};
+    }).filter(h=>h.items.length);
     const total=hubs.reduce((a,h)=>a+h.items.length,0);
     const head=`<div class="search-head"><h2>"${esc(q)}"</h2>${total?`<span class="count">${total} result${total===1?"":"s"}</span>`:""}</div>`;
     if(!hubs.length){
