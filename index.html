@@ -2788,9 +2788,14 @@ async function showHome(gen){
     if(gen!==undefined&&gen!==_routeGen) return;
     if(cw.length){
       const cwHub={title:"Continue Watching",key:"continue_watching",plexKey:"",items:cw,lib:"",featured:true,summary:""};
-      const cwSec=renderHubSection(cwHub,getRailStyle("continue_watching"));
+      const cwStyle=getRailStyle("continue_watching");
+      const cwSec=renderHubSection(cwHub,cwStyle);
       cwSec.querySelector(".rail-head")?.remove();
       cwSec.querySelector(".rail-summary")?.remove();
+      // Remove the top padding left behind by the stripped header.
+      // For carousel, also clear the first-child pill-clear margin so it goes full-bleed.
+      cwSec.style.paddingTop="0";
+      if(cwStyle==="carousel") cwSec.style.marginTop="0";
       c.appendChild(cwSec);
     }
     const movieHubs=videoHubs.filter(h=>h.items[0]&&h.items[0].type==="movie");
