@@ -1548,8 +1548,11 @@
     .lib-menu{max-width:calc(100vw - 24px)}
 
     .searchbox:focus-within{width:min(72vw,260px)}
-    /* Mobile search landing page */
-    .mobile-search-landing{padding:var(--pill-clear) 16px 0}
+    /* Mobile search landing page — starts at y:0 to fill behind the status bar */
+    .mobile-search-landing{min-height:100svh}
+    .ms-hero{padding:calc(var(--pill-clear) + 8px) 16px 24px;
+      background:linear-gradient(to bottom,rgba(255,255,255,.05) 0%,transparent 80%)}
+    .ms-hero h2{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1}
     .search-head{margin:0 16px 8px}
     .ms-field{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);
       border-radius:14px;padding:13px 16px;margin-top:12px}
@@ -4745,10 +4748,13 @@ function showMobileSearch(prefill){
   setTitle("Search"); clearUltraBlur();
   const c=$("#content");
   c.innerHTML=`<div class="mobile-search-landing" id="mobileSearchPage">
-    <div class="ms-field">
-      <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
-      <input id="mobileSearchInput" type="search" placeholder="Movies, shows, people…"
-        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <div class="ms-hero">
+      <h2>Search</h2>
+      <div class="ms-field">
+        <span class="svgi" style="--i:url('assets/images/icons/ui/magnifying-glass.svg')" aria-hidden="true"></span>
+        <input id="mobileSearchInput" type="search" placeholder="Movies, shows, people…"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
     </div>
     <div id="mobileSearchResults"></div>
   </div>`;
