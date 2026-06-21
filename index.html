@@ -1107,7 +1107,7 @@
   /* TV mode toggle button in Settings */
   .toggle-btn{padding:8px 22px;border-radius:var(--radius-sm);background:var(--surface2);
     color:var(--dim);font-size:14px;font-weight:500;border:1px solid var(--line2);
-    transition:all .14s var(--ease);cursor:pointer}
+    transition:all .14s var(--ease);cursor:pointer;flex-shrink:0}
   .toggle-btn.active{background:rgba(232,184,37,.13);color:var(--accent);
     border-color:rgba(232,184,37,.38);
     box-shadow:0 0 0 1px rgba(232,184,37,.18),0 0 16px rgba(232,184,37,.1)}
@@ -1330,11 +1330,11 @@
     .p-pause-title{font-size:36px}
     .p-pause-logo{max-height:110px}
   }
-  /* ── Always-on status-bar dark veil (mobile only) ──────────────────────── */
+  /* ── Status-bar dark veil: shown only when scrolled past the top (mobile only) */
   #topFrost{display:none;position:fixed;top:0;left:0;right:0;z-index:8;
     height:calc(env(safe-area-inset-top) + 36px);
-    background:linear-gradient(to bottom,rgba(0,0,0,.78) 0%,transparent 100%);
-    pointer-events:none}
+    background:linear-gradient(to bottom,#191919 0%,transparent 100%);
+    pointer-events:none;opacity:0;transition:opacity .25s var(--ease)}
   /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
   /* SOLID background (no backdrop-filter): a frosted bar must re-blur the
      content behind it on every scroll frame, which is expensive on phones and
@@ -1418,8 +1418,9 @@
     #app{height:auto;min-height:100svh}
     .shell{display:block;height:auto;min-height:100svh}
     .main{overflow:visible;height:auto;scroll-behavior:auto}
-    /* Status-bar veil always on */
+    /* Status-bar veil: visible only when scrolled away from top */
     #topFrost{display:block}
+    body.scrolled-down #topFrost{opacity:1}
     /* Tab bar replaces sidebar + hamburger entirely on mobile */
     #tabBar{display:flex}
     #menuToggle{display:none}
@@ -1593,6 +1594,8 @@
     .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
     /* Settings hub rows: stack label above buttons so long hub names don't squish */
     .settings-row:has(.rail-style-btns){flex-direction:column;align-items:flex-start;gap:8px}
+    /* Toggle rows: keep toggle pinned to the right */
+    .settings-row .toggle-btn{margin-left:auto}
   }
 </style>
 </head>
@@ -1914,6 +1917,7 @@ const $=s=>document.querySelector(s);
 const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 
 document.addEventListener('click',e=>{if(e.target.closest('button')&&navigator.vibrate)navigator.vibrate(1);},{capture:true,passive:true});
+window.addEventListener('scroll',()=>{document.body.classList.toggle('scrolled-down',window.scrollY>0);},{passive:true});
 /* ============================================================ STATE */
 let accountToken=localStorage.getItem(LS.token)||null;
 let server=JSON.parse(localStorage.getItem(LS.server)||"null");
@@ -2781,8 +2785,8 @@ async function showHome(gen){
       .filter(h=>h.items.length);
 
     c.innerHTML="";
-    const hero=cw[0]||(videoHubs[0]&&videoHubs[0].items[0]);
-    if(hero) c.appendChild(await heroEl(hero));
+    const heroItem=videoHubs[0]&&videoHubs[0].items[0];
+    if(heroItem) c.appendChild(await heroEl(heroItem));
     if(gen!==undefined&&gen!==_routeGen) return;
     if(cw.length){
       const cwHub={title:"Continue Watching",key:"continue_watching",plexKey:"",items:cw,lib:"",featured:true,summary:""};
@@ -3085,14 +3089,14 @@ function card(it,wide,square){
   const fallbackIconHTML = it._collection ? `<span class="art-fallback">${svgIcon("stack-fill")}</span>`
     : `<span class="art-fallback">${svgIcon(it.type==="playlist"?"playlist":it.type==="show"?"television":"movies")}</span>`;
   let badge="";
-  if(!pct && !it._collection && it.type!=="playlist"){
+  if(!pct && !it._collection && it.type!=="playlist" && getWatchedBadges()){
     if(it.type==="show"){
       const unseen=(it.leafCount||0)-(it.viewedLeafCount||0);
       if(unseen>0) badge=`<div class="unwatched-badge">${unseen}</div>`;
-      else if(getWatchedBadges()&&(it.viewedLeafCount||0)>0) badge=`<div class="watched-check" aria-hidden="true">${svgIcon("check-circle-fill")}</div>`;
+      else if((it.viewedLeafCount||0)>0) badge=`<div class="watched-check" aria-hidden="true">${svgIcon("check-circle-fill")}</div>`;
     }else if(!it.viewCount){
       badge=`<div class="unwatched-dot" aria-hidden="true"></div>`;
-    }else if(getWatchedBadges()){
+    }else{
       badge=`<div class="watched-check" aria-hidden="true">${svgIcon("check-circle-fill")}</div>`;
     }
   }
@@ -3421,8 +3425,8 @@ async function showSettings(){
         Choose how each hub looks on the home screen.
       </div>
       <div class="settings-row">
-        <div class="settings-label">Watched Indicators
-          <small>Show a check badge on fully-watched movies and TV shows.</small>
+        <div class="settings-label">Watch Status Badges
+          <small>Show watched / unwatched indicators on all cards.</small>
         </div>
         <button class="toggle-btn${getWatchedBadges()?" active":""}" id="watchedBadgesToggle">${getWatchedBadges()?"On":"Off"}</button>
       </div>
@@ -3524,8 +3528,7 @@ async function showSettings(){
         items:(h.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type)),lib:""}))
       .filter(h=>h.items.length);
 
-    const hubs=[{title:"Browse by Genre",key:GENRE_CARDS_KEY}];
-    if(hasCw) hubs.push({title:"Continue Watching",key:"continue_watching"});
+    const hubs=[{title:"Continue Watching",key:"continue_watching"},{title:"Browse by Genre",key:GENRE_CARDS_KEY}];
     videoHubs.forEach(h=>hubs.push({title:h.title,key:h.key}));
 
     const container=$("#settingsRailRows");
