@@ -602,6 +602,7 @@
   .art .watch-prog{position:absolute;left:6px;right:6px;bottom:6px;height:4px;background:rgba(0,0,0,.5);
     border-radius:3px;overflow:hidden}
   .art .watch-prog > i{display:block;height:100%;background:var(--accent);border-radius:3px}
+  .art.ep-blur img{filter:blur(20px) brightness(.6);transform:scale(1.1)}
   .art .unwatched-dot{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;
     background:var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.45)}
   .art .watched-check{position:absolute;top:7px;right:7px;font-size:17px;line-height:1;
@@ -1840,7 +1841,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries",watchedBadges:"hume_watched_badges"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries",watchedBadges:"hume_watched_badges",spoilerBlur:"hume_spoiler_blur"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- FONT THEMING ---- */
@@ -3009,6 +3010,7 @@ function collectItems(mc){
 function getHeroStyle(){ return localStorage.getItem(LS.heroStyle)||"backdrop"; }
 function getHubSummaries(){ return localStorage.getItem(LS.hubSummaries)==="1"; }
 function getWatchedBadges(){ return localStorage.getItem(LS.watchedBadges)!=="0"; }
+function getSpoilerBlur(){ return localStorage.getItem(LS.spoilerBlur)==="1"; }
 /* Shared hero markup + wiring, reused by the home hero and the hub carousel
    slides so both render the same layout (logo top-left, ratings + metadata,
    summary, actions at the bottom). */
@@ -3263,8 +3265,9 @@ function card(it,wide,square){
       badge=`<div class="watched-check" aria-hidden="true">${svgIcon("check-circle-fill")}</div>`;
     }
   }
+  const blurArt=ep&&!it.viewCount&&getSpoilerBlur();
   b.innerHTML=`
-    <div class="art${src||mosaic?"":" broken"}">
+    <div class="art${src||mosaic?"":" broken"}${blurArt?" ep-blur":""}">
       ${src?`<img class="${useWide&&!square?"wide":""}" loading="lazy" decoding="async" alt="${esc(title)}"
         src="${src}" onerror="this.closest('.art').classList.add('broken')">`:mosaic}
       ${fallbackIconHTML}
@@ -3594,6 +3597,12 @@ async function showSettings(){
         <button class="toggle-btn${getWatchedBadges()?" active":""}" id="watchedBadgesToggle">${getWatchedBadges()?"On":"Off"}</button>
       </div>
       <div class="settings-row">
+        <div class="settings-label">Spoiler Prevention
+          <small>Blur thumbnails for unwatched episodes. Clears once you've watched them.</small>
+        </div>
+        <button class="toggle-btn${getSpoilerBlur()?" active":""}" id="spoilerBlurToggle">${getSpoilerBlur()?"On":"Off"}</button>
+      </div>
+      <div class="settings-row">
         <div class="settings-label">Hub Descriptions
           <small>Show the description below each hub title when available.</small>
         </div>
@@ -3650,6 +3659,15 @@ async function showSettings(){
     wbBtn.textContent=on?"On":"Off";
     wbBtn.classList.toggle("active",on);
     toast(on?"Watched indicators on":"Watched indicators off");
+  };
+  // Wire spoiler blur toggle
+  const sbBtn=$("#spoilerBlurToggle");
+  if(sbBtn) sbBtn.onclick=()=>{
+    const on=localStorage.getItem(LS.spoilerBlur)!=="1";
+    localStorage.setItem(LS.spoilerBlur,on?"1":"0");
+    sbBtn.textContent=on?"On":"Off";
+    sbBtn.classList.toggle("active",on);
+    toast(on?"Spoiler blur on":"Spoiler blur off");
   };
   // Wire hub summaries toggle
   const hubSumBtn=$("#hubSummariesToggle");
