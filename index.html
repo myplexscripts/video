@@ -368,6 +368,7 @@
      blurred, saturated smear of its first item's art sitting behind the
      header — a per-row echo of the page-level UltraBlur underlay. */
   .rail-section{position:relative;padding:40px 0 10px;overflow:hidden}
+  .rail-ph{min-height:240px}
   .rail-ambient{position:absolute;top:-90px;left:6%;right:6%;height:260px;
     background-size:cover;background-position:center;opacity:.28;
     filter:blur(70px) saturate(1.8);pointer-events:none;transform:scale(1.25)}
@@ -2787,16 +2788,19 @@ async function showHome(gen){
     }
     const movieHubs=videoHubs.filter(h=>h.items[0]&&h.items[0].type==="movie");
     const tvHubs=videoHubs.filter(h=>!h.items[0]||h.items[0].type!=="movie");
-    movieHubs.forEach(h=>{ const sec=renderHubSection(h,getRailStyle(h.key)); sec.dataset.hubId=h.key; c.appendChild(sec); });
+    // Render first 2 movie hubs immediately (above the fold); defer the rest
+    movieHubs.slice(0,2).forEach(h=>{ const sec=renderHubSection(h,getRailStyle(h.key)); sec.dataset.hubId=h.key; c.appendChild(sec); });
+    movieHubs.slice(2).forEach(h=>deferRail(h,gen,c));
     // Genre rail: loads async between movie and TV rails
-    const genrePlaceholder=el("div");
+    const genrePlaceholder=el("div","rail-ph");
     c.appendChild(genrePlaceholder);
     fetchGenreData().then(genres=>{
       if(!genres.length||gen!==_routeGen){genrePlaceholder.remove();return;}
       genrePlaceholder.replaceWith(genreRailSection(genres,getRailStyle(GENRE_CARDS_KEY)));
     }).catch(()=>genrePlaceholder.remove());
-    tvHubs.forEach(h=>{ const sec=renderHubSection(h,getRailStyle(h.key)); sec.dataset.hubId=h.key; c.appendChild(sec); });
-    // Async: fill in collection descriptions for hubs whose summaries are empty
+    // All TV hubs deferred
+    tvHubs.forEach(h=>deferRail(h,gen,c));
+    // Collection summaries: update hub.summary so deferred rails pick it up at render time
     if(getHubSummaries()){
       [...movieHubs,...tvHubs].filter(h=>!h.summary&&h.plexKey.includes("/collections/")).forEach(async h=>{
         try{
@@ -2805,6 +2809,7 @@ async function showHome(gen){
           const coll=await api(`/library/collections/${m[1]}`);
           const s=(coll.Metadata&&coll.Metadata[0]&&coll.Metadata[0].summary)||"";
           if(!s||gen!==_routeGen) return;
+          h.summary=s; // update hub object so deferred renders pick it up
           const section=c.querySelector(`[data-hub-id="${h.key}"]`);
           if(!section) return;
           const head=section.querySelector(".rail-head");
@@ -3005,6 +3010,21 @@ function wireRailArrows(viewport,carousel,prev,next){
   carousel.addEventListener("scroll",update,{passive:true});
   if(window.ResizeObserver) new ResizeObserver(update).observe(carousel);
   requestAnimationFrame(update);
+}
+/* Defer off-screen rail rendering: insert a placeholder, swap it for the
+   real section when it's ~400px from the viewport. Data is already in
+   memory (fetched upfront), so the swap is synchronous and instant. */
+function deferRail(hub,gen,c){
+  const ph=el("div","rail-ph"); c.appendChild(ph);
+  const obs=new IntersectionObserver(entries=>{
+    if(!entries[0].isIntersecting) return;
+    obs.disconnect();
+    if(gen!==undefined&&gen!==_routeGen){ph.remove();return;}
+    const sec=renderHubSection(hub,getRailStyle(hub.key));
+    sec.dataset.hubId=hub.key;
+    ph.replaceWith(sec);
+  },{rootMargin:"400px 0px"});
+  obs.observe(ph);
 }
 /* Warm the detail-metadata cache when a card is hovered/focused so the
    subsequent click renders instantly (native-app feel). A short delay +
