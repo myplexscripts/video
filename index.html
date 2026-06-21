@@ -1597,6 +1597,7 @@
     /* Options row: centered secondary controls */
     .p-ctl-right{justify-content:center;gap:18px;padding-bottom:6px}
     #pipBtn{display:none}
+    #castBtn.casting{color:var(--accent)}
     /* Pause overlay: centered on mobile */
     #player.paused .p-pause{opacity:0;visibility:hidden}
     .p-pause-logo{max-height:72px;max-width:min(72vw,280px);object-position:center bottom}
@@ -1691,7 +1692,7 @@
 <!-- PLAYER -->
 <div id="player" role="dialog" aria-modal="true" aria-label="Video player">
   <div class="p-backdrop" id="pBackdrop"></div>
-  <video id="video" playsinline></video>
+  <video id="video" playsinline x-webkit-airplay="allow"></video>
   <div class="p-pause" id="pPause">
     <img class="p-pause-logo hidden" id="pPauseLogo" alt="">
     <div class="p-pause-title" id="pPauseTitle"></div>
@@ -1747,6 +1748,8 @@
       <div class="p-ctl-right">
         <button class="pbtn bare" id="chaptersBtn" aria-label="Chapters & play queue" title="Chapters & play queue" aria-haspopup="true" aria-expanded="false" aria-controls="pPanel"><span class="svgi" style="--i:url('assets/images/icons/ui/list-bullets.svg')" aria-hidden="true"></span></button>
         <button class="pbtn bare" id="pipBtn" aria-label="Picture in picture" title="Picture in picture"><span class="svgi" style="--i:url('assets/images/icons/ui/frame-corners.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn bare hidden" id="castBtn" aria-label="Cast to device" title="Cast to device"><span class="svgi" style="--i:url('assets/images/icons/ui/screencast.svg')" aria-hidden="true"></span></button>
+        <button class="pbtn bare hidden" id="airplayBtn" aria-label="AirPlay" title="AirPlay"><span class="svgi" style="--i:url('assets/images/icons/ui/airplay.svg')" aria-hidden="true"></span></button>
         <button class="pbtn bare" id="fullBtn" aria-label="Fullscreen" title="Fullscreen"><span class="svgi" style="--i:url('assets/images/icons/ui/corners-out.svg')" aria-hidden="true"></span></button>
       </div>
     </div>
@@ -5222,7 +5225,10 @@ menuKeyHandler($("#pMenu"),$("#settingsBtn"));
 /* ---- transport controls ---- */
 $("#playBtn").onclick=togglePlay;
 $("#pauseResume").onclick=()=>video.play().catch(()=>{});
-function togglePlay(){ if(video.paused) video.play(); else video.pause(); }
+function togglePlay(){
+  if(isCasting()){ remotePlayerController.playOrPause(); return; }
+  if(video.paused) video.play(); else video.pause();
+}
 video.addEventListener("click",()=>{ if($("#player").classList.contains("min"))return; togglePlay(); });
 video.addEventListener("dblclick",toggleFull);
 video.addEventListener("play",()=>{ setPlayIcon(true); $("#player").classList.remove("paused"); });
@@ -5234,8 +5240,14 @@ function setPlayIcon(playing){
   $("#miniPlay").innerHTML=icon; $("#miniPlay").setAttribute("aria-label",label);
 }
 
-$("#back10").onclick=()=>video.currentTime=Math.max(0,video.currentTime-10);
-$("#fwd10").onclick=()=>video.currentTime=Math.min(video.duration||1e9,video.currentTime+10);
+$("#back10").onclick=()=>{
+  if(isCasting()){ remotePlayer.currentTime=Math.max(0,(remotePlayer.currentTime||0)-10); remotePlayerController.seek(); return; }
+  video.currentTime=Math.max(0,video.currentTime-10);
+};
+$("#fwd10").onclick=()=>{
+  if(isCasting()){ remotePlayer.currentTime=Math.min(remotePlayer.duration||1e9,(remotePlayer.currentTime||0)+10); remotePlayerController.seek(); return; }
+  video.currentTime=Math.min(video.duration||1e9,video.currentTime+10);
+};
 $("#prevEpBtn").onclick=()=>{ if(prevEp) playItem(prevEp,0); };
 $("#nextEpBtn").onclick=()=>{ if(nextEp) playItem(nextEp,0); };
 
@@ -5281,12 +5293,13 @@ $("#skipIntro").onclick=()=>{
 const track=$("#seekTrack"); let scrubbing=false;
 function seekFromEvent(e){ const r=track.getBoundingClientRect();
   const x=Math.min(Math.max((e.clientX-r.left)/r.width,0),1);
+  if(isCasting()){ remotePlayer.currentTime=x*(remotePlayer.duration||0); remotePlayerController.seek(); return x; }
   if(video.duration) video.currentTime=x*video.duration; return x; }
 track.addEventListener("pointerdown",e=>{ scrubbing=true; track.setPointerCapture(e.pointerId); seekFromEvent(e); });
 track.addEventListener("pointermove",e=>{
   const r=track.getBoundingClientRect(); const x=Math.min(Math.max((e.clientX-r.left)/r.width,0),1);
   const ht=$("#hoverTime"); ht.style.display="block"; ht.style.left=(x*100)+"%";
-  ht.textContent=fmtClock(x*(video.duration||0));
+  ht.textContent=fmtClock(x*((isCasting()?remotePlayer.duration:video.duration)||0));
   if(scrubbing) seekFromEvent(e);
 });
 track.addEventListener("pointerup",()=>{ scrubbing=false; });
@@ -5331,6 +5344,101 @@ $("#pipBtn").onclick=async()=>{ try{
 if(!document.fullscreenEnabled) $("#fullBtn").classList.add("hidden");
 if(!document.pictureInPictureEnabled||!video.requestPictureInPicture) $("#pipBtn").classList.add("hidden");
 
+/* ---- Google Cast + AirPlay ---- */
+let castSession=null, remotePlayer=null, remotePlayerController=null, castSyncInterval=null;
+
+function isCasting(){ return !!castSession; }
+
+function startCastSync(){
+  clearInterval(castSyncInterval);
+  castSyncInterval=setInterval(()=>{
+    if(!isCasting()||!remotePlayer){ clearInterval(castSyncInterval); return; }
+    const t=remotePlayer.currentTime||0, d=remotePlayer.duration||0;
+    const pct=d?t/d*100:0;
+    $("#played").style.width=pct+"%"; $("#knob").style.left=pct+"%";
+    $("#curTime").textContent=fmtClock(t);
+    if(d) $("#durTime").textContent=fmtClock(d);
+    $("#seekTrack").setAttribute("aria-valuenow",String(Math.round(pct)));
+    $("#seekTrack").setAttribute("aria-valuetext",`${fmtClock(t)} of ${fmtClock(d)}`);
+  },1000);
+}
+
+function castCurrentItem(){
+  if(!castSession||!currentItem) return;
+  const part=partOf(currentItem);
+  if(!part) return;
+  const url=`${server.uri}${part.key}?X-Plex-Token=${server.token}`;
+  const mi=new chrome.cast.media.MediaInfo(url,"video/mp4");
+  mi.metadata=new chrome.cast.media.MovieMediaMetadata();
+  mi.metadata.title=currentItem.title||"";
+  const thumbUrl=img(currentItem.thumb||currentItem.art,800,450);
+  if(thumbUrl) mi.metadata.images=[new chrome.cast.Image(thumbUrl)];
+  const req=new chrome.cast.media.LoadRequest(mi);
+  req.currentTime=video.currentTime||0;
+  castSession.loadMedia(req).then(()=>{
+    video.pause();
+    setStatus(true,"Casting");
+    startCastSync();
+  }).catch(e=>toast("Cast error: "+(e.description||e)));
+}
+
+window.__onGCastApiAvailable=function(isAvailable){
+  if(!isAvailable) return;
+  cast.framework.CastContext.getInstance().setOptions({
+    receiverApplicationId:chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+    autoJoinPolicy:chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+  });
+  remotePlayer=new cast.framework.RemotePlayer();
+  remotePlayerController=new cast.framework.RemotePlayerController(remotePlayer);
+  const castBtn=$("#castBtn");
+  if(castBtn) castBtn.classList.remove("hidden");
+
+  cast.framework.CastContext.getInstance().addEventListener(
+    cast.framework.CastContextEventType.CAST_STATE_CHANGED,e=>{
+      const connected=e.castState===cast.framework.CastState.CONNECTED;
+      if(castBtn){
+        castBtn.classList.toggle("casting",connected);
+        castBtn.setAttribute("aria-label",connected?"Stop casting":"Cast to device");
+        setSvgIcon(castBtn, connected?"screencast":"screencast");
+      }
+      if(connected){
+        castSession=cast.framework.CastContext.getInstance().getCurrentSession();
+        if(currentItem&&$("#player").classList.contains("show")) castCurrentItem();
+      } else {
+        const resumeAt=remotePlayer&&remotePlayer.currentTime>0?remotePlayer.currentTime:0;
+        castSession=null; clearInterval(castSyncInterval);
+        setStatus(false,"");
+        if(resumeAt>0) video.currentTime=resumeAt;
+        video.play().catch(()=>{});
+      }
+    }
+  );
+  remotePlayerController.addEventListener(
+    cast.framework.RemotePlayerEventType.IS_PAUSED_CHANGED,()=>{
+      if(!isCasting()) return;
+      const paused=remotePlayer.isPaused;
+      $("#player").classList.toggle("paused",paused);
+      setPlayIcon(!paused);
+    }
+  );
+};
+
+$("#castBtn").onclick=async()=>{
+  if(typeof cast==="undefined") return;
+  const ctx=cast.framework.CastContext.getInstance();
+  if(ctx.getCastState()===cast.framework.CastState.CONNECTED){ ctx.endCurrentSession(true); return; }
+  try{ await ctx.requestSession(); }catch(_){}
+};
+
+/* AirPlay (Safari/WebKit) */
+const airBtn=$("#airplayBtn");
+if(airBtn&&window.WebKitPlaybackTargetAvailabilityEvent){
+  video.addEventListener("webkitplaybacktargetavailabilitychanged",e=>{
+    airBtn.classList.toggle("hidden",e.availability!=="available");
+  });
+  airBtn.onclick=()=>video.webkitShowPlaybackTargetPicker();
+}
+
 /* minimize / expand / close */
 $("#minPlayer").onclick=()=>$("#player").classList.add("min");
 $("#expandPlayer").onclick=()=>$("#player").classList.remove("min");
@@ -5342,6 +5450,7 @@ function closePlayer(){
   if(sessionId){ stopSession(sessionId); sessionId=null; }
   if(warmedNext){ stopSession(warmedNext.sessionId); warmedNext=null; }
   hideNextUp(); $("#skipIntro").hidden=true;
+  clearInterval(castSyncInterval); castSession=null;
   video.pause(); video.removeAttribute("src"); video.load();
   $("#player").classList.remove("show","min","idle","loading","paused","panel-open");
   currentItem=null;
@@ -5658,5 +5767,6 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLibMenus(); 
     try{ await afterLogin(); }catch(e){ $("#login").style.display="flex"; loginErr("Session error: "+e.message); } }
 })();
 </script>
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 </body>
 </html>
