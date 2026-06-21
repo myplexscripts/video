@@ -434,7 +434,7 @@
   .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
   .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
   .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
-    scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
+    scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .carousel::-webkit-scrollbar{height:0}
   /* ---- RAIL ARROWS ----
      Mouse/keyboard affordance for scrolling a rail (touch already swipes).
@@ -806,7 +806,7 @@
   .genre-card--square .genre-art{aspect-ratio:1/1}
   .genre-card--square .genre-fade{display:none}
   .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
-    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .cast-row::-webkit-scrollbar{height:0}
   .cast{flex:0 0 auto;width:112px;text-align:center;background:none;border:none;
     padding:0;cursor:default;font-family:var(--font);color:var(--text)}
@@ -916,7 +916,7 @@
   .trailer-state i,.trailer-state .svgi{font-size:28px;width:28px;height:28px;color:var(--faint)}
 
   /* ---- SEASON SWITCHER (artwork, not pill tabs) ---- */
-  .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
+  .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .season-rail::-webkit-scrollbar{height:0}
   .season-card{width:150px}
   .season-card .art{aspect-ratio:2/3;outline:2px solid transparent;outline-offset:2px;
@@ -2677,7 +2677,7 @@ function carouselHubSection(hub){
     const slide=el("div","hub-cs-slide"+(i===0?" active":""));
     // Each slide is a full hero (no kicker — the hub title sits above instead).
     slide.innerHTML=heroInnerHTML(it,{kicker:false,priority:false});
-    wireHero(slide,it,{square:true});
+    wireHero(slide,it,{square:window.innerWidth<=680});
     if(/trending/i.test(hub.key+' '+hub.title)){const rankEl=el("div","bill-rank");rankEl.textContent=i+1;slide.appendChild(rankEl);}
     car.appendChild(slide);
   });
