@@ -445,6 +445,7 @@
   @media(min-width:681px){
     .cw-carousel .hub-cs-slide{padding-bottom:152px}
     .cw-carousel .hub-carousel-dots{display:none}
+    .cw-carousel .cw-ep-thumb{display:none}
     .cw-filmstrip{position:absolute;bottom:22px;left:var(--edge);right:var(--edge);
       display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;z-index:4}
     .cw-filmstrip::-webkit-scrollbar{display:none}
@@ -758,15 +759,6 @@
   .genres{color:var(--dim);font-size:14px;font-weight:500;margin:0 0 16px}
   .detail-bottom{position:relative;max-width:800px;display:flex;flex-direction:column;gap:18px}
   .detail-bottom .stat-row{padding:0;border-top:none}
-  /* Full detail hero: centred content layout */
-  .detail-hero.full .detail-top{text-align:center;align-self:center;max-width:680px;width:100%}
-  .detail-hero.full .title-logo{margin:0 auto 6px;object-position:center bottom}
-  .detail-hero.full .detail-top .sub{justify-content:center}
-  .detail-hero.full .detail-top .genres{text-align:center}
-  .detail-hero.full .detail-actions{justify-content:center}
-  .detail-hero.full .ratings-row{justify-content:center}
-  .detail-hero.full .detail-bottom{align-self:center;max-width:680px;width:100%}
-  .detail-hero.full .detail-bottom .stat-row{display:flex;justify-content:center}
   /* Icon-only trailer button on detail pages */
   .detail-trailer-btn{display:inline-flex;align-items:center;justify-content:center;
     width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.13);
@@ -1597,6 +1589,8 @@
       object-fit:contain;object-position:center bottom;margin:0 auto}
     .detail-hero.full .detail-top .sub{justify-content:center}
     .detail-hero.full .detail-top .genres{text-align:center}
+    .detail-hero.full .detail-actions{justify-content:center}
+    .detail-hero.full .ratings-row{justify-content:center}
     .detail-hero.full .detail-bottom{padding:16px var(--edge) 32px}
     .detail-hero.full .rate-float{display:none}
     .ep-card{width:220px}
