@@ -368,6 +368,15 @@
      header — a per-row echo of the page-level UltraBlur underlay. */
   .rail-section{position:relative;padding:40px 0 10px;overflow:hidden}
   .rail-ph{min-height:240px}
+  /* ---- HUB GRID STYLE (2-column Spotify-style shelf) ---- */
+  .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px var(--edge) 16px}
+  .hub-grid-item{display:flex;align-items:center;background:var(--surface2);border-radius:var(--radius-sm);
+    overflow:hidden;border:none;cursor:pointer;text-align:left;color:inherit;font-family:var(--font);
+    width:100%;transition:background-color .15s var(--ease)}
+  .hub-grid-item:hover,.hub-grid-item:focus-visible{background:var(--surface3)}
+  .hub-grid-thumb{width:72px;height:72px;flex:0 0 72px;object-fit:cover}
+  .hub-grid-title{font-size:13px;font-weight:700;padding:0 12px;line-height:1.35;
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .rail-ambient{position:absolute;top:-90px;left:6%;right:6%;height:260px;
     background-size:cover;background-position:center;opacity:.28;
     filter:blur(70px) saturate(1.8);pointer-events:none;transform:scale(1.25)}
@@ -1330,9 +1339,12 @@
   }
   /* ── Status-bar dark veil: shown only when scrolled past the top (mobile only) */
   #topFrost{display:none;position:fixed;top:0;left:0;right:0;z-index:8;
-    height:calc(env(safe-area-inset-top) + 36px);
-    background:linear-gradient(to bottom,#191919 0%,rgba(25,25,25,.8) 30%,rgba(25,25,25,.3) 65%,transparent 100%);
-    pointer-events:none;opacity:0;transition:opacity .35s ease}
+    height:calc(var(--pill-clear) + 24px);
+    background:linear-gradient(to bottom,
+      #000 0%,rgba(0,0,0,.87) 15%,rgba(0,0,0,.7) 30%,
+      rgba(0,0,0,.51) 45%,rgba(0,0,0,.34) 60%,rgba(0,0,0,.17) 75%,
+      rgba(0,0,0,.05) 90%,transparent 100%);
+    pointer-events:none;opacity:0;transition:opacity .4s cubic-bezier(.4,0,.2,1)}
   /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
   /* SOLID background (no backdrop-filter): a frosted bar must re-blur the
      content behind it on every scroll frame, which is expensive on phones and
@@ -2620,6 +2632,24 @@ function genreCard(g,style){
   return b;
 }
 function genreRailSection(genreItems,style){
+  if(style==="grid"){
+    const sec=el("div","rail-section");
+    const head=el("div","rail-head");
+    head.innerHTML=`<div class="rail-head-text"><h3>Browse by Genre</h3></div><span class="count">${genreItems.length}</span>`;
+    sec.appendChild(head);
+    const grid=el("div","hub-grid");
+    genreItems.forEach(g=>{
+      const gc=genreColor(g.name);
+      const src=img(g.squareArt||g.thumb,144,144);
+      const btn=el("button","hub-grid-item");
+      btn.style.setProperty("--gc",gc);
+      btn.innerHTML=`<img class="hub-grid-thumb" loading="lazy" alt="${esc(g.name)}" src="${src}" style="background:${gc}" onerror="this.style.opacity=0"><span class="hub-grid-title">${esc(g.name)}</span>`;
+      btn.onclick=()=>{_genrePageData={title:g.name,genreId:g.genreId,sectionKey:g.sectionKey};navigate("/genre");};
+      grid.appendChild(btn);
+    });
+    sec.appendChild(grid);
+    return sec;
+  }
   const sec=el("div","rail-section");
   const head=el("div","rail-head");
   head.innerHTML=`<div class="rail-head-text"><h3>Browse by Genre</h3></div><span class="count">${genreItems.length}</span>`;
@@ -2751,10 +2781,31 @@ function carouselHubSection(hub){
   },{passive:true});
   return sec;
 }
+function gridHubSection(hub){
+  const sec=el("div","rail-section");
+  const first=hub.items[0];
+  const firstArt=first&&(first.art||first.grandparentArt||first.thumb);
+  if(firstArt){const amb=el("div","rail-ambient");amb.style.backgroundImage=`url('${imgAmbient(firstArt)}')`;sec.appendChild(amb);}
+  const head=el("div","rail-head");
+  head.innerHTML=`<div class="rail-head-text">${hub.lib?`<div class="rail-lib">${esc(hub.lib)}</div>`:""}<h3>${esc(hub.title)}</h3></div><span class="count">${hub.items.length}</span>`;
+  sec.appendChild(head);
+  if(hub.summary&&getHubSummaries()){const p=el("p","rail-summary");p.textContent=hub.summary;sec.appendChild(p);}
+  const grid=el("div","hub-grid");
+  hub.items.forEach(it=>{
+    const btn=el("button","hub-grid-item");
+    const thumb=img(it.thumb||it.parentThumb||it.grandparentThumb,144,144);
+    btn.innerHTML=`<img class="hub-grid-thumb" loading="lazy" decoding="async" alt="${esc(it.title||'')}" src="${thumb}" onerror="this.style.opacity=0"><span class="hub-grid-title">${esc(it.title||'')}</span>`;
+    btn.onclick=()=>{const r=pathForItem(it);if(r)navigate(r);else openItem(it);};
+    grid.appendChild(btn);
+  });
+  sec.appendChild(grid);
+  return sec;
+}
 function renderHubSection(hub,style){
   const sum=hub.summary||"";
   const isTrending=/trending/i.test(hub.key+' '+hub.title);
   if(style==="carousel") return carouselHubSection(hub);
+  if(style==="grid") return gridHubSection(hub);
   if(style==="square") return squareBoardRailSection(hub.title,hub.items,hub.lib,isTrending,sum);
   const wide=style==="billboard"||hub.items.every(x=>x.type==="episode");
   const cm=hub.plexKey&&hub.plexKey.match(/\/library\/collections\/(\d+)/);
@@ -3539,8 +3590,8 @@ async function showSettings(){
 
     const container=$("#settingsRailRows");
     container.innerHTML="";
-    const ALL_STYLES=[{v:"poster",l:"Poster"},{v:"billboard",l:"Billboard"},{v:"square",l:"Square"},{v:"carousel",l:"Carousel"}];
-    const GENRE_STYLES=[{v:"billboard",l:"Billboard"},{v:"square",l:"Square"}];
+    const ALL_STYLES=[{v:"poster",l:"Poster"},{v:"billboard",l:"Billboard"},{v:"square",l:"Square"},{v:"carousel",l:"Carousel"},{v:"grid",l:"Grid"}];
+    const GENRE_STYLES=[{v:"billboard",l:"Billboard"},{v:"square",l:"Square"},{v:"grid",l:"Grid"}];
     hubs.forEach(hub=>{
       const current=getRailStyle(hub.key);
       const styles=hub.key===GENRE_CARDS_KEY?GENRE_STYLES:ALL_STYLES;
