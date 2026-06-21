@@ -387,7 +387,7 @@
      hover/touch. Each slide reuses the .hero-* content classes; .hub-cs-slide
      carries the stacking/positioning for the wipe transition. */
   .hub-carousel-section{padding:40px 0 22px;overflow:visible}
-  .hub-carousel{position:relative;height:min(56vh,560px);min-height:380px;overflow:hidden;touch-action:none}
+  .hub-carousel{position:relative;height:min(56vh,560px);min-height:380px;overflow:hidden;touch-action:pan-y}
   .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;visibility:hidden;
     will-change:transform;display:flex;flex-direction:column;justify-content:space-between;
     padding:36px var(--edge) 40px}
@@ -1591,6 +1591,8 @@
     /* Next up: full width on mobile */
     .next-up{left:16px;right:16px;width:auto;bottom:180px}
     .p-menu{min-width:220px;max-width:calc(100vw - 24px)}
+    /* Settings hub rows: stack label above buttons so long hub names don't squish */
+    .settings-row:has(.rail-style-btns){flex-direction:column;align-items:flex-start;gap:8px}
   }
 </style>
 </head>
@@ -4513,7 +4515,7 @@ async function openShow(it,jumpSeasonKey){
 }
 /* ---- EPISODE WATCHED ICON ---- */
 function epWatchedIcon(watched){
-  return watched?` ${svgIcon("check-circle-fill","","color:var(--accent)")}`:"";
+  return (watched&&getWatchedBadges())?` ${svgIcon("check-circle-fill","","color:var(--accent)")}`:"";
 }
 function closeEpMenus(){ document.querySelectorAll(".ep-menu-wrap.open").forEach(w=>{
   w.classList.remove("open"); const b=w.querySelector(".ep-more"); if(b) b.setAttribute("aria-expanded","false"); }); }
