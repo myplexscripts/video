@@ -440,6 +440,27 @@
   .hub-carousel:hover .hub-ca{opacity:1}
   .hub-ca.prev{left:14px}.hub-ca.next{right:14px}
   .hub-ca .svgi{width:14px;height:14px}
+  /* ── CW filmstrip (desktop only) ── */
+  .cw-filmstrip{display:none}
+  @media(min-width:681px){
+    .cw-carousel .hub-cs-slide{padding-bottom:152px}
+    .cw-carousel .hub-carousel-dots{display:none}
+    .cw-filmstrip{position:absolute;bottom:22px;left:var(--edge);right:var(--edge);
+      display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;z-index:4}
+    .cw-filmstrip::-webkit-scrollbar{display:none}
+    .cw-fs-card{flex:0 0 172px;position:relative;border-radius:8px;overflow:hidden;
+      cursor:pointer;opacity:.52;border:2px solid transparent;background:none;padding:0;
+      transition:opacity .2s var(--ease),border-color .2s var(--ease)}
+    .cw-fs-card.active{opacity:1;border-color:rgba(255,255,255,.78)}
+    .cw-fs-card:not(.active):hover{opacity:.82}
+    .cw-fs-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+    .cw-fs-prog{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.2)}
+    .cw-fs-prog i{display:block;height:100%;background:var(--accent)}
+    .cw-fs-label{position:absolute;inset:0;display:flex;align-items:flex-end;
+      padding:4px 7px 8px;font-size:11px;font-weight:600;line-height:1.3;color:#fff;
+      background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%);
+      overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none}
+  }
   .rail-head.with-avatar{align-items:center}
   .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
     box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--frost-border),var(--frost-shadow-sm)}
@@ -699,9 +720,8 @@
     background:linear-gradient(to top,rgba(10,10,12,.55) 2%,rgba(10,10,12,.38) 40%,rgba(10,10,12,.1) 100%),
     linear-gradient(to right,rgba(10,10,12,.7),transparent 55%)}
   .detail-hero.full .detail-scrim{
-    background:linear-gradient(to right,rgba(10,10,12,.55) 0%,rgba(10,10,12,.35) 35%,rgba(10,10,12,.1) 60%,transparent 82%),
-    linear-gradient(to top,rgba(10,10,12,.72) 0%,rgba(10,10,12,.28) 26%,transparent 52%),
-    linear-gradient(to bottom,rgba(10,10,12,.3) 0%,transparent 24%)}
+    background:linear-gradient(to bottom,rgba(10,10,12,.46) 0%,transparent 26%),
+    linear-gradient(to top,rgba(10,10,12,.82) 0%,rgba(10,10,12,.34) 22%,transparent 54%)}
   .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
     align-items:flex-start;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
@@ -738,6 +758,21 @@
   .genres{color:var(--dim);font-size:14px;font-weight:500;margin:0 0 16px}
   .detail-bottom{position:relative;max-width:800px;display:flex;flex-direction:column;gap:18px}
   .detail-bottom .stat-row{padding:0;border-top:none}
+  /* Full detail hero: centred content layout */
+  .detail-hero.full .detail-top{text-align:center;align-self:center;max-width:680px;width:100%}
+  .detail-hero.full .title-logo{margin:0 auto 6px;object-position:center bottom}
+  .detail-hero.full .detail-top .sub{justify-content:center}
+  .detail-hero.full .detail-top .genres{text-align:center}
+  .detail-hero.full .detail-actions{justify-content:center}
+  .detail-hero.full .ratings-row{justify-content:center}
+  .detail-hero.full .detail-bottom{align-self:center;max-width:680px;width:100%}
+  .detail-hero.full .detail-bottom .stat-row{display:flex;justify-content:center}
+  /* Icon-only trailer button on detail pages */
+  .detail-trailer-btn{display:inline-flex;align-items:center;justify-content:center;
+    width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.13);
+    border:none;cursor:pointer;color:#fff;font-size:18px;margin-bottom:18px;
+    transition:background .15s var(--ease)}
+  .detail-trailer-btn:hover{background:rgba(255,255,255,.24)}
 
   /* ---- RATE FLOAT (star rating) ---- */
   .rate-float{position:absolute;right:var(--edge);bottom:var(--edge);z-index:4;
@@ -2752,19 +2787,17 @@ function setRailStyle(key,style){
 }
 function carouselHubSection(hub){
   const sec=el("div","rail-section hub-carousel-section");
-  // Hub title header stays above the carousel, like every other rail style.
   const head=el("div","rail-head");
   head.innerHTML=`<div class="rail-head-text">${hub.lib?`<div class="rail-lib">${esc(hub.lib)}</div>`:""}<h3>${esc(hub.title)}</h3></div><span class="count">${hub.items.length}</span>`;
   sec.appendChild(head);
   if(hub.summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=hub.summary; sec.appendChild(p); }
   const car=el("div","hub-carousel");
   const isCWHub=/continue|on.?deck/i.test(hub.key+hub.title);
+  if(isCWHub) car.classList.add("cw-carousel");
   hub.items.forEach((it,i)=>{
     const slide=el("div","hub-cs-slide"+(i===0?" active":""));
-    // Each slide is a full hero (no kicker — the hub title sits above instead).
     slide.innerHTML=heroInnerHTML(it,{kicker:false,priority:false});
     wireHero(slide,it,{square:window.innerWidth<=680});
-    // CW episodes on desktop: show episode thumbnail above description
     if(isCWHub&&it.type==="episode"&&it.thumb){
       const p=slide.querySelector(".hero-top p");
       if(p){ const t=document.createElement("img"); t.className="cw-ep-thumb";
@@ -2773,49 +2806,70 @@ function carouselHubSection(hub){
     if(/trending/i.test(hub.key+' '+hub.title)){const rankEl=el("div","bill-rank");rankEl.textContent=i+1;slide.appendChild(rankEl);}
     car.appendChild(slide);
   });
-  // Dots
+  // Dots (always built; hidden on desktop for CW via CSS)
   const dots=el("div","hub-carousel-dots");
   hub.items.forEach((_,i)=>{ const d=el("button","hub-cd"+(i===0?" active":"")); d.setAttribute("aria-label",`Slide ${i+1}`); dots.appendChild(d); });
-  // Arrows
-  const prev=el("button","hub-ca prev"); prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
-  const next=el("button","hub-ca next"); next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
-  car.appendChild(dots); car.appendChild(prev); car.appendChild(next);
+  car.appendChild(dots);
+  // CW filmstrip replaces prev/next arrows on desktop
+  let fsCards=[];
+  if(isCWHub){
+    const strip=el("div","cw-filmstrip");
+    hub.items.forEach((it,i)=>{
+      const thumb=it.type==="episode"?it.thumb:(it.art||it.thumb);
+      const label=it.type==="episode"?(it.grandparentTitle||it.title):it.title;
+      const pct=it.viewOffset&&it.duration?Math.round(it.viewOffset/it.duration*100):0;
+      const btn=el("button","cw-fs-card"+(i===0?" active":""));
+      btn.setAttribute("aria-label",label||"");
+      btn.innerHTML=`<img loading="lazy" decoding="async" alt="${esc(label||"")}" src="${img(thumb,340,191)}">
+        <div class="cw-fs-label">${esc(label||"")}</div>
+        ${pct?`<div class="cw-fs-prog"><i style="width:${pct}%"></i></div>`:""}`;
+      strip.appendChild(btn);
+      fsCards.push(btn);
+    });
+    car.appendChild(strip);
+  } else {
+    const prev=el("button","hub-ca prev"); prev.innerHTML=svgIcon("caret-down"); prev.firstChild.style.transform="rotate(90deg)";
+    const next=el("button","hub-ca next"); next.innerHTML=svgIcon("caret-down"); next.firstChild.style.transform="rotate(-90deg)";
+    car.appendChild(prev); car.appendChild(next);
+    // Arrow wiring added after goTo is defined below
+    car._cwPrev=prev; car._cwNext=next;
+  }
   sec.appendChild(car);
-  // Wire auto-advance with directional screen-wipe transitions
   const slides=Array.from(car.querySelectorAll(".hub-cs-slide"));
   const dotEls=Array.from(dots.querySelectorAll(".hub-cd"));
   const total=slides.length;
   const WIPE_DUR=500;
   const WIPE_EASE="cubic-bezier(.4,0,.2,1)";
   let cur=0, wiping=false;
-  // Park all slides at translateX(0) initially; first slide is .active
   function goTo(i,fwd){
     if(wiping) return;
-    const next=((i%total)+total)%total;
-    if(next===cur) return;
-    // Determine wipe direction: explicit > index comparison, with wrap overrides
-    if(fwd===undefined) fwd=next>cur;
-    if(cur===total-1&&next===0) fwd=true;   // last→first = forward
-    if(cur===0&&next===total-1) fwd=false;  // first→last = backward
+    const nxt=((i%total)+total)%total;
+    if(nxt===cur) return;
+    if(fwd===undefined) fwd=nxt>cur;
+    if(cur===total-1&&nxt===0) fwd=true;
+    if(cur===0&&nxt===total-1) fwd=false;
     wiping=true;
-    const entering=slides[next], exiting=slides[cur];
-    // Park entering slide offscreen with no transition
+    const entering=slides[nxt], exiting=slides[cur];
     entering.style.transition="none";
     entering.style.transform=`translateX(${fwd?100:-100}%)`;
     entering.classList.add("active");
-    entering.offsetWidth; // force reflow
-    // Animate both slides simultaneously
+    entering.offsetWidth;
     const t=`transform ${WIPE_DUR}ms ${WIPE_EASE}`;
     entering.style.transition=t; exiting.style.transition=t;
     entering.style.transform="translateX(0)";
     exiting.style.transform=`translateX(${fwd?-100:100}%)`;
     dotEls[cur].classList.remove("active");
-    cur=next;
+    if(fsCards.length){ fsCards[cur].classList.remove("active"); }
+    cur=nxt;
     dotEls[cur].classList.add("active");
+    if(fsCards.length){
+      fsCards[cur].classList.add("active");
+      fsCards[cur].scrollIntoView({behavior:"smooth",inline:"nearest",block:"nearest"});
+    }
     setTimeout(()=>{
       exiting.classList.remove("active");
       exiting.style.transition="none";
-      exiting.style.transform="translateX(0)"; // reset for next use
+      exiting.style.transform="translateX(0)";
       wiping=false;
     },WIPE_DUR);
   }
@@ -2823,8 +2877,9 @@ function carouselHubSection(hub){
   const stop=()=>clearInterval(timer);
   const start=()=>{ stop(); timer=setInterval(()=>goTo(cur+1,true),5000); };
   _carouselCleanups.add(stop);
-  prev.onclick=()=>{ stop(); goTo(cur-1,false); start(); };
-  next.onclick=()=>{ stop(); goTo(cur+1,true); start(); };
+  if(car._cwPrev){ car._cwPrev.onclick=()=>{ stop(); goTo(cur-1,false); start(); }; }
+  if(car._cwNext){ car._cwNext.onclick=()=>{ stop(); goTo(cur+1,true); start(); }; }
+  fsCards.forEach((btn,i)=>{ btn.onclick=()=>{ stop(); goTo(i); start(); }; });
   dotEls.forEach((d,i)=>{ d.onclick=()=>{ stop(); goTo(i); start(); }; });
   car.addEventListener("mouseenter",stop); car.addEventListener("mouseleave",start);
   let _tx=null;
@@ -3936,22 +3991,26 @@ function applyBackdropContrast(heroEl,art){
   probe.onerror=()=>{ const r={bright:false,glow:''}; _bgContrast.set(art,r); };
   probe.src=img(art,192,108);
 }
+function trailerIconBtnHTML(extras){
+  const trailer=(extras||[]).find(e=>/trailer/i.test(e.subtype||""));
+  return trailer?`<button class="detail-trailer-btn" id="ratingsTrailerBtn" aria-label="Watch trailer" title="Watch trailer">${svgIcon("trailer")}</button>`:"";
+}
 function detailHero(m,isMovie,actionsHTML,extras){
-  const art=m.art||m.thumb;
   const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
   return `<div class="detail-wrap">
     <div class="detail-hero full">
       <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" decoding="async" fetchpriority="high" alt=""><div class="detail-scrim"></div></div>
       <div class="detail-top">
         ${titleArtHTML(m)}
+        ${trailerIconBtnHTML(extras)}
+        <div class="detail-actions">${actionsHTML}</div>
         <div class="sub">${metaBits(m,isMovie)}</div>
+        ${ratingsRowHTML(m,[])}
         ${genres?`<div class="genres">${genres}</div>`:""}
-        ${ratingsRowHTML(m,extras)}
         <div class="summary">${esc(m.summary||"")}</div>
       </div>
       <div class="detail-bottom">
         ${statRowHTML(m,isMovie)}
-        <div class="detail-actions">${actionsHTML}</div>
       </div>
       ${rateFloatHTML(m)}
     </div></div>`;
