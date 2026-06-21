@@ -349,7 +349,8 @@
   .hero-trailer-ctrls.show{opacity:1}
   .hero-trailer-ctrls .pbtn{width:40px;height:40px;font-size:17px;border-radius:10px}
   .title-logo{display:block;max-width:min(72%,560px);max-height:120px;width:auto;height:auto;
-    object-fit:contain;object-position:left bottom;margin-bottom:2px}
+    object-fit:contain;object-position:left bottom;margin-bottom:2px;
+    filter:drop-shadow(0 0 22px var(--img-glow,transparent))}
   /* Adaptive legibility: a localized dark veil behind the title block, switched
      on only when applyBackdropContrast() finds the artwork bright enough to
      wash out a white logo/headline. Lives on the scrim's ::after so no markup
@@ -1510,7 +1511,7 @@
     .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(10,10,12,.72) 0%,rgba(10,10,12,.22) 45%,transparent 68%)}
     .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:center;width:100%}
     .hub-carousel .hero-meta{justify-content:center}
-    .hub-carousel .ratings-row{justify-content:center;gap:12px}
+    .hub-carousel .ratings-row{display:none}
     .hub-carousel .hero-actions{justify-content:center}
     .hub-carousel .title-logo{max-height:100px;max-width:min(72%,320px);object-position:center bottom;margin:0 auto 8px}
     .hub-carousel .hero-top h2{font-size:clamp(22px,7vw,34px)}
@@ -3902,31 +3903,37 @@ function titleArtHTML(item,fallbackTitle){
    backdrop) from a small CORS probe; if it's bright, flag the hero so an
    extra legibility veil + stronger title shadow kick in. Falls back silently
    when the server doesn't allow canvas reads — the baseline scrim still holds. */
-const _bgContrast=new Map();   // art url -> true(bright)/false(dark)
+const _bgContrast=new Map();   // art url -> {bright, glow}
 function applyBackdropContrast(heroEl,art){
   if(!heroEl||!art) return;
-  const finish=bright=>{ if(heroEl.isConnected) heroEl.classList.toggle("bright-bg",bright); };
-  if(_bgContrast.has(art)){ finish(_bgContrast.get(art)); return; }
+  const apply=r=>{
+    if(!heroEl.isConnected) return;
+    heroEl.classList.toggle("bright-bg",r.bright);
+    if(r.glow) heroEl.style.setProperty('--img-glow',r.glow);
+  };
+  if(_bgContrast.has(art)){ apply(_bgContrast.get(art)); return; }
   const probe=new Image();
   probe.crossOrigin="anonymous";
   probe.onload=()=>{
-    let bright=false;
+    let bright=false, glow='';
     try{
       const w=72,h=40,cv=document.createElement("canvas"); cv.width=w; cv.height=h;
       const ctx=cv.getContext("2d",{willReadFrequently:true});
       ctx.drawImage(probe,0,0,w,h);
       const cols=Math.max(1,Math.round(w*0.62));
       const d=ctx.getImageData(0,0,cols,h).data;
-      let sum=0,n=0;
+      let lum=0,rS=0,gS=0,bS=0,n=0;
       for(let i=0;i<d.length;i+=4){
         const a=d[i+3]/255;
-        sum+=(0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2])*a; n++;
+        rS+=d[i]*a; gS+=d[i+1]*a; bS+=d[i+2]*a;
+        lum+=(0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2])*a; n++;
       }
-      bright = n ? (sum/n/255)>0.52 : false;
+      bright = n ? (lum/n/255)>0.52 : false;
+      if(n) glow=`rgba(${Math.round(rS/n)},${Math.round(gS/n)},${Math.round(bS/n)},.65)`;
     }catch(_){ bright=false; }   // tainted canvas (no CORS) — skip, keep baseline
-    _bgContrast.set(art,bright); finish(bright);
+    const r={bright,glow}; _bgContrast.set(art,r); apply(r);
   };
-  probe.onerror=()=>{ _bgContrast.set(art,false); };
+  probe.onerror=()=>{ const r={bright:false,glow:''}; _bgContrast.set(art,r); };
   probe.src=img(art,192,108);
 }
 function detailHero(m,isMovie,actionsHTML,extras){
