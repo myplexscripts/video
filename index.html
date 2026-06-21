@@ -1289,6 +1289,24 @@
   .p-panel-scrim{position:absolute;inset:0;z-index:14;background:rgba(0,0,0,.45);
     opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
   .p-panel-scrim.show{opacity:1;pointer-events:auto;cursor:pointer}
+  /* Device picker sheet */
+  #devicePicker{position:absolute;bottom:0;left:0;right:0;z-index:16;
+    background:rgba(12,12,18,.97);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    -webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
+    border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,.1);
+    padding:20px 20px max(20px,env(safe-area-inset-bottom));
+    transform:translateY(100%);transition:transform .28s var(--ease);pointer-events:none}
+  #devicePicker.open{transform:translateY(0);pointer-events:auto}
+  .dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .dp-head h3{font-size:16px;font-weight:700;margin:0}
+  #deviceList .device-item{display:flex;align-items:center;gap:14px;width:100%;
+    padding:13px 8px;border:none;background:none;color:inherit;text-align:left;
+    border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;border-radius:8px}
+  #deviceList .device-item:last-child{border-bottom:none}
+  #deviceList .device-item:hover,#deviceList .device-item:focus-visible{background:rgba(255,255,255,.08)}
+  #deviceList .device-item .svgi{width:22px;height:22px;color:var(--dim);flex:0 0 auto}
+  .di-name{font-size:15px;font-weight:600}
+  .di-sub{font-size:12px;color:var(--dim);margin-top:2px}
   #player.panel-open.idle .p-top{opacity:1;transform:none;pointer-events:auto}
   .p-panel-head{display:flex;align-items:center;justify-content:flex-end;padding:10px 12px;
     flex:0 0 auto;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -1720,6 +1738,7 @@
     <div class="pt" id="pTitle"></div>
     <div class="p-top-right">
       <div class="p-status hidden" id="pStatus" role="status"><span class="dot" aria-hidden="true"></span><span id="pStatusText"></span></div>
+      <button class="pbtn hidden" id="playOnBtn" title="Play on…" aria-label="Play on another device"><span class="svgi" style="--i:url('assets/images/icons/ui/television.svg')" aria-hidden="true"></span></button>
       <button class="pbtn" id="settingsBtn" title="Settings" aria-label="Playback settings" aria-haspopup="menu" aria-expanded="false"><span class="svgi" style="--i:url('assets/images/icons/ui/gear.svg')" aria-hidden="true"></span></button>
       <div class="p-menu" id="pMenu" role="menu" aria-label="Playback settings"></div>
     </div>
@@ -1758,6 +1777,14 @@
   <div class="p-panel" id="pPanel" aria-hidden="true">
     <div class="p-panel-head"><button class="p-panel-close" id="pPanelClose" aria-label="Close"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button></div>
     <div class="p-panel-body" id="pPanelBody"></div>
+  </div>
+  <!-- Device picker: "Play on…" sheet -->
+  <div id="devicePicker" aria-hidden="true">
+    <div class="dp-head">
+      <h3>Play on…</h3>
+      <button class="pbtn" id="devicePickerClose" aria-label="Close picker"><span class="svgi" style="--i:url('assets/images/icons/ui/x.svg')" aria-hidden="true"></span></button>
+    </div>
+    <div id="deviceList"></div>
   </div>
   <button class="pbtn mini-play" id="miniPlay" aria-label="Play"><span class="svgi" style="--i:url('assets/images/icons/ui/play-fill.svg')" aria-hidden="true"></span></button>
   <div class="mini-bar" id="miniBar">
@@ -4898,6 +4925,7 @@ const AUTO_LADDER=[
 async function playItem(it,offsetMs){
   playerOpener=document.activeElement;
   $("#player").classList.add("show");
+  $("#playOnBtn").classList.remove("hidden");
   playerLoading(true,"Loading", it);
   // Always pull full metadata WITH chapters + intro/credits markers so the
   // chapters panel and the credits-triggered "Up Next" have data to work with
@@ -5439,6 +5467,86 @@ if(airBtn&&window.WebKitPlaybackTargetAvailabilityEvent){
   airBtn.onclick=()=>video.webkitShowPlaybackTargetPicker();
 }
 
+/* ---- Play on another device (Plex clients via /clients API) ---- */
+let _serverMachineId=null, _playOnCmdId=0;
+
+async function getServerMachineId(){
+  if(_serverMachineId) return _serverMachineId;
+  try{
+    const r=await fetch(`${server.uri}/identity?X-Plex-Token=${server.token}`,{headers:plexHeaders(server.token)});
+    const xml=await r.text();
+    const m=xml.match(/machineIdentifier="([^"]+)"/);
+    if(m) _serverMachineId=m[1];
+  }catch(_){}
+  return _serverMachineId||"";
+}
+
+async function fetchPlexClients(){
+  const mc=await api("/clients");
+  return (mc.Server||[]).map(s=>({
+    name:s.name||s.product||"Unknown Device",
+    host:s.address||s.host||"",
+    port:parseInt(s.port||"32500",10),
+    machineId:s.machineIdentifier||"",
+    platform:s.product||s.platform||""
+  })).filter(c=>c.host);
+}
+
+async function playOnDevice(client){
+  const machineId=await getServerMachineId();
+  const su=new URL(server.uri);
+  const params=new URLSearchParams({
+    key:`/library/metadata/${currentItem.ratingKey}`,
+    offset:String(Math.floor((video.currentTime||0)*1000)),
+    machineIdentifier:machineId,
+    address:su.hostname,
+    port:su.port||(su.protocol==="https:"?"443":"80"),
+    protocol:su.protocol.replace(":",""),
+    token:server.token,
+    "X-Plex-Client-Identifier":clientId(),
+    commandID:String(++_playOnCmdId),
+    containerKey:`/library/metadata/${currentItem.ratingKey}/children`
+  });
+  const url=`http://${client.host}:${client.port}/player/playback/playMedia?${params}`;
+  try{
+    await fetch(url,{headers:{"X-Plex-Client-Identifier":clientId(),"X-Plex-Token":server.token}});
+    toast(`Playing on ${client.name}`);
+  }catch(_){
+    try{ await fetch(url,{mode:"no-cors"}); toast(`Sent to ${client.name}`); }
+    catch(e2){ toast(`Couldn't reach ${client.name}`); }
+  }
+  closeDevicePicker();
+}
+
+function closeDevicePicker(){
+  const dp=$("#devicePicker"); if(!dp) return;
+  dp.classList.remove("open"); dp.setAttribute("aria-hidden","true");
+}
+
+async function showDevicePicker(){
+  const dp=$("#devicePicker"), dl=$("#deviceList"); if(!dp||!dl) return;
+  dl.innerHTML="<div class='loading' style='padding:16px 0'>Looking for devices…</div>";
+  dp.classList.add("open"); dp.removeAttribute("aria-hidden");
+  try{
+    const clients=await fetchPlexClients();
+    if(!clients.length){
+      dl.innerHTML="<div style='padding:16px 0;color:var(--dim);font-size:14px'>No active Plex players found.<br><small>Open the Plex app on your device first.</small></div>";
+      return;
+    }
+    dl.innerHTML="";
+    clients.forEach(c=>{
+      const btn=document.createElement("button");
+      btn.className="device-item";
+      btn.innerHTML=`${svgIcon("television")}<div><div class="di-name">${esc(c.name)}</div>${c.platform?`<div class="di-sub">${esc(c.platform)}</div>`:""}</div>`;
+      btn.onclick=()=>playOnDevice(c);
+      dl.appendChild(btn);
+    });
+  }catch(e){ dl.innerHTML=`<div style='padding:16px 0;color:var(--dim);font-size:14px'>Error: ${esc(e.message)}</div>`; }
+}
+
+$("#playOnBtn").onclick=showDevicePicker;
+$("#devicePickerClose").onclick=closeDevicePicker;
+
 /* minimize / expand / close */
 $("#minPlayer").onclick=()=>$("#player").classList.add("min");
 $("#expandPlayer").onclick=()=>$("#player").classList.remove("min");
@@ -5451,8 +5559,10 @@ function closePlayer(){
   if(warmedNext){ stopSession(warmedNext.sessionId); warmedNext=null; }
   hideNextUp(); $("#skipIntro").hidden=true;
   clearInterval(castSyncInterval); castSession=null;
+  closeDevicePicker();
   video.pause(); video.removeAttribute("src"); video.load();
   $("#player").classList.remove("show","min","idle","loading","paused","panel-open");
+  $("#playOnBtn").classList.add("hidden");
   currentItem=null;
   closeSettingsMenu(); closePanel();
   if(playerOpener&&document.contains(playerOpener)) playerOpener.focus();
