@@ -349,8 +349,7 @@
   .hero-trailer-ctrls.show{opacity:1}
   .hero-trailer-ctrls .pbtn{width:40px;height:40px;font-size:17px;border-radius:10px}
   .title-logo{display:block;max-width:min(72%,560px);max-height:120px;width:auto;height:auto;
-    object-fit:contain;object-position:left bottom;margin-bottom:2px;
-    filter:drop-shadow(0 1px 8px rgba(0,0,0,.9)) drop-shadow(0 0 24px rgba(0,0,0,.6))}
+    object-fit:contain;object-position:left bottom;margin-bottom:2px}
   /* Adaptive legibility: a localized dark veil behind the title block, switched
      on only when applyBackdropContrast() finds the artwork bright enough to
      wash out a white logo/headline. Lives on the scrim's ::after so no markup
@@ -621,8 +620,7 @@
   /* Logo wrapper: fixed height = 1/3 of card; object-fit:contain scales logo proportionally */
   .bill-logo-wrap{position:absolute;bottom:14px;left:14px;right:14px;height:93px;z-index:2;
     display:flex;justify-content:center;align-items:flex-end}
-  .bill-logo{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;
-    filter:drop-shadow(0 1px 8px rgba(0,0,0,.9)) drop-shadow(0 0 24px rgba(0,0,0,.6))}
+  .bill-logo{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom}
   @media(max-width:680px){.bill-logo-wrap{height:73px}}
   /* Trending rank badge */
   .bill-rank{position:absolute;top:10px;left:12px;z-index:3;font-size:clamp(28px,8vw,40px);
@@ -1334,7 +1332,7 @@
   #topFrost{display:none;position:fixed;top:0;left:0;right:0;z-index:8;
     height:calc(env(safe-area-inset-top) + 36px);
     background:linear-gradient(to bottom,#191919 0%,transparent 100%);
-    pointer-events:none;opacity:0;transition:opacity .25s var(--ease)}
+    pointer-events:none;opacity:0;transition:opacity .35s ease}
   /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
   /* SOLID background (no backdrop-filter): a frosted bar must re-blur the
      content behind it on every scroll frame, which is expensive on phones and
@@ -2325,6 +2323,8 @@ let _navDoneTimer;
 function navStart(){
   const bar=document.getElementById("navBar"),c=document.getElementById("content");
   clearTimeout(_navDoneTimer);
+  document.getElementById("main")?.scrollTo(0,0);
+  window.scrollTo(0,0);
   if(bar){ bar.className=""; void bar.offsetWidth; bar.className="going"; }
   if(c){ c.classList.add("nav-out"); setTimeout(()=>c.classList.remove("nav-out"),130); }
   _navDoneTimer=setTimeout(navDone,8000);
@@ -2785,8 +2785,6 @@ async function showHome(gen){
       .filter(h=>h.items.length);
 
     c.innerHTML="";
-    const heroItem=videoHubs[0]&&videoHubs[0].items[0];
-    if(heroItem) c.appendChild(await heroEl(heroItem));
     if(gen!==undefined&&gen!==_routeGen) return;
     if(cw.length){
       const cwHub={title:"Continue Watching",key:"continue_watching",plexKey:"",items:cw,lib:"",featured:true,summary:""};
