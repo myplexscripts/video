@@ -4761,13 +4761,13 @@ function showMobileSearch(prefill){
   const inp=c.querySelector("#mobileSearchInput");
   if(!inp) return;
   if(prefill){ inp.value=prefill; runMobileSearch(prefill); }
-  else requestAnimationFrame(()=>inp.focus());
+  else{ requestAnimationFrame(()=>inp.focus()); loadMobileSearchLanding(); }
   let st=null;
   inp.addEventListener("input",e=>{
     clearTimeout(st);
     const q=e.target.value.trim();
     const res=document.getElementById("mobileSearchResults");
-    if(!q){ if(res) res.innerHTML=""; history.replaceState(null,"",location.pathname+location.search+"#/search"); return; }
+    if(!q){ loadMobileSearchLanding(); history.replaceState(null,"",location.pathname+location.search+"#/search"); return; }
     st=setTimeout(()=>{
       if(q.length>=2){
         history.replaceState(null,"",location.pathname+location.search+`#/search?q=${encodeURIComponent(q)}`);
@@ -4775,6 +4775,25 @@ function showMobileSearch(prefill){
       }
     },500);
   });
+}
+async function loadMobileSearchLanding(){
+  const container=document.getElementById("mobileSearchResults");
+  if(!container) return;
+  container.innerHTML="";
+  try{
+    const genres=await fetchGenreData();
+    if(!genres.length) return;
+    const cur=document.getElementById("mobileSearchResults");
+    if(!cur||cur.innerHTML!=="") return; // user started typing, don't clobber results
+    const label=el("div","");
+    label.style.cssText="padding:16px 16px 4px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)";
+    label.textContent="Browse";
+    cur.appendChild(label);
+    const sec=genreRailSection(genres,getRailStyle(GENRE_CARDS_KEY));
+    sec.querySelector(".rail-head")?.remove();
+    sec.style.paddingTop="0";
+    cur.appendChild(sec);
+  }catch(e){ /* fail silently */ }
 }
 async function runMobileSearch(q){
   const container=document.getElementById("mobileSearchResults");
