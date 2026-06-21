@@ -2693,7 +2693,7 @@ async function showGenrePage(){
 function getRailStyles(){ return JSON.parse(localStorage.getItem(LS.railStyles)||"{}"); }
 function getRailStyle(key){
   const s=getRailStyles()[key];
-  if(key===GENRE_CARDS_KEY) return (s==="billboard"||s==="square")?s:"square";
+  if(key===GENRE_CARDS_KEY) return (s==="billboard"||s==="square"||s==="grid")?s:"square";
   if(s) return s;
   return /continue|on.?deck/i.test(key)?"billboard":"poster";
 }
