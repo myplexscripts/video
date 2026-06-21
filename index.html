@@ -366,7 +366,7 @@
      Each rail can carry its own ambient color wash (.rail-ambient), a
      blurred, saturated smear of its first item's art sitting behind the
      header — a per-row echo of the page-level UltraBlur underlay. */
-  .rail-section{position:relative;padding:40px 0 10px;overflow:hidden}
+  .rail-section{position:relative;padding:24px 0 0;overflow:hidden}
   .rail-ph{min-height:240px}
   /* ---- HUB GRID STYLE (2-column Spotify-style shelf) ---- */
   .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px var(--edge) 16px}
@@ -394,7 +394,7 @@
      summary, actions at the bottom). Auto-advances every 5s, pauses on
      hover/touch. Each slide reuses the .hero-* content classes; .hub-cs-slide
      carries the stacking/positioning for the wipe transition. */
-  .hub-carousel-section{padding:40px 0 22px;overflow:visible}
+  .hub-carousel-section{padding:24px 0 0;overflow:visible}
   .hub-carousel{position:relative;height:min(72vh,704px);min-height:480px;overflow:hidden;touch-action:pan-y}
   .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;visibility:hidden;
     will-change:transform;display:flex;flex-direction:column;justify-content:space-between;
@@ -419,6 +419,13 @@
     object-fit:contain;object-position:left bottom;margin:0 0 8px}
   /* Progress dots */
   .hub-carousel-dots{position:absolute;bottom:26px;right:var(--edge);display:flex;gap:6px;z-index:3}
+  /* CW episode thumbnail shown in carousel slides on desktop */
+  .cw-ep-thumb{display:none}
+  @media(min-width:681px){
+    .cw-ep-thumb{display:block;width:100%;max-width:360px;aspect-ratio:16/9;
+      border-radius:var(--radius);object-fit:cover;margin-bottom:16px;
+      box-shadow:var(--shadow-lg)}
+  }
   .hub-cd{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);
     border:none;cursor:pointer;padding:0;flex:0 0 auto;
     transition:background .2s,width .2s,border-radius .2s}
@@ -2748,11 +2755,18 @@ function carouselHubSection(hub){
   sec.appendChild(head);
   if(hub.summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=hub.summary; sec.appendChild(p); }
   const car=el("div","hub-carousel");
+  const isCWHub=/continue|on.?deck/i.test(hub.key+hub.title);
   hub.items.forEach((it,i)=>{
     const slide=el("div","hub-cs-slide"+(i===0?" active":""));
     // Each slide is a full hero (no kicker — the hub title sits above instead).
     slide.innerHTML=heroInnerHTML(it,{kicker:false,priority:false});
     wireHero(slide,it,{square:window.innerWidth<=680});
+    // CW episodes on desktop: show episode thumbnail above description
+    if(isCWHub&&it.type==="episode"&&it.thumb){
+      const p=slide.querySelector(".hero-top p");
+      if(p){ const t=document.createElement("img"); t.className="cw-ep-thumb";
+        t.src=img(it.thumb,680,382); t.alt=""; p.before(t); }
+    }
     if(/trending/i.test(hub.key+' '+hub.title)){const rankEl=el("div","bill-rank");rankEl.textContent=i+1;slide.appendChild(rankEl);}
     car.appendChild(slide);
   });
@@ -2962,8 +2976,9 @@ function heroInnerHTML(it,opts={}){
     <div class="hero-top">
       ${kicker?`<div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>`:""}
       ${titleArtHTML(it,title)}
+      ${ratingBadges?`<div class="ratings-row">${ratingBadges}</div>`:""}
       <div class="hero-meta">
-        ${ratingBadges}${ratingFallback}
+        ${ratingFallback}
         <span>${esc(meta)}</span>
       </div>
       <p>${esc(it.summary||"")}</p>
