@@ -1331,7 +1331,7 @@
   /* ── Status-bar dark veil: shown only when scrolled past the top (mobile only) */
   #topFrost{display:none;position:fixed;top:0;left:0;right:0;z-index:8;
     height:calc(env(safe-area-inset-top) + 36px);
-    background:linear-gradient(to bottom,#191919 0%,transparent 100%);
+    background:linear-gradient(to bottom,#191919 0%,rgba(25,25,25,.8) 30%,rgba(25,25,25,.3) 65%,transparent 100%);
     pointer-events:none;opacity:0;transition:opacity .35s ease}
   /* ── Mobile bottom tab bar ──────────────────────────────────────────────── */
   /* SOLID background (no backdrop-filter): a frosted bar must re-blur the
@@ -2788,7 +2788,10 @@ async function showHome(gen){
     if(gen!==undefined&&gen!==_routeGen) return;
     if(cw.length){
       const cwHub={title:"Continue Watching",key:"continue_watching",plexKey:"",items:cw,lib:"",featured:true,summary:""};
-      c.appendChild(renderHubSection(cwHub,getRailStyle("continue_watching")));
+      const cwSec=renderHubSection(cwHub,getRailStyle("continue_watching"));
+      cwSec.querySelector(".rail-head")?.remove();
+      cwSec.querySelector(".rail-summary")?.remove();
+      c.appendChild(cwSec);
     }
     const movieHubs=videoHubs.filter(h=>h.items[0]&&h.items[0].type==="movie");
     const tvHubs=videoHubs.filter(h=>!h.items[0]||h.items[0].type!=="movie");
