@@ -1548,11 +1548,11 @@
     .lib-menu{max-width:calc(100vw - 24px)}
 
     .searchbox:focus-within{width:min(72vw,260px)}
-    /* Mobile search landing: fills the viewport content area (between status bar
-       and tab bar) so there is no void. The flex spacer below results absorbs
-       remaining space without adding phantom scrollable height. */
+    /* Mobile search landing: min-height reaches the tab bar top so the flex
+       spacer always fills the gap between the last content item and the tab bar.
+       Do NOT subtract safe-area-inset-top — the spacer needs that extra room. */
     .mobile-search-landing{display:flex;flex-direction:column;
-      min-height:calc(100dvh - var(--tab-h) - env(safe-area-inset-bottom) - env(safe-area-inset-top))}
+      min-height:calc(100dvh - var(--tab-h) - env(safe-area-inset-bottom))}
     .ms-spacer{flex:1}
     .ms-hero{padding:calc(var(--pill-clear) + 8px) 16px 24px;
       background:linear-gradient(to bottom,rgba(255,255,255,.05) 0%,transparent 80%)}
