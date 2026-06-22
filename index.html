@@ -136,7 +136,7 @@
     /* CARD DIMENSIONS
        portrait cards (movies/shows): --card-w wide, 3:2 ratio (height auto)
        wide cards (episodes/extras):  --card-w-wide */
-    --card-w:170px; --card-w-wide:280px; --grid-gap:24px; --rail-gap:20px;
+    --card-w:170px; --card-w-wide:280px; --grid-gap:0px; --rail-gap:0px;
     /* FLOATING NAV RULES
        Library page title → pure typography, no glass pill.
          font-size: 19px / weight 800 / letter-spacing -.025em
@@ -307,7 +307,7 @@
   /* ---- HERO ---- */
   /* ---- HERO — editorial full-bleed ---- */
   .hero{position:relative;overflow:hidden;cursor:pointer;
-    aspect-ratio:16/9;max-height:92vh;min-height:460px;
+    height:100svh;min-height:0;max-height:none;
     display:flex;flex-direction:column;justify-content:flex-end}
   .hero-bg{position:absolute;inset:0;overflow:hidden;background:var(--bg2)}
   /* Blurred ambient echo removed — the image is full-bleed and crisp. */
@@ -317,9 +317,8 @@
     object-fit:cover;object-position:center 20%;
     opacity:0;transition:opacity .6s var(--ease)}
   .hero-bg-img.loaded,.hero-video.show{opacity:1}
-  /* Cinematic bottom scrim — heavy at the foot for type legibility */
-  .hero-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,rgba(10,10,12,1) 0%,rgba(10,10,12,.82) 14%,rgba(10,10,12,.45) 38%,rgba(10,10,12,.1) 68%,transparent 88%)}
+  /* Scrim removed — flat editorial, hard edges */
+  .hero-scrim{position:absolute;inset:0;background:none}
   .hero-top,.hero-bottom{position:relative;z-index:2;max-width:none}
   .hero-top{padding:0 var(--edge) 0}
   .hero-bottom{padding:16px var(--edge) 48px}
@@ -351,12 +350,7 @@
   .title-logo{display:block;max-width:min(80%,680px);max-height:160px;width:auto;height:auto;
     object-fit:contain;object-position:left bottom;margin-bottom:2px;
     filter:drop-shadow(0 0 22px var(--img-glow,transparent))}
-  /* Adaptive legibility veil for bright backdrops */
-  .hero-scrim::after,.detail-scrim::after{content:"";position:absolute;inset:0;opacity:0;pointer-events:none;
-    transition:opacity .45s var(--ease);
-    background:linear-gradient(to top,rgba(6,6,8,.65) 0%,transparent 44%),
-    linear-gradient(102deg,rgba(6,6,8,.6) 0%,transparent 58%)}
-  .bright-bg .hero-scrim::after,.bright-bg .detail-scrim::after{opacity:1}
+  /* No adaptive veil — flat editorial. Legibility via text-shadow only. */
   .bright-bg .hero-top h2,.bright-bg .detail-top h2,.bright-bg .detail-info h2{
     text-shadow:0 2px 18px rgba(0,0,0,.85),0 1px 4px rgba(0,0,0,.72)}
 
@@ -393,7 +387,7 @@
      hover/touch. Each slide reuses the .hero-* content classes; .hub-cs-slide
      carries the stacking/positioning for the wipe transition. */
   .hub-carousel-section{padding:0;overflow:visible}
-  .hub-carousel{position:relative;aspect-ratio:16/9;max-height:92vh;min-height:480px;overflow:hidden;touch-action:pan-y}
+  .hub-carousel{position:relative;height:100svh;min-height:0;max-height:none;overflow:hidden;touch-action:pan-y}
   .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;visibility:hidden;
     will-change:transform;display:flex;flex-direction:column;justify-content:flex-end;
     padding:0 var(--edge) 48px}
@@ -402,7 +396,7 @@
   .hub-carousel .hero-bg-img{position:absolute;inset:0;width:100%;height:100%;
     object-fit:cover;object-position:center 20%}
   .hub-carousel .hero-bg-blur{-webkit-mask-image:none;mask-image:none}
-  .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(10,10,12,1) 0%,rgba(10,10,12,.82) 14%,rgba(10,10,12,.45) 38%,rgba(10,10,12,.1) 68%,transparent 88%)}
+  .hub-carousel .hero-scrim{background:none}
   .hub-carousel .hero-top,.hub-carousel .hero-bottom{position:relative;z-index:2;padding:0;max-width:none;text-align:left}
   .hub-carousel .hero-meta{justify-content:flex-start}
   .hub-carousel .hero-actions{justify-content:flex-start}
@@ -466,7 +460,7 @@
   .see-all:hover{color:var(--text)}
   .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
   .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
-  .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
+  .carousel{display:flex;gap:0;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
     scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .carousel::-webkit-scrollbar{height:0}
   /* ---- RAIL ARROWS ----
@@ -488,7 +482,7 @@
   .rail-viewport.has-overflow:hover .rail-arrow:not(.edge),
   .rail-viewport.has-overflow:focus-within .rail-arrow:not(.edge){opacity:1;pointer-events:auto}
   @media (hover:none){ .rail-viewport.has-overflow .rail-arrow:not(.edge){opacity:1;pointer-events:auto} }
-  .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px;
+  .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0;
     padding:4px var(--edge) 16px}
 
   /* ---- LIBRARY TABS ----
@@ -697,9 +691,8 @@
     font-size:44px;color:var(--faint);background:var(--bg2)}
   .ec-art.broken img{display:none}
   .ec-art.broken .art-fallback{display:flex}
-  /* Right-edge fade so the logo reads where it crosses the image into the text column */
-  .ec-art::after{content:'';position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(to right,transparent 62%,rgba(10,10,12,.85) 96%)}
+  /* Edge fade removed — hard editorial border */
+  .ec-art::after{content:none}
   /* Text column: right-aligned, vertically centred, anchored to the page edge */
   .ec-body{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-end;
     justify-content:center;text-align:right;padding:0 var(--edge) 0 0;gap:14px;min-width:0;
@@ -720,7 +713,6 @@
     .editorial-card{grid-template-columns:1fr;grid-template-rows:auto auto;
       align-items:start;padding:22px 0 28px;text-align:left}
     .ec-art{grid-column:1;grid-row:1;aspect-ratio:1/1}
-    .ec-art::after{background:linear-gradient(to bottom,transparent 66%,rgba(10,10,12,.9) 99%)}
     .ec-body{grid-column:1;grid-row:2;align-items:flex-start;text-align:left;
       padding:0 var(--edge);gap:10px}
     .ec-title{align-self:stretch;margin-left:0;margin-top:-52px;position:relative;z-index:2}
@@ -751,7 +743,7 @@
      right. Episode pages keep the original poster+info row layout. */
   .detail-wrap{position:relative}
   .detail-hero{position:relative;min-height:520px;display:flex;align-items:flex-start;overflow:hidden}
-  .detail-hero.full{min-height:min(72vh,704px);align-items:stretch;flex-direction:column;
+  .detail-hero.full{min-height:100svh;align-items:stretch;flex-direction:column;
     justify-content:space-between;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
   .detail-bg{position:absolute;inset:0;overflow:hidden}
   /* Blurred ambient echo removed for the flat editorial look. */
@@ -760,12 +752,9 @@
     object-position:center 20%;
     opacity:0;transition:opacity .6s var(--ease)}
   .detail-bg-img.loaded{opacity:1}
-  .detail-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,rgba(10,10,12,.92) 0%,rgba(10,10,12,.65) 18%,rgba(10,10,12,.25) 48%,transparent 75%),
-    linear-gradient(to right,rgba(10,10,12,.55),transparent 65%)}
-  .detail-hero.full .detail-scrim{
-    background:linear-gradient(to bottom,rgba(10,10,12,.52) 0%,transparent 28%),
-    linear-gradient(to top,rgba(10,10,12,.9) 0%,rgba(10,10,12,.42) 26%,transparent 58%)}
+  /* Scrims removed — flat editorial, hard edges */
+  .detail-scrim{position:absolute;inset:0;background:none}
+  .detail-hero.full .detail-scrim{background:none}
   .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
     align-items:flex-start;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
@@ -802,12 +791,7 @@
   .genres{color:var(--dim);font-size:14px;font-weight:500;margin:0 0 16px}
   .detail-bottom{position:relative;max-width:800px;display:flex;flex-direction:column;gap:18px}
   .detail-bottom .stat-row{padding:0;border-top:none}
-  /* Icon-only trailer button on detail pages */
-  .detail-trailer-btn{display:inline-flex;align-items:center;justify-content:center;
-    width:42px;height:42px;border-radius:0;background:rgba(255,255,255,.13);
-    border:none;cursor:pointer;color:#fff;font-size:18px;margin-bottom:18px;
-    transition:background .15s var(--ease)}
-  .detail-trailer-btn:hover{background:rgba(255,255,255,.24)}
+  /* Trailer button uses .btn.glass — merged into detail-actions row */
 
   /* ---- RATE FLOAT (star rating) ---- */
   .rate-float{position:absolute;right:var(--edge);bottom:var(--edge);z-index:4;
@@ -821,18 +805,12 @@
   .rate-stars button .svgi.filled{color:var(--accent)}
   .rate-stars button:hover{transform:scale(1.15);color:var(--accent2)}
 
-  /* ---- RATINGS ---- */
-  .ratings-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
-  .rating-badge{display:inline-flex;align-items:center;gap:8px;background:var(--frost-bg);
-    backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:0;
-    padding:4px 14px 4px 4px;font-size:13px;font-weight:600;color:var(--text);
-    box-shadow:var(--frost-shadow-sm)}
-  .rating-badge .src{display:inline-flex;align-items:center;justify-content:center;height:22px;flex:0 0 auto}
+  /* ---- RATINGS ---- flat text, no pill */
+  .ratings-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
+  .rating-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text)}
+  .rating-badge .src{display:inline-flex;align-items:center;justify-content:center;height:20px;flex:0 0 auto}
   .rating-badge .src img{height:100%;width:auto;display:block}
   .rating-badge b{font-weight:700}
-  .rating-badge.trailer{padding:7px 16px;cursor:pointer;transition:background-color .15s var(--ease)}
-  .rating-badge.trailer:hover{background:var(--frost-bg-hover)}
-  .rating-badge.trailer .svgi{color:var(--accent);font-size:16px}
 
   /* ---- META STAT ROW (added / watched history) ---- */
   .stat-row{display:flex;gap:36px;flex-wrap:wrap;padding:26px var(--edge);border-top:1px solid var(--line)}
@@ -1549,11 +1527,11 @@
   }
   @media(max-width:560px){
     .p-vol{display:none}
-    /* ---- MOBILE HERO — 1:1 square, full-bleed (16:9 is desktop-only) ---- */
-    .hero{aspect-ratio:1/1;height:auto;min-height:0;max-height:none;justify-content:flex-end}
+    /* ---- MOBILE HERO — full viewport, image fills via object-fit:cover ---- */
+    .hero{height:100svh;justify-content:flex-end}
     .hero-bg-img,.hero-video{inset:0;width:100%;height:100%;object-fit:cover;object-position:center 18%}
     .hero-top{padding:0 var(--edge) 0;text-align:left}
-    .hero-bottom{padding:12px var(--edge) 28px}
+    .hero-bottom{padding:12px var(--edge) max(72px,calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px))}
     .hero h2{font-size:clamp(26px,8.5vw,40px)}
     .hero .title-logo{height:68px;max-width:min(300px,76vw);width:auto;
       object-fit:contain;object-position:left bottom;margin:0}
@@ -1561,9 +1539,9 @@
     .hero-kicker{display:none}
     .hero-actions{justify-content:flex-start}
     .hero-trailer-ctrls{bottom:80px}
-    /* Hub carousel on mobile: same editorial look, stacked content */
-    .hub-carousel{aspect-ratio:unset;height:calc(100vw * .75 + 180px);max-height:unset;min-height:unset}
-    .hub-cs-slide{padding:0 var(--edge) 48px;justify-content:flex-end;align-items:flex-start}
+    /* Hub carousel on mobile: full viewport */
+    .hub-carousel{height:100svh;max-height:none;min-height:0}
+    .hub-cs-slide{padding:0 var(--edge) max(72px,calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px));justify-content:flex-end;align-items:flex-start}
     .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:left;width:100%}
     .hub-carousel .hero-meta{justify-content:flex-start}
     .hub-carousel .ratings-row{display:none}
@@ -1588,21 +1566,13 @@
        On phones the crisp art is a square (1:1) that fills the top of the hero
        and fades at its lower edge into the solid background; the title block
        sits below, left-aligned. No blur echo, no ambient wash. */
-    .detail-hero.full{min-height:unset;padding:0;flex-direction:column;justify-content:flex-start}
-    .detail-hero.full .detail-bg{position:absolute;inset:0;overflow:hidden;background:var(--bg)}
-    /* Square crisp image, full width, fading at its bottom into --bg */
-    .detail-hero.full .detail-bg-img{position:absolute;top:0;left:0;right:0;bottom:auto;width:100%;height:100vw;
-      object-fit:cover;object-position:center 18%;
-      -webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent 99%);
-      mask-image:linear-gradient(to bottom,#000 72%,transparent 99%)}
-    .detail-hero.full .detail-scrim{position:absolute;inset:0;
-      background:linear-gradient(to bottom,
-        transparent calc(58vw),
-        rgba(10,10,12,.6) calc(86vw),
-        rgba(10,10,12,.78) 100%)}
-    .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
-    /* Title block sits below the square art, left-aligned (editorial) */
-    .detail-hero.full .detail-top{position:relative;z-index:1;padding:calc(100vw - 52px) var(--edge) 0;max-width:100%;text-align:left}
+    /* Mobile detail hero — full viewport, art fills behind text (same as desktop) */
+    .detail-hero.full{min-height:100svh;padding:calc(var(--pill-clear) + 8px) var(--edge) max(40px,env(safe-area-inset-bottom));
+      flex-direction:column;justify-content:space-between}
+    .detail-hero.full .detail-bg{position:absolute;inset:0;overflow:hidden}
+    .detail-hero.full .detail-bg-img{position:absolute;inset:0;width:100%;height:100%;
+      object-fit:cover;object-position:center 18%}
+    .detail-hero.full .detail-top{position:relative;z-index:1;padding:0;max-width:100%;text-align:left}
     .detail-hero.full .detail-top h2{font-size:clamp(28px,9vw,42px)}
     .detail-hero.full .title-logo{display:block;height:68px;max-width:min(300px,76vw);width:auto;
       object-fit:contain;object-position:left bottom;margin:0}
@@ -1610,7 +1580,7 @@
     .detail-hero.full .detail-top .genres{text-align:left}
     .detail-hero.full .detail-actions{justify-content:flex-start}
     .detail-hero.full .ratings-row{justify-content:flex-start}
-    .detail-hero.full .detail-bottom{padding:16px var(--edge) 32px}
+    .detail-hero.full .detail-bottom{padding:16px 0 32px}
     .detail-hero.full .rate-float{display:none}
     .ep-card{width:220px}
     .coll-art{width:120px}
@@ -1690,6 +1660,17 @@
     .settings-row:has(.rail-style-btns){flex-direction:column;align-items:flex-start;gap:8px}
     /* Toggle rows: keep toggle pinned to the right */
     .settings-row .toggle-btn{margin-left:auto}
+  }
+  /* ---- SERIF HEADLINE FONT (opt-in via settings) ---- */
+  body.serif-headlines .hero h2,
+  body.serif-headlines .hub-carousel .hero-top h2,
+  body.serif-headlines .detail-top h2,
+  body.serif-headlines .detail-info h2,
+  body.serif-headlines .ec-title h3,
+  body.serif-headlines .page-head h2,
+  body.serif-headlines .editorial-head h2{
+    font-family:'Playfair Display',Georgia,'Times New Roman',serif;
+    letter-spacing:-.02em;
   }
 </style>
 </head>
@@ -1858,7 +1839,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries",watchedBadges:"hume_watched_badges",spoilerBlur:"hume_spoiler_blur"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",headlineFont:"hume_headline_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries",watchedBadges:"hume_watched_badges",spoilerBlur:"hume_spoiler_blur"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- FONT THEMING ---- */
@@ -1868,9 +1849,13 @@ const FONT_STACKS={
   outfit:"'Outfit','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif",
 };
 function _loadGFont(family){
-  const id="gf-"+family.toLowerCase(); if(document.getElementById(id)) return;
-  const l=document.createElement("link"); l.id=id; l.rel="stylesheet";
-  l.href=`https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700;900&display=swap`;
+  const slug="gf-"+family.split(":")[0].replace(/[+\s]/g,"-").toLowerCase();
+  if(document.getElementById(slug)) return;
+  const l=document.createElement("link"); l.id=slug; l.rel="stylesheet";
+  const hasWeights=family.includes(":");
+  l.href=hasWeights
+    ?`https://fonts.googleapis.com/css2?family=${family}&display=swap`
+    :`https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700;900&display=swap`;
   document.head.appendChild(l);
 }
 function applyFont(name,save=true){
@@ -1880,8 +1865,18 @@ function applyFont(name,save=true){
   else if(name==="outfit") _loadGFont("Outfit");
   if(save){ localStorage.setItem(LS.font,name); pushRemoteSettings(); toast("Settings saved"); }
 }
+function applyHeadlineFont(name,save=true){
+  if(name==="serif"){
+    document.body.classList.add("serif-headlines");
+    _loadGFont("Playfair+Display:ital,wght@0,700;0,900;1,700");
+  }else{
+    document.body.classList.remove("serif-headlines");
+  }
+  if(save){ localStorage.setItem(LS.headlineFont,name); pushRemoteSettings(); toast("Settings saved"); }
+}
 // Set font before first content render so there's no flash of wrong typeface
 applyFont(localStorage.getItem(LS.font)||"circular",false);
+applyHeadlineFont(localStorage.getItem(LS.headlineFont)||"sans",false);
 // Restore TV mode (applies body class before paint so cursor:none is immediate)
 if(localStorage.getItem(LS.tvMode)==="1") document.body.classList.add("tv-mode");
 
@@ -1960,6 +1955,10 @@ async function loadRemoteSettings(){
         const next=remote[LS.font];
         if(next!==localStorage.getItem(LS.font)){ localStorage.setItem(LS.font,next); applyFont(next,false); changed=true; }
       }
+      if(remote[LS.headlineFont]==="sans"||remote[LS.headlineFont]==="serif"){
+        const next=remote[LS.headlineFont];
+        if(next!==localStorage.getItem(LS.headlineFont)){ localStorage.setItem(LS.headlineFont,next); applyHeadlineFont(next,false); changed=true; }
+      }
       if(remote[LS.detailArt]==="backdrop"||remote[LS.detailArt]==="square"){
         const next=remote[LS.detailArt];
         if(next!==localStorage.getItem(LS.detailArt)){ localStorage.setItem(LS.detailArt,next); changed=true; }
@@ -1987,6 +1986,7 @@ function pushRemoteSettings(){
         [LS.railStyles]:getRailStyles(),
         [LS.navCollapsed]:localStorage.getItem(LS.navCollapsed)||"0",
         [LS.font]:localStorage.getItem(LS.font)||"circular",
+        [LS.headlineFont]:localStorage.getItem(LS.headlineFont)||"sans",
         [LS.detailArt]:localStorage.getItem(LS.detailArt)||"backdrop",
         [LS.heroStyle]:localStorage.getItem(LS.heroStyle)||"backdrop",
         [LS.hubSummaries]:localStorage.getItem(LS.hubSummaries)||"0",
@@ -3646,9 +3646,11 @@ async function showSettings(){
   setTitle("Settings"); clearUltraBlur(); hideLibNav();
   const c=$("#content");
   const cf=localStorage.getItem(LS.font)||"circular";
+  const hf=localStorage.getItem(LS.headlineFont)||"sans";
   const da=localStorage.getItem(LS.detailArt)||"backdrop";
   const hs=getHeroStyle();
   const fBtn=(id,label)=>`<button class="rail-style-btn${cf===id?" active":""}" data-font="${id}">${label}</button>`;
+  const hfBtn=(id,label)=>`<button class="rail-style-btn${hf===id?" active":""}" data-hf="${id}">${label}</button>`;
   const daBtn=(id,label)=>`<button class="rail-style-btn${da===id?" active":""}" data-detailart="${id}">${label}</button>`;
   const hsBtn=(id,label)=>`<button class="rail-style-btn${hs===id?" active":""}" data-herostyle="${id}">${label}</button>`;
   c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>Settings</h2></div></div>
@@ -3656,7 +3658,15 @@ async function showSettings(){
     <div class="settings-group">
       <div class="settings-group-head">Appearance</div>
       <div class="settings-row">
-        <div class="settings-label">Font
+        <div class="settings-label">Headline Font
+          <small>Font used for titles, heroes, and section headings.</small>
+        </div>
+        <div class="rail-style-btns" id="settingsHeadlineFontBtns">
+          ${hfBtn("sans","Sans-serif (Circular)")}${hfBtn("serif","Serif")}
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Interface Font
           <small>Applies to the entire app interface.</small>
         </div>
         <div class="rail-style-btns" id="settingsFontBtns">
@@ -3723,7 +3733,14 @@ async function showSettings(){
         <span class="sync-dot" id="syncDot"></span>
       </div>
     </div></div>`;
-  // Wire font picker
+  // Wire headline font picker
+  c.querySelectorAll("#settingsHeadlineFontBtns .rail-style-btn").forEach(btn=>{
+    btn.onclick=()=>{
+      applyHeadlineFont(btn.dataset.hf);
+      c.querySelectorAll("#settingsHeadlineFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
+    };
+  });
+  // Wire interface font picker
   c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(btn=>{
     btn.onclick=()=>{
       applyFont(btn.dataset.font);
@@ -4100,7 +4117,7 @@ function applyBackdropContrast(heroEl,art){
 }
 function trailerIconBtnHTML(extras){
   const trailer=(extras||[]).find(e=>/trailer/i.test(e.subtype||""));
-  return trailer?`<button class="detail-trailer-btn" id="ratingsTrailerBtn" aria-label="Watch trailer" title="Watch trailer">${svgIcon("trailer")}</button>`:"";
+  return trailer?`<button class="btn glass" id="ratingsTrailerBtn">${svgIcon("trailer")} Trailer</button>`:"";
 }
 function detailHero(m,isMovie,actionsHTML,extras){
   const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
@@ -4109,8 +4126,7 @@ function detailHero(m,isMovie,actionsHTML,extras){
       <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" decoding="async" fetchpriority="high" alt=""><div class="detail-scrim"></div></div>
       <div class="detail-top">
         ${titleArtHTML(m)}
-        ${trailerIconBtnHTML(extras)}
-        <div class="detail-actions">${actionsHTML}</div>
+        <div class="detail-actions">${actionsHTML}${trailerIconBtnHTML(extras)}</div>
         <div class="sub">${metaBits(m,isMovie)}</div>
         ${ratingsRowHTML(m,[])}
         ${genres?`<div class="genres">${genres}</div>`:""}
