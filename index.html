@@ -165,7 +165,7 @@
     padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;
     transition:top .15s var(--ease)}
   .skip-link:focus-visible{top:12px}
-  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   ::-webkit-scrollbar{display:none}
   *{scrollbar-width:none}
   @media (prefers-reduced-motion: reduce){
@@ -187,7 +187,7 @@
   .btn i,.btn .svgi{font-size:17px;width:17px;height:17px}
   .btn.lg{padding:14px 30px;font-size:15px}
   .btn.sm{padding:8px 16px;font-size:13px}
-  .btn.icon{width:48px;height:48px;padding:0;justify-content:center;border-radius:50%;font-size:19px}
+  .btn.icon{width:48px;height:48px;padding:0;justify-content:center;border-radius:0;font-size:19px}
   .btn.icon.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .btn.icon.active:hover{background:var(--accent-glass-hover)}
 
@@ -214,16 +214,11 @@
   .badge.remote{background:var(--accent-wash);color:var(--accent)}
   .badge.relay{background:rgba(255,100,100,.1);color:#ff9090}
 
-  /* ---- ULTRABLUR UNDERLAY ----
-     Single fixed, blurred color wash derived from the current page's artwork.
-     Used on detail-style pages (movie/show/season/collection/playlist) and the
-     player. Grid/list pages leave it hidden to keep things calm and legible. */
-  #ultraBlur{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-  .ub-layer{position:absolute;inset:-20%;background-size:cover;background-position:center;
-    opacity:0;transition:opacity 1.2s var(--ease);filter:blur(110px) saturate(1.9) brightness(1.05)}
-  .ub-layer.show{opacity:.65}
-  .ub-scrim{position:absolute;inset:0;
-    background:linear-gradient(180deg,rgba(10,10,12,.35) 0%,rgba(10,10,12,.6) 50%,rgba(10,10,12,.78) 100%)}
+  /* ---- ULTRABLUR UNDERLAY — REMOVED ----
+     The editorial design is flat: crisp images on a solid background, no soft
+     ambient colour washes anywhere. The element is kept in the DOM (JS still
+     references it) but never paints. */
+  #ultraBlur{display:none !important}
 
   /* ---- APP SHELL ---- */
   #app{display:none;height:100%;position:relative;z-index:1}
@@ -287,7 +282,7 @@
   .menu-toggle{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));
     left:max(16px,env(safe-area-inset-left));z-index:15;background:var(--frost-bg);
     backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    border:1px solid var(--frost-border);width:44px;height:44px;border-radius:50%;
+    border:1px solid var(--frost-border);width:44px;height:44px;border-radius:0;
     align-items:center;justify-content:center;font-size:18px;color:var(--text);
     box-shadow:var(--frost-shadow);
     transition:background-color .15s,box-shadow .15s}
@@ -314,9 +309,9 @@
   .hero{position:relative;overflow:hidden;cursor:pointer;
     aspect-ratio:16/9;max-height:92vh;min-height:460px;
     display:flex;flex-direction:column;justify-content:flex-end}
-  .hero-bg{position:absolute;inset:0;overflow:hidden}
-  .hero-bg-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
-    filter:blur(100px) saturate(1.9) brightness(1.05)}
+  .hero-bg{position:absolute;inset:0;overflow:hidden;background:var(--bg2)}
+  /* Blurred ambient echo removed — the image is full-bleed and crisp. */
+  .hero-bg-blur{display:none}
   /* Full-bleed cover — image fills the entire hero frame */
   .hero-bg-img,.hero-video{position:absolute;inset:0;width:100%;height:100%;
     object-fit:cover;object-position:center 20%;
@@ -339,7 +334,7 @@
     color:rgba(255,255,255,.5);margin-top:14px;font-weight:500}
   .hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:18px 0 14px;font-weight:500}
-  .hero-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
+  .hero-meta .sep{width:4px;height:4px;border-radius:0;background:var(--faint)}
   .pill{display:inline-flex;align-items:center;gap:5px;background:var(--frost-bg);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:0;padding:4px 10px;
     font-size:12px;font-weight:600;box-shadow:var(--frost-shadow-sm)}
@@ -381,9 +376,8 @@
   .hub-grid-art{width:72px;height:72px;flex:0 0 72px;overflow:hidden}
   .hub-grid-title{font-size:13px;font-weight:700;padding:0 12px;line-height:1.35;
     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .rail-ambient{position:absolute;top:-90px;left:6%;right:6%;height:260px;
-    background-size:cover;background-position:center;opacity:.28;
-    filter:blur(70px) saturate(1.8);pointer-events:none;transform:scale(1.25)}
+  /* Per-rail ambient colour wash removed for the flat editorial look. */
+  .rail-ambient{display:none !important}
   .rail-head{display:flex;align-items:flex-end;gap:12px;margin:0 var(--edge) 16px;position:relative}
   .rail-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
   .rail-lib{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:var(--fw-bold)}
@@ -434,7 +428,7 @@
   .hub-cd.active{background:#fff;width:18px}
   /* Prev/next arrows (appear on hover) */
   .hub-ca{position:absolute;top:50%;transform:translateY(-50%);z-index:3;
-    width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.4);
+    width:38px;height:38px;border-radius:0;background:rgba(0,0,0,.4);
     border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
     cursor:pointer;color:var(--text);opacity:0;transition:opacity .2s var(--ease)}
   .hub-carousel:hover .hub-ca{opacity:1}
@@ -463,7 +457,7 @@
       overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none}
   }
   .rail-head.with-avatar{align-items:center}
-  .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+  .rail-head-avatar{width:48px;height:48px;border-radius:0;overflow:hidden;flex:0 0 auto;
     box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--frost-border),var(--frost-shadow-sm)}
   .rail-head-avatar img{width:100%;height:100%;object-fit:cover;display:block}
   .see-all{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;
@@ -480,7 +474,7 @@
      Shown only when the rail overflows; the edge arrow hides at each end. */
   .rail-viewport{position:relative}
   .rail-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;
-    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    width:44px;height:44px;border-radius:0;display:flex;align-items:center;justify-content:center;
     background:rgba(20,20,24,.7);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     border:1px solid var(--frost-border);box-shadow:var(--frost-shadow);color:var(--text);
@@ -602,7 +596,7 @@
     overflow:hidden}
   .art .watch-prog > i{display:block;height:100%;background:var(--accent)}
   .art.ep-blur img{filter:blur(20px) brightness(.6);transform:scale(1.1)}
-  .art .unwatched-dot{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;
+  .art .unwatched-dot{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:0;
     background:var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.45)}
   .art .watched-check{position:absolute;top:7px;right:7px;font-size:17px;line-height:1;
     color:var(--accent);filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));pointer-events:none}
@@ -645,12 +639,10 @@
   .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column;
     position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate;
     background:var(--bg2);transform:translateZ(0);clip-path:inset(0)}
-  /* Shared blurred-art wash behind the whole card: the art's bottom dissolves
-     into it and the meta strip rides on it, so there's no hard seam between them. */
+  /* Flat dark panel behind the card — no ambient blur wash. */
   .card.billboard::before{content:'';position:absolute;inset:0;z-index:0;
-    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
-    filter:blur(30px) saturate(1.7) brightness(.32)}
-  /* Art: square, rounded only at top; transparent bg + above the wash */
+    background:var(--bg2)}
+  /* Art: square; transparent bg + above the panel */
   .card.billboard .art{aspect-ratio:1/1;border-radius:0;flex:0 0 auto;
     z-index:1;background:transparent}
   /* Scrim for logo legibility; faded out at the very bottom with the image */
@@ -669,12 +661,9 @@
   .bill-title{font-size:22px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
     color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.7);text-align:center;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  /* Metadata strip: rides the shared wash — no own blur, just a readability tint */
-  .bill-meta{position:relative;z-index:1;flex:0 0 auto;
+  /* Metadata strip: flat dark panel, no blur */
+  .bill-meta{position:relative;z-index:1;flex:0 0 auto;background:var(--bg2);
     padding:6px 12px 13px;text-align:center;overflow:hidden}
-  .bill-meta::before{content:'';position:absolute;inset:-24px;z-index:-1;
-    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
-    filter:blur(48px) saturate(1.8) brightness(.52)}
   .bill-meta .cs{position:relative;z-index:1;font-size:var(--t-sm);font-weight:500;
     color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
   /* Suppress legacy card text rows — all metadata lives in .bill-meta */
@@ -682,40 +671,63 @@
   @media(max-width:680px){.carousel .card.billboard{width:220px}}
 
   /* ---- EDITORIAL SECTION — magazine-style featured items ----
-     Each card: square 1:1 art on the left, large overlapping title straddling
-     the image/background boundary, right-aligned meta below. */
-  .editorial-section{padding:0 0 48px;border-top:2px solid var(--text)}
+     A title-page feature row: wide 16:9 art on large screens (1:1 on phones),
+     the logo/headline straddling the image's right edge into a right-hand
+     text column where the standfirst sits, right-aligned. Hard rules, no
+     rounding, no ambient blur — flat editorial composition. */
+  .editorial-section{padding:0 0 40px;border-top:2px solid var(--text)}
   .editorial-head{display:flex;align-items:baseline;justify-content:space-between;
-    gap:12px;padding:18px var(--edge) 20px}
-  .editorial-head h2{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    gap:12px;padding:18px var(--edge) 4px}
+  .editorial-head h2{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
     color:var(--faint)}
-  .editorial-head .count{font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.06em}
-  .editorial-card{position:relative;display:grid;grid-template-columns:55% 1fr;grid-template-rows:1fr auto;
-    width:100%;cursor:pointer;border:none;background:none;color:inherit;font-family:var(--font);
-    text-align:left;touch-action:manipulation;padding:32px 0 40px;gap:0}
+  .editorial-head .count{font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.08em}
+  /* Card: image column + text column. align-items:center keeps the standfirst
+     vertically centred against the 16:9 art. */
+  .editorial-card{position:relative;display:grid;grid-template-columns:58% 42%;
+    align-items:center;width:100%;cursor:pointer;border:none;background:none;color:inherit;
+    font-family:var(--font);text-align:right;touch-action:manipulation;padding:30px 0;gap:0}
   .editorial-card+.editorial-card{border-top:1px solid var(--line)}
-  /* Square art: full left column, no horizontal padding */
-  .ec-art{grid-column:1;grid-row:1/3;position:relative;overflow:hidden;aspect-ratio:1/1;align-self:start}
+  /* 16:9 cinematic art, flush to the card's left edge */
+  .ec-art{grid-column:1;grid-row:1;position:relative;overflow:hidden;aspect-ratio:16/9;background:var(--bg2)}
   .ec-art img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--ease)}
-  .editorial-card:hover .ec-art img,.editorial-card:focus-visible .ec-art img{transform:scale(1.03)}
-  .ec-art .art-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    font-size:48px;color:var(--faint);background:var(--bg2)}
-  /* Right-edge fade — image dissolves into background where the title overlaps */
+  .editorial-card:hover .ec-art img,.editorial-card:focus-visible .ec-art img{transform:scale(1.035)}
+  /* Fallback icon hidden unless the image genuinely fails — this is the fix for
+     the square art that wasn't showing (the overlay used to paint over a valid image). */
+  .ec-art .art-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+    font-size:44px;color:var(--faint);background:var(--bg2)}
+  .ec-art.broken img{display:none}
+  .ec-art.broken .art-fallback{display:flex}
+  /* Right-edge fade so the logo reads where it crosses the image into the text column */
   .ec-art::after{content:'';position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(to right,transparent 70%,var(--bg) 98%)}
-  /* Title: spans both columns, right-side content right-aligned */
-  .ec-title{grid-column:1/3;grid-row:1;align-self:center;pointer-events:none;
-    padding:0 var(--edge) 0 48%;position:relative;z-index:1;text-align:right}
-  .ec-title h3{font-size:clamp(22px,4vw,68px);font-weight:900;letter-spacing:-.04em;line-height:.95;
-    text-shadow:0 2px 24px rgba(0,0,0,.95),0 4px 48px rgba(0,0,0,.8)}
-  .ec-title .ec-logo{display:block;max-width:260px;max-height:96px;object-fit:contain;
-    object-position:right center;margin-left:auto;filter:drop-shadow(0 2px 14px rgba(0,0,0,.95))}
-  /* Meta + summary: right column only, right-aligned */
-  .ec-meta{grid-column:2;grid-row:2;padding:14px var(--edge) 0 24px;text-align:right}
-  .ec-label{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;
-    color:var(--faint);font-weight:700;margin-bottom:8px}
-  .ec-summary{font-size:var(--t-body);color:var(--dim);line-height:1.65;
+    background:linear-gradient(to right,transparent 62%,rgba(10,10,12,.85) 96%)}
+  /* Text column: right-aligned, vertically centred, anchored to the page edge */
+  .ec-body{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-end;
+    justify-content:center;text-align:right;padding:0 var(--edge) 0 0;gap:14px;min-width:0;
+    position:relative;z-index:2}
+  /* Logo/headline pulls left over the image's right edge (overlap), right edge stays at page margin */
+  .ec-title{align-self:stretch;margin-left:-46%;filter:drop-shadow(0 3px 22px rgba(0,0,0,.92))}
+  .ec-title h3{font-size:clamp(26px,3.4vw,60px);font-weight:900;letter-spacing:-.04em;line-height:.92;
+    text-shadow:0 2px 24px rgba(0,0,0,.92),0 4px 48px rgba(0,0,0,.7)}
+  .ec-title .ec-logo{display:block;max-width:min(100%,440px);max-height:118px;object-fit:contain;
+    object-position:right center;margin-left:auto}
+  .ec-label{font-size:var(--t-label);text-transform:uppercase;letter-spacing:.16em;
+    color:var(--faint);font-weight:700}
+  .ec-summary{font-size:var(--t-body);color:var(--dim);line-height:1.6;max-width:34ch;
     display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  /* TABLET + PHONE (≤768px): editorial cards stack — 1:1 square art, the
+     logo overlapping the bottom of the image, standfirst left-aligned below. */
+  @media(max-width:768px){
+    .editorial-card{grid-template-columns:1fr;grid-template-rows:auto auto;
+      align-items:start;padding:22px 0 28px;text-align:left}
+    .ec-art{grid-column:1;grid-row:1;aspect-ratio:1/1}
+    .ec-art::after{background:linear-gradient(to bottom,transparent 66%,rgba(10,10,12,.9) 99%)}
+    .ec-body{grid-column:1;grid-row:2;align-items:flex-start;text-align:left;
+      padding:0 var(--edge);gap:10px}
+    .ec-title{align-self:stretch;margin-left:0;margin-top:-52px;position:relative;z-index:2}
+    .ec-title .ec-logo{margin-left:0;object-position:left center;max-height:72px;max-width:min(72%,300px)}
+    .ec-title h3{font-size:clamp(24px,5.4vw,40px);text-align:left}
+    .ec-summary{max-width:none;-webkit-line-clamp:3}
+  }
 
   .loading,.empty{color:var(--dim);font-size:14px;padding:48px var(--edge)}
   .empty i,.empty .svgi{font-size:38px;color:var(--faint);display:block;margin-bottom:12px}
@@ -742,8 +754,8 @@
   .detail-hero.full{min-height:min(72vh,704px);align-items:stretch;flex-direction:column;
     justify-content:space-between;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
   .detail-bg{position:absolute;inset:0;overflow:hidden}
-  .detail-bg-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
-    filter:blur(100px) saturate(1.9) brightness(1.05)}
+  /* Blurred ambient echo removed for the flat editorial look. */
+  .detail-bg-blur{display:none}
   .detail-bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
     object-position:center 20%;
     opacity:0;transition:opacity .6s var(--ease)}
@@ -767,17 +779,17 @@
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:20px;
     background:none;border:none;padding:0;cursor:pointer}
   .ep-kicker-ico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-    border-radius:50%;background:var(--frost-bg);border:1px solid var(--frost-border);font-size:14px;flex:0 0 auto;
+    border-radius:0;background:var(--frost-bg);border:1px solid var(--frost-border);font-size:14px;flex:0 0 auto;
     backdrop-filter:blur(12px) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(12px) saturate(var(--frost-sat));
     box-shadow:var(--frost-shadow-sm);
     transition:background-color .15s var(--ease),transform .15s var(--ease)}
   .ep-kicker:hover .ep-kicker-ico{background:var(--frost-bg-hover);transform:translateX(-2px)}
   .ep-kicker-text{display:inline-flex;align-items:center;gap:10px;min-width:0;text-align:left}
-  .ep-kicker .sep{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.55;flex:0 0 auto}
+  .ep-kicker .sep{width:4px;height:4px;border-radius:0;background:var(--accent);opacity:.55;flex:0 0 auto}
   .detail-info h2{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98}
   .detail-info .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:16px 0;font-weight:500}
-  .sub .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
+  .sub .sep{width:4px;height:4px;border-radius:0;background:var(--faint)}
   .summary{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin-bottom:22px}
   .detail-hero:not(.full) .summary{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
   .detail-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -792,7 +804,7 @@
   .detail-bottom .stat-row{padding:0;border-top:none}
   /* Icon-only trailer button on detail pages */
   .detail-trailer-btn{display:inline-flex;align-items:center;justify-content:center;
-    width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.13);
+    width:42px;height:42px;border-radius:0;background:rgba(255,255,255,.13);
     border:none;cursor:pointer;color:#fff;font-size:18px;margin-bottom:18px;
     transition:background .15s var(--ease)}
   .detail-trailer-btn:hover{background:rgba(255,255,255,.24)}
@@ -846,7 +858,7 @@
     transition:background .15s,color .15s,border-color .15s;white-space:nowrap}
   .rail-style-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
   .rail-style-btn:hover:not(.active){background:var(--surface2);color:var(--text)}
-  .sync-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--faint)}
+  .sync-dot{width:9px;height:9px;border-radius:0;flex-shrink:0;background:var(--faint)}
   .sync-dot.ok{background:#3ecf6b;box-shadow:0 0 0 3px rgba(62,207,107,.18)}
   .sync-dot.bad{background:#e0556b;box-shadow:0 0 0 3px rgba(224,85,107,.18)}
   /* ---- GENRE RAIL ---- */
@@ -887,15 +899,15 @@
   .cast[data-actor-id]{cursor:pointer}
   .cast[data-actor-id]:hover .art{border-color:var(--accent)}
   .cast[data-actor-id]:hover .nm{color:var(--accent)}
-  .cast .art{width:112px;height:112px;border-radius:50%;overflow:hidden;
+  .cast .art{width:112px;height:112px;border-radius:0;overflow:hidden;
     background:var(--bg2);border:1px solid var(--line);margin:0 auto;
     transition:border-color .15s;position:relative}
-  .cast .art::before{content:"";position:absolute;border-radius:50%;
+  .cast .art::before{content:"";position:absolute;border-radius:0;
     width:34%;height:34%;top:18%;left:50%;transform:translateX(-50%);
     background:rgba(255,255,255,.15)}
   .cast .art::after{content:"";position:absolute;
     width:60%;height:33%;bottom:0;left:50%;transform:translateX(-50%);
-    border-radius:50% 50% 0 0;background:rgba(255,255,255,.11)}
+    background:rgba(255,255,255,.11)}
   .cast .art img{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:1}
   .cast .art.no-img img{display:none}
   .cast .nm{font-size:12.5px;font-weight:600;line-height:1.3;margin-top:9px;
@@ -903,12 +915,12 @@
   .cast .rl{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.25}
   .crew{display:flex;gap:28px;flex-wrap:wrap;color:var(--dim);font-size:13px;margin-top:4px}
   .crew b{color:var(--text);font-weight:600}
-  .person-card .person-art{aspect-ratio:1/1;border-radius:50%;overflow:hidden;background:var(--bg2);border:1px solid var(--line)}
-  .person-card .person-art img{border-radius:50%}
+  .person-card .person-art{aspect-ratio:1/1;border-radius:0;overflow:hidden;background:var(--bg2);border:1px solid var(--line)}
+  .person-card .person-art img{border-radius:0}
   /* ---- ACTOR DETAIL PAGE ---- */
   .actor-head{display:flex;align-items:flex-end;gap:28px;padding:120px var(--edge) 32px;
     background:linear-gradient(to bottom,transparent 0%,var(--bg) 100%);position:relative}
-  .actor-photo{width:140px;height:140px;border-radius:50%;overflow:hidden;flex:0 0 140px;
+  .actor-photo{width:140px;height:140px;border-radius:0;overflow:hidden;flex:0 0 140px;
     background:var(--bg2);border:2px solid var(--line)}
   .actor-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .actor-info{flex:1;min-width:0}
@@ -926,7 +938,7 @@
   .bio-modal{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--radius-lg);max-width:580px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden}
   .bio-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--line);flex-shrink:0}
   .bio-modal-head h2{font-size:16px;font-weight:700;letter-spacing:-.02em}
-  .bio-modal-close{background:none;border:none;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;width:30px;height:30px;padding:0;font-size:18px}
+  .bio-modal-close{background:none;border:none;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:0;width:30px;height:30px;padding:0;font-size:18px}
   .bio-modal-close:hover{background:var(--surface);color:var(--text)}
   .bio-modal-body{padding:20px 22px 24px;overflow-y:auto;line-height:1.72;font-size:14px;color:var(--dim)}
   .bio-modal-body p{margin-bottom:12px}
@@ -985,7 +997,7 @@
   .trailer-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:10px;color:var(--dim);font-size:13px;font-weight:500}
   .trailer-state.hidden{display:none}
-  .trailer-state .ring{width:40px;height:40px;border-radius:50%;
+  .trailer-state .ring{width:40px;height:40px;border-radius:0;
     border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite}
   .trailer-state i,.trailer-state .svgi{font-size:28px;width:28px;height:28px;color:var(--faint)}
 
@@ -1068,7 +1080,7 @@
   .coll-desc{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin-bottom:22px}
   .coll-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--dim);font-size:13px;
     font-weight:500}
-  .coll-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
+  .coll-meta .sep{width:4px;height:4px;border-radius:0;background:var(--faint)}
   .coll-actions{display:flex;gap:12px;margin-top:24px}
 
   /* ---- EPISODE ROW LIST ----
@@ -1108,7 +1120,7 @@
   #player.paused .p-backdrop{opacity:.6}
   .p-spinner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:18px;z-index:3;pointer-events:none}
-  .p-spinner .ring{width:52px;height:52px;border-radius:50%;
+  .p-spinner .ring{width:52px;height:52px;border-radius:0;
     border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   /* ---- SKELETON SCREENS ---- */
@@ -1254,7 +1266,7 @@
   .p-played{position:absolute;left:0;top:0;bottom:0;background:var(--accent);width:0}
   .p-chapter-marks{position:absolute;inset:0;pointer-events:none}
   .p-chapter-mark{position:absolute;top:0;bottom:0;width:2px;background:rgba(10,10,12,.55)}
-  .p-knob{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;
+  .p-knob{position:absolute;top:50%;width:14px;height:14px;border-radius:0;background:#fff;
     transform:translate(-50%,-50%) scale(0);transition:transform .15s var(--ease);
     box-shadow:0 1px 6px rgba(0,0,0,.4);left:0}
   .p-seek-track:hover .p-knob,.p-seek-track:focus-visible .p-knob{transform:translate(-50%,-50%) scale(1)}
@@ -1277,7 +1289,7 @@
     -webkit-backdrop-filter:blur(16px) saturate(var(--frost-sat));
     border:1px solid rgba(255,255,255,.12);box-shadow:var(--frost-edge-sm);padding:5px 12px;margin-right:6px;
     white-space:nowrap;display:flex;align-items:center;gap:6px;font-weight:600}
-  .p-status .dot{width:6px;height:6px;border-radius:50%;background:#6ee7a0;flex:0 0 auto}
+  .p-status .dot{width:6px;height:6px;border-radius:0;background:#6ee7a0;flex:0 0 auto}
   .p-status.transcode .dot{background:var(--accent)}
 
   .p-menu{position:absolute;top:52px;right:0;background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
@@ -1537,17 +1549,17 @@
   }
   @media(max-width:560px){
     .p-vol{display:none}
-    /* ---- MOBILE HERO — keep full-bleed, use 4:3ish crop so it's not too squat ---- */
-    .hero{aspect-ratio:unset;height:75vw;min-height:260px;max-height:80vw;justify-content:flex-end}
-    .hero-bg-img,.hero-video{inset:0;width:100%;height:100%;object-fit:cover;object-position:center 20%}
-    .hero-top{padding:0 var(--edge) 0;text-align:center}
-    .hero-bottom{padding:12px var(--edge) 24px}
-    .hero h2{font-size:clamp(22px,7.5vw,34px)}
-    .hero .title-logo{height:60px;max-width:min(260px,72vw);width:100%;
-      object-fit:contain;object-position:center bottom;margin:0 auto}
+    /* ---- MOBILE HERO — 1:1 square, full-bleed (16:9 is desktop-only) ---- */
+    .hero{aspect-ratio:1/1;height:auto;min-height:0;max-height:none;justify-content:flex-end}
+    .hero-bg-img,.hero-video{inset:0;width:100%;height:100%;object-fit:cover;object-position:center 18%}
+    .hero-top{padding:0 var(--edge) 0;text-align:left}
+    .hero-bottom{padding:12px var(--edge) 28px}
+    .hero h2{font-size:clamp(26px,8.5vw,40px)}
+    .hero .title-logo{height:68px;max-width:min(300px,76vw);width:auto;
+      object-fit:contain;object-position:left bottom;margin:0}
     .hero-tagline{display:none}
     .hero-kicker{display:none}
-    .hero-actions{justify-content:center}
+    .hero-actions{justify-content:flex-start}
     .hero-trailer-ctrls{bottom:80px}
     /* Hub carousel on mobile: same editorial look, stacked content */
     .hub-carousel{aspect-ratio:unset;height:calc(100vw * .75 + 180px);max-height:unset;min-height:unset}
@@ -1559,15 +1571,10 @@
     .hub-carousel .title-logo{max-height:80px;max-width:min(68%,300px);object-position:left bottom;margin:0 0 8px}
     .hub-carousel .hero-top h2{font-size:clamp(20px,6.5vw,32px)}
     .hub-carousel-dots{bottom:16px;left:0;right:0;justify-content:center;padding:6px 0}
-    /* Editorial cards — stack vertically on mobile */
-    .editorial-card{grid-template-columns:1fr;grid-template-rows:auto auto auto;padding:20px 0 28px}
-    .ec-art{grid-column:1;grid-row:1;width:82%;aspect-ratio:1/1}
-    .ec-art::after{background:linear-gradient(to bottom,transparent 62%,var(--bg) 97%)}
-    .ec-title{grid-column:1;grid-row:2;padding:0 var(--edge);margin-top:-28px;align-self:start;text-align:left}
-    .ec-title .ec-logo{margin-left:0;object-position:left center}
-    .ec-title h3{font-size:clamp(20px,7vw,32px)}
-    .ec-meta{grid-column:1;grid-row:3;padding:10px var(--edge) 0;text-align:left}
-    .ec-summary{-webkit-line-clamp:3}
+    /* Editorial card phone tweaks (stacking handled by the ≤768px block) */
+    .ec-title{margin-top:-44px}
+    .ec-title .ec-logo{max-height:60px;max-width:min(68%,240px)}
+    .ec-title h3{font-size:clamp(22px,7vw,34px)}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
@@ -1577,45 +1584,32 @@
     .detail-row{flex-wrap:wrap;gap:20px}
     /* On phones the thumbnail stacks back on top of the info column. */
     .detail-poster.wide{width:100%;order:-1}
-    /* ---- MOBILE FULL-BLEED DETAIL HERO ----
-       Same structure as desktop: detail-bg fills the full hero (position:absolute;inset:0),
-       blur echo is the blurred art backdrop for the whole hero area, crisp image covers
-       just the top 4:3 portion and vignettes at its bottom into the blur echo below it.
-       Blur echo then fades at the hero's bottom edge into the ultraBlur ambient.
-       This is identical to how the desktop hero works, just rotated 90°. */
+    /* ---- MOBILE DETAIL HERO — 1:1 square, full-bleed, flat ----
+       On phones the crisp art is a square (1:1) that fills the top of the hero
+       and fades at its lower edge into the solid background; the title block
+       sits below, left-aligned. No blur echo, no ambient wash. */
     .detail-hero.full{min-height:unset;padding:0;flex-direction:column;justify-content:flex-start}
-    /* detail-bg: absolute like desktop, fills the full hero height */
-    .detail-hero.full .detail-bg{position:absolute;inset:0;overflow:hidden;background:transparent}
-    /* blur echo: restored — local blurred art fills the whole hero, same as desktop.
-       Fades out at the bottom so it dissolves into the ultraBlur ambient below. */
-    .detail-hero.full .detail-bg-blur{display:block;
-      -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);
-      mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
-    /* crisp image: covers just the 4:3 art zone at the top; vignettes at its bottom
-       edge into the blur echo behind it — same concept as the desktop left-edge vignette */
-    .detail-hero.full .detail-bg-img{position:absolute;top:0;left:0;right:0;bottom:auto;width:100%;height:75vw;
-      object-fit:cover;
-      -webkit-mask-image:linear-gradient(to bottom,#000 44%,transparent 92%);
-      mask-image:linear-gradient(to bottom,#000 44%,transparent 92%)}
-    .detail-hero.full.sq .detail-bg-img{height:100vw}
+    .detail-hero.full .detail-bg{position:absolute;inset:0;overflow:hidden;background:var(--bg)}
+    /* Square crisp image, full width, fading at its bottom into --bg */
+    .detail-hero.full .detail-bg-img{position:absolute;top:0;left:0;right:0;bottom:auto;width:100%;height:100vw;
+      object-fit:cover;object-position:center 18%;
+      -webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent 99%);
+      mask-image:linear-gradient(to bottom,#000 72%,transparent 99%)}
     .detail-hero.full .detail-scrim{position:absolute;inset:0;
-      /* No top scrim — the art shows clean, same as Plex native.
-         Bottom gradient darkens only the text zone below the art fade. */
       background:linear-gradient(to bottom,
-        transparent calc(38vw),
-        rgba(10,10,12,.55) calc(68vw),
-        rgba(10,10,12,.72) 100%)}
+        transparent calc(58vw),
+        rgba(10,10,12,.6) calc(86vw),
+        rgba(10,10,12,.78) 100%)}
     .bright-bg .detail-hero.full .detail-scrim::after{opacity:0}
-    /* detail-top: padding-top pushes it below the 4:3 art with a 64px overlap into the fade zone */
-    .detail-hero.full .detail-top{position:relative;z-index:1;padding:calc(75vw - 64px) var(--edge) 0;max-width:100%;text-align:center}
-    .detail-hero.full.sq .detail-top{padding-top:calc(100vw - 64px)}
-    .detail-hero.full .detail-top h2{font-size:clamp(26px,8vw,38px)}
-    .detail-hero.full .title-logo{display:block;height:73px;max-width:min(320px,80vw);width:100%;
-      object-fit:contain;object-position:center bottom;margin:0 auto}
-    .detail-hero.full .detail-top .sub{justify-content:center}
-    .detail-hero.full .detail-top .genres{text-align:center}
-    .detail-hero.full .detail-actions{justify-content:center}
-    .detail-hero.full .ratings-row{justify-content:center}
+    /* Title block sits below the square art, left-aligned (editorial) */
+    .detail-hero.full .detail-top{position:relative;z-index:1;padding:calc(100vw - 52px) var(--edge) 0;max-width:100%;text-align:left}
+    .detail-hero.full .detail-top h2{font-size:clamp(28px,9vw,42px)}
+    .detail-hero.full .title-logo{display:block;height:68px;max-width:min(300px,76vw);width:auto;
+      object-fit:contain;object-position:left bottom;margin:0}
+    .detail-hero.full .detail-top .sub{justify-content:flex-start}
+    .detail-hero.full .detail-top .genres{text-align:left}
+    .detail-hero.full .detail-actions{justify-content:flex-start}
+    .detail-hero.full .ratings-row{justify-content:flex-start}
     .detail-hero.full .detail-bottom{padding:16px var(--edge) 32px}
     .detail-hero.full .rate-float{display:none}
     .ep-card{width:220px}
@@ -3357,8 +3351,10 @@ function editorialCard(it){
   b.setAttribute("type","button");
   const isEp=it.type==="episode";
   const title=isEp?(it.grandparentTitle||it.title):it.title;
-  const art=it.thumb||it.parentThumb||it.grandparentArt||it.art;
-  const imgSrc=art?img(art,640,640):"";
+  // 16:9 cinematic art: prefer backdrop art, fall back to the poster thumb.
+  // The image fills a landscape frame on desktop and a 1:1 crop on mobile (CSS).
+  const art=it.art||it.grandparentArt||it.thumb||it.parentThumb;
+  const imgSrc=art?img(art,960,540):"";
   const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
   const metaParts=[year,it.contentRating,
     it.type==="show"?(it.childCount>1?`${it.childCount} Seasons`:(it.childCount===1?"1 Season":"")):"",
@@ -3372,8 +3368,8 @@ function editorialCard(it){
       ${imgSrc?`<img loading="lazy" decoding="async" alt="${esc(title)}" src="${imgSrc}" onerror="this.closest('.ec-art').classList.add('broken')">`:""}
       <span class="art-fallback">${svgIcon(it.type==="show"?"television":"movies")}</span>
     </div>
-    <div class="ec-title">${titleHTML}</div>
-    <div class="ec-meta">
+    <div class="ec-body">
+      <div class="ec-title">${titleHTML}</div>
       ${metaParts.length?`<div class="ec-label">${esc(metaParts.join(" · "))}</div>`:""}
       ${it.summary?`<p class="ec-summary">${esc(it.summary)}</p>`:""}
     </div>`;
