@@ -282,7 +282,7 @@
   .menu-toggle{display:none;position:fixed;top:max(16px,env(safe-area-inset-top));
     left:max(16px,env(safe-area-inset-left));z-index:15;background:var(--frost-bg);
     backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    border:1px solid var(--frost-border);width:44px;height:44px;border-radius:0;
+    border:1px solid var(--frost-border);width:44px;height:44px;border-radius:50%;
     align-items:center;justify-content:center;font-size:18px;color:var(--text);
     box-shadow:var(--frost-shadow);
     transition:background-color .15s,box-shadow .15s}
@@ -317,8 +317,9 @@
     object-fit:cover;object-position:center 20%;
     opacity:0;transition:opacity .6s var(--ease)}
   .hero-bg-img.loaded,.hero-video.show{opacity:1}
-  /* Scrim removed — flat editorial, hard edges */
-  .hero-scrim{position:absolute;inset:0;background:none}
+  /* Subtle bottom-up gradient for legibility */
+  .hero-scrim{position:absolute;inset:0;
+    background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.28) 44%,transparent 72%)}
   .hero-top,.hero-bottom{position:relative;z-index:2;max-width:none}
   .hero-top{padding:0 var(--edge) 0}
   .hero-bottom{padding:16px var(--edge) 48px}
@@ -396,7 +397,7 @@
   .hub-carousel .hero-bg-img{position:absolute;inset:0;width:100%;height:100%;
     object-fit:cover;object-position:center 20%}
   .hub-carousel .hero-bg-blur{-webkit-mask-image:none;mask-image:none}
-  .hub-carousel .hero-scrim{background:none}
+  .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.28) 44%,transparent 72%)}
   .hub-carousel .hero-top,.hub-carousel .hero-bottom{position:relative;z-index:2;padding:0;max-width:none;text-align:left}
   .hub-carousel .hero-meta{justify-content:flex-start}
   .hub-carousel .hero-actions{justify-content:flex-start}
@@ -565,8 +566,8 @@
      play affordance — no movement, scaling, or stacked effects. */
   .card{scroll-snap-align:start;cursor:pointer;border:none;background:none;text-align:left;
     flex:0 0 auto;color:inherit;outline:none;border-radius:var(--radius-sm);touch-action:manipulation}
-  .carousel .card{width:180px}
-  .carousel .card.wide{width:262px}
+  .carousel .card{width:220px}
+  .carousel .card.wide{width:300px}
   /* Gold focus ring lives on .art, not the card button, so it follows the visible image edge. */
   .card:focus-visible .art{
     box-shadow:0 0 0 2.5px var(--accent),0 0 0 6px rgba(232,184,37,.18),0 16px 48px rgba(232,184,37,.2) !important;
@@ -616,14 +617,17 @@
   .art-mosaic.n2{grid-template-rows:1fr}
   .art-mosaic.n3 img:first-child{grid-row:1/3}
 
-  .card .ct{font-size:13.5px;margin-top:10px;line-height:1.3;font-weight:600;letter-spacing:-.01em;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .card .cs{font-size:12px;color:var(--dim);margin-top:3px;font-weight:500;
+  /* Card text hidden for clean poster-only look; shown on season/extra cards that need labels */
+  .card .ct{display:none}
+  .card .cs{display:none}
+  .season-card .ct,.extra-card .ct{display:block;font-size:13.5px;margin-top:10px;line-height:1.3;
+    font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .season-card .cs{display:block;font-size:12px;color:var(--dim);margin-top:3px;font-weight:500;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* Featured (first rail): bigger cards */
-  .featured .carousel .card{width:260px}
-  .featured .carousel .card.wide{width:344px}
+  .featured .carousel .card{width:300px}
+  .featured .carousel .card.wide{width:380px}
   .featured .art img{aspect-ratio:2/3}
   .featured .art img.wide{aspect-ratio:16/9}
 
@@ -744,7 +748,7 @@
   .detail-wrap{position:relative}
   .detail-hero{position:relative;min-height:520px;display:flex;align-items:flex-start;overflow:hidden}
   .detail-hero.full{min-height:100svh;align-items:stretch;flex-direction:column;
-    justify-content:space-between;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
+    justify-content:flex-end;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
   .detail-bg{position:absolute;inset:0;overflow:hidden}
   /* Blurred ambient echo removed for the flat editorial look. */
   .detail-bg-blur{display:none}
@@ -752,9 +756,10 @@
     object-position:center 20%;
     opacity:0;transition:opacity .6s var(--ease)}
   .detail-bg-img.loaded{opacity:1}
-  /* Scrims removed — flat editorial, hard edges */
-  .detail-scrim{position:absolute;inset:0;background:none}
-  .detail-hero.full .detail-scrim{background:none}
+  /* Subtle bottom-up gradient for legibility */
+  .detail-scrim{position:absolute;inset:0;
+    background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.28) 44%,transparent 72%)}
+  .detail-hero.full .detail-scrim{background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.3) 42%,transparent 68%)}
   .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
     align-items:flex-start;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
@@ -768,7 +773,7 @@
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:20px;
     background:none;border:none;padding:0;cursor:pointer}
   .ep-kicker-ico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-    border-radius:0;background:var(--frost-bg);border:1px solid var(--frost-border);font-size:14px;flex:0 0 auto;
+    border-radius:50%;background:var(--frost-bg);border:1px solid var(--frost-border);font-size:14px;flex:0 0 auto;
     backdrop-filter:blur(12px) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(12px) saturate(var(--frost-sat));
     box-shadow:var(--frost-shadow-sm);
     transition:background-color .15s var(--ease),transform .15s var(--ease)}
@@ -792,6 +797,22 @@
   .detail-bottom{position:relative;max-width:800px;display:flex;flex-direction:column;gap:18px}
   .detail-bottom .stat-row{padding:0;border-top:none}
   /* Trailer button uses .btn.glass — merged into detail-actions row */
+  /* ---- BELOW-HERO METADATA SECTION ---- */
+  .detail-meta{padding:32px var(--edge) 0}
+  .detail-meta .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
+    margin:0 0 14px;font-weight:500}
+  .detail-meta .genres{color:var(--dim);font-size:14px;font-weight:500;margin:0 0 14px}
+  .detail-meta .summary{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin:0 0 22px}
+  .detail-meta .ratings-row{margin:0 0 4px}
+  /* Personal viewing data — grid with faint outline */
+  .detail-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    border:1px solid var(--line);margin-top:28px}
+  .detail-stat-grid .stat-row{display:contents}
+  .detail-stat-grid .stat{padding:16px 20px;border-right:1px solid var(--line)}
+  .detail-stat-grid .stat:last-child{border-right:none}
+  .detail-stat-grid .sl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+    color:var(--faint);font-weight:700;display:block;margin-bottom:4px}
+  .detail-stat-grid .sv{font-size:14px;font-weight:600;color:var(--text);display:block}
 
   /* ---- RATE FLOAT (star rating) ---- */
   .rate-float{position:absolute;right:var(--edge);bottom:var(--edge);z-index:4;
@@ -877,7 +898,7 @@
   .cast[data-actor-id]{cursor:pointer}
   .cast[data-actor-id]:hover .art{border-color:var(--accent)}
   .cast[data-actor-id]:hover .nm{color:var(--accent)}
-  .cast .art{width:112px;height:112px;border-radius:0;overflow:hidden;
+  .cast .art{width:112px;height:112px;border-radius:50%;overflow:hidden;
     background:var(--bg2);border:1px solid var(--line);margin:0 auto;
     transition:border-color .15s;position:relative}
   .cast .art::before{content:"";position:absolute;border-radius:0;
@@ -898,7 +919,7 @@
   /* ---- ACTOR DETAIL PAGE ---- */
   .actor-head{display:flex;align-items:flex-end;gap:28px;padding:120px var(--edge) 32px;
     background:linear-gradient(to bottom,transparent 0%,var(--bg) 100%);position:relative}
-  .actor-photo{width:140px;height:140px;border-radius:0;overflow:hidden;flex:0 0 140px;
+  .actor-photo{width:140px;height:140px;border-radius:50%;overflow:hidden;flex:0 0 140px;
     background:var(--bg2);border:2px solid var(--line)}
   .actor-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .actor-info{flex:1;min-width:0}
@@ -1098,7 +1119,7 @@
   #player.paused .p-backdrop{opacity:.6}
   .p-spinner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:18px;z-index:3;pointer-events:none}
-  .p-spinner .ring{width:52px;height:52px;border-radius:0;
+  .p-spinner .ring{width:52px;height:52px;border-radius:50%;
     border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   /* ---- SKELETON SCREENS ---- */
@@ -1220,12 +1241,12 @@
     text-overflow:ellipsis;white-space:nowrap}
   .p-top-right{display:flex;align-items:center;gap:6px;position:relative;justify-content:flex-end}
 
-  .pbtn{background:rgba(255,255,255,.1);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
-    border:1px solid rgba(255,255,255,.14);box-shadow:var(--frost-edge-sm);
+  .pbtn{background:rgba(0,0,0,.65);
+    border:1px solid rgba(255,255,255,.14);
     color:#fff;width:44px;height:44px;border-radius:0;display:flex;align-items:center;
     justify-content:center;font-size:19px;flex:0 0 auto;
     transition:background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),transform .1s var(--ease)}
-  .pbtn:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.22)}
+  .pbtn:hover{background:rgba(0,0,0,.82);border-color:rgba(255,255,255,.22)}
   .pbtn:active{transform:scale(.94)}
   .pbtn.bare{background:none;border:none;backdrop-filter:none;box-shadow:none;border-radius:0}
   .pbtn.bare:hover{background:rgba(255,255,255,.12)}
@@ -1554,8 +1575,10 @@
     .ec-title .ec-logo{max-height:60px;max-width:min(68%,240px)}
     .ec-title h3{font-size:clamp(22px,7vw,34px)}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
-    .carousel .card{width:130px}.carousel .card.wide{width:188px}
-    .featured .carousel .card{width:170px}
+    /* Peeking carousel: one card at a time, next card peeks ~40px */
+    .carousel .card{width:calc(100vw - var(--edge) - 40px);max-width:280px}
+    .carousel .card.wide{width:calc(100vw - var(--edge) - 40px);max-width:320px}
+    .featured .carousel .card{width:calc(100vw - var(--edge) - 40px);max-width:320px}
     .detail-info h2{font-size:28px}
     .rate-float{display:none}
     .detail-poster{width:110px}
@@ -1568,19 +1591,13 @@
        sits below, left-aligned. No blur echo, no ambient wash. */
     /* Mobile detail hero — full viewport, art fills behind text (same as desktop) */
     .detail-hero.full{min-height:100svh;padding:calc(var(--pill-clear) + 8px) var(--edge) max(40px,env(safe-area-inset-bottom));
-      flex-direction:column;justify-content:space-between}
+      flex-direction:column;justify-content:flex-end}
     .detail-hero.full .detail-bg{position:absolute;inset:0;overflow:hidden}
     .detail-hero.full .detail-bg-img{position:absolute;inset:0;width:100%;height:100%;
       object-fit:cover;object-position:center 18%}
     .detail-hero.full .detail-top{position:relative;z-index:1;padding:0;max-width:100%;text-align:left}
     .detail-hero.full .detail-top h2{font-size:clamp(28px,9vw,42px)}
-    .detail-hero.full .title-logo{display:block;height:68px;max-width:min(300px,76vw);width:auto;
-      object-fit:contain;object-position:left bottom;margin:0}
-    .detail-hero.full .detail-top .sub{justify-content:flex-start}
-    .detail-hero.full .detail-top .genres{text-align:left}
     .detail-hero.full .detail-actions{justify-content:flex-start}
-    .detail-hero.full .ratings-row{justify-content:flex-start}
-    .detail-hero.full .detail-bottom{padding:16px 0 32px}
     .detail-hero.full .rate-float{display:none}
     .ep-card{width:220px}
     .coll-art{width:120px}
@@ -2617,8 +2634,6 @@ function billboardCard(it,rank){
   const squareImg=imgs.find(i=>i.type==="backgroundSquare");
   // For episodes use grandparent (show) art; fallback: backdrop → poster
   const artSrc=img((squareImg&&squareImg.url)||it.art||it.grandparentArt||it.thumb,560,560);
-  const logoImg=imgs.find(i=>i.type==="clearLogo");
-  const logoSrc=logoImg?imgLogo(logoImg.url,600,300):"";
   // For episodes display show title, not episode title
   const title=it.type==="episode"?(it.grandparentTitle||it.title||""):(it.title||"");
   // Genre only — no Movie/TV type prefix
@@ -2630,12 +2645,8 @@ function billboardCard(it,rank){
       ${rank!=null?`<div class="bill-rank">${rank}</div>`:""}
       <div class="play-hover">${svgIcon("play-circle-fill")}</div>
       <div class="bill-logo-wrap">
-        ${logoSrc?`<img class="bill-logo" src="${logoSrc}" alt="${esc(title)}" onerror="this.nextElementSibling.style.display='block';this.remove()">`:""}
-        <div class="bill-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
+        <div class="bill-title">${esc(title)}</div>
       </div>
-    </div>
-    <div class="bill-meta">
-      <span class="cs">${esc(meta)}</span>
     </div>`;
   // Wash behind the whole card uses the same art; guarded so broken art falls back
   if(artSrc) b.style.setProperty("--bill-bg",`url('${artSrc.replace(/'/g,"\\'")}')`);
@@ -3058,18 +3069,6 @@ function heroInnerHTML(it,opts={}){
   const isEp=it.type==="episode";
   const title=isEp?(it.grandparentTitle||it.title):it.title;
   const tagline=!isEp&&it.tagline?it.tagline:"";
-  let metaBlock="";
-  if(full){
-    const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
-    const meta=isEp
-      ? `S${it.parentIndex||0} · E${it.index||0} · ${esc(it.title||"")}`
-      : [year,fmtDur(it.duration),it.contentRating].filter(Boolean).join(" · ");
-    const ratingBadges=ratingBadgesHTML(it);
-    const ratingFallback=ratingBadges?"":(it.rating?`<span class="pill">${svgIcon("star-fill","","color:var(--accent)")} ${(+it.rating).toFixed(1)}</span>`:"");
-    metaBlock=`${ratingBadges?`<div class="ratings-row">${ratingBadges}</div>`:""}
-      <div class="hero-meta">${ratingFallback}<span>${esc(meta)}</span></div>
-      <p class="hero-summary">${esc(it.summary||"")}</p>`;
-  }
   return `
     <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" decoding="async" ${priority?'fetchpriority="high"':'loading="lazy"'} alt=""></div>
     <div class="hero-scrim"></div>
@@ -3077,7 +3076,6 @@ function heroInnerHTML(it,opts={}){
       ${kicker?`<div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>`:""}
       ${titleArtHTML(it,title)}
       ${tagline?`<p class="hero-tagline">${esc(tagline)}</p>`:""}
-      ${metaBlock}
     </div>
     <div class="hero-bottom">
       <div class="hero-actions">
@@ -3359,10 +3357,7 @@ function editorialCard(it){
   const metaParts=[year,it.contentRating,
     it.type==="show"?(it.childCount>1?`${it.childCount} Seasons`:(it.childCount===1?"1 Season":"")):"",
   ].filter(Boolean);
-  const logo=(it.Image||[]).find(i=>i.type==="clearLogo");
-  const titleHTML=logo
-    ? `<img class="ec-logo" src="${imgLogo(logo.url,560,200)}" alt="${esc(title)}">`
-    : `<h3>${esc(title)}</h3>`;
+  const titleHTML=`<h3>${esc(title)}</h3>`;
   b.innerHTML=`
     <div class="ec-art">
       ${imgSrc?`<img loading="lazy" decoding="async" alt="${esc(title)}" src="${imgSrc}" onerror="this.closest('.ec-art').classList.add('broken')">`:""}
@@ -4073,8 +4068,7 @@ function wireCollActions(c,items){
    and shows; use it in place of the plain text title when available. */
 function titleArtHTML(item,fallbackTitle){
   const title=fallbackTitle!=null?fallbackTitle:(item.title||"");
-  const logo=(item.Image||[]).find(i=>i.type==="clearLogo");
-  return logo?`<img class="title-logo" src="${imgLogo(logo.url,800,300)}" alt="${esc(title)}">`:`<h2>${esc(title)}</h2>`;
+  return `<h2>${esc(title)}</h2>`;
 }
 /* ---- BACKDROP CONTRAST DETECTION ----
    White title logos/headlines wash out over bright artwork (snow, sky, sand).
@@ -4120,23 +4114,27 @@ function trailerIconBtnHTML(extras){
   return trailer?`<button class="btn glass" id="ratingsTrailerBtn">${svgIcon("trailer")} Trailer</button>`:"";
 }
 function detailHero(m,isMovie,actionsHTML,extras){
-  const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
   return `<div class="detail-wrap">
     <div class="detail-hero full">
       <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" decoding="async" fetchpriority="high" alt=""><div class="detail-scrim"></div></div>
       <div class="detail-top">
         ${titleArtHTML(m)}
+        ${m.tagline?`<p class="hero-tagline">${esc(m.tagline)}</p>`:""}
         <div class="detail-actions">${actionsHTML}${trailerIconBtnHTML(extras)}</div>
-        <div class="sub">${metaBits(m,isMovie)}</div>
-        ${ratingsRowHTML(m,[])}
-        ${genres?`<div class="genres">${genres}</div>`:""}
-        <div class="summary">${esc(m.summary||"")}</div>
-      </div>
-      <div class="detail-bottom">
-        ${statRowHTML(m,isMovie)}
       </div>
       ${rateFloatHTML(m)}
     </div></div>`;
+}
+function detailMetaHTML(m,isMovie){
+  const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
+  const stats=statRowHTML(m,isMovie);
+  return `<div class="detail-meta">
+    <div class="sub">${metaBits(m,isMovie)}</div>
+    ${ratingsRowHTML(m,[])}
+    ${genres?`<div class="genres">${genres}</div>`:""}
+    ${m.summary?`<div class="summary">${esc(m.summary)}</div>`:""}
+    ${stats?`<div class="detail-stat-grid">${stats}</div>`:""}
+  </div>`;
 }
 /* ---- EPISODE DETAIL HERO ----
    Like detailHero, but for a single episode: 16:9 thumbnail, a "back to show"
@@ -4750,7 +4748,7 @@ async function openMovie(it){
     const resume=(m.viewOffset?`<button class="btn lg" id="resumeBtn">${svgIcon("play-fill")} Resume · ${fmtClock(m.viewOffset/1000)}</button>
       <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
-    c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
+    c.innerHTML=detailHero(m,true,resume,extras)+detailMetaHTML(m,true)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
     appendRelatedRails(c,related,m);
     wireBackdrop(c,m.art||m.thumb,(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url);
     wireExtras(c,extras,"ratingsTrailerBtn");
@@ -4786,7 +4784,7 @@ async function openShow(it,jumpSeasonKey){
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
     const actions=`<button class="btn lg" id="playShow">${svgIcon("play-fill")} Play</button>
       <button class="btn glass lg" id="shuffleShow">${svgIcon("shuffle")} Shuffle</button>${watchedToggleHTML(show,false)}`;
-    c.innerHTML=detailHero(show,false,actions,extras)
+    c.innerHTML=detailHero(show,false,actions,extras)+detailMetaHTML(show,false)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
         <div class="season-rail" id="seasonRail"></div></div>`:"")
       +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`
