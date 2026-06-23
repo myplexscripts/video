@@ -4721,7 +4721,7 @@ async function fetchTmdbEnrich(ids,isMovie){
   try{ return await tmdbFetch(`/${type}/${ids.tmdb}?append_to_response=keywords,credits,images&include_image_language=en,null`); }
   catch(_){ return null; }
 }
-const OMDB_KEY="e1236de7";
+const OMDB_KEY="6079f41c";
 async function fetchOmdb(imdbId){
   if(!imdbId||!OMDB_KEY) return null;
   try{
@@ -4866,12 +4866,14 @@ function enrichDetailPage(c,m,isMovie,appendStats){
       //    image hashing never blocks the rest of the enrichment); inserts just
       //    below the hero once ready.
       const fullPlot=od?.Plot&&od.Plot!=="N/A"?od.Plot:"";
-      const summ=(m.summary||"").trim();
-      const dupOfSummary=summ&&fullPlot&&fullPlot.slice(0,60).toLowerCase()===summ.slice(0,60).toLowerCase();
+      const norm=s=>(s||"").toLowerCase().replace(/\s+/g," ").trim();
+      // Only suppress the full plot if it's word-for-word the hero summary —
+      // a longer/different OMDb synopsis is exactly what we want to surface.
+      const dupOfSummary=norm(fullPlot)&&norm(fullPlot)===norm(m.summary);
       if(fullPlot&&!dupOfSummary){
         const paras=splitParagraphs(fullPlot);
         (async()=>{
-          const imgs=paras.length>1?await pickUniqueBackdrops(td?.images?.backdrops,3):[];
+          const imgs=await pickUniqueBackdrops(td?.images?.backdrops,4);
           const story=dpStoryHTML(paras,imgs);
           const hero=c.querySelector(".dp-hero");
           if(story&&hero&&!c.querySelector(".dp-story")) hero.insertAdjacentHTML("afterend",story);
