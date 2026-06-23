@@ -884,6 +884,13 @@
   .dp-keyword{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
     color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:5px 10px;
     line-height:1}
+  /* Storyline — full plot with interleaved 16:9 backdrops */
+  .dp-story{padding:60px var(--edge) 0;max-width:760px;margin:0 auto}
+  .dp-story-head h3{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
+    line-height:1.08;margin:0 0 20px}
+  .dp-story-p{font-size:15px;line-height:1.75;color:var(--dim);margin:0 0 22px}
+  .dp-story-fig{margin:28px 0;overflow:hidden;background:var(--bg2)}
+  .dp-story-fig img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
   /* ---- RATINGS ---- flat badges, no frost */
   .ratings-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
   .rating-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text)}
@@ -4700,17 +4707,88 @@ function getExternalIds(m){
 async function fetchTmdbEnrich(ids,isMovie){
   if(!ids.tmdb) return null;
   const type=isMovie?"movie":"tv";
-  try{ return await tmdbFetch(`/${type}/${ids.tmdb}?append_to_response=keywords,credits`); }
+  // include_image_language=en,null pulls English + textless backdrops so we can
+  // prefer clean (logo-free) frames for the storyline section.
+  try{ return await tmdbFetch(`/${type}/${ids.tmdb}?append_to_response=keywords,credits,images&include_image_language=en,null`); }
   catch(_){ return null; }
 }
 const OMDB_KEY="e1236de7";
 async function fetchOmdb(imdbId){
   if(!imdbId||!OMDB_KEY) return null;
   try{
-    const r=await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${imdbId}`);
+    // plot=full returns the long-form synopsis used by the storyline section.
+    const r=await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&plot=full&i=${imdbId}`);
     const d=await r.json();
     return d.Response==="True"?d:null;
   }catch(_){ return null; }
+}
+/* ---- STORYLINE: full plot + de-duplicated TMDB backdrops ----
+   OMDb gives a single long plot string; we split it into pseudo-paragraphs and
+   interleave clean 16:9 TMDB backdrops between them. Backdrops are de-duplicated
+   perceptually (8x8 average-hash + Hamming distance) so near-identical frames
+   (same shot, different text overlay) don't both appear. */
+function _loadCorsImg(src){
+  return new Promise(res=>{
+    const im=new Image(); im.crossOrigin="anonymous"; im.decoding="async";
+    im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src;
+  });
+}
+function _aHash(imgEl){
+  try{
+    const cv=document.createElement("canvas"); cv.width=8; cv.height=8;
+    const ctx=cv.getContext("2d",{willReadFrequently:true});
+    ctx.drawImage(imgEl,0,0,8,8);
+    const d=ctx.getImageData(0,0,8,8).data;
+    const g=[]; let sum=0;
+    for(let i=0;i<64;i++){ const v=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2]; g.push(v); sum+=v; }
+    const avg=sum/64;
+    return g.map(v=>v>=avg?1:0);
+  }catch(_){ return null; }  // tainted canvas → fall back to file-path dedupe only
+}
+function _hamming(a,b){ let n=0; for(let i=0;i<64;i++) if(a[i]!==b[i]) n++; return n; }
+async function pickUniqueBackdrops(backdrops,max){
+  const seen=new Set();
+  const pool=(backdrops||[])
+    .filter(b=>b.file_path&&b.aspect_ratio>=1.6&&b.aspect_ratio<=2.0)
+    .filter(b=>!seen.has(b.file_path)&&seen.add(b.file_path))
+    .sort((a,b)=>(b.vote_average-a.vote_average)||(b.width-a.width))
+    .slice(0,8);
+  const loaded=await Promise.all(pool.map(async b=>{
+    const im=await _loadCorsImg(`https://image.tmdb.org/t/p/w300${b.file_path}`);
+    return {path:b.file_path,hash:im?_aHash(im):null};
+  }));
+  const accepted=[],hashes=[];
+  for(const {path,hash} of loaded){
+    if(accepted.length>=max) break;
+    if(hash&&hashes.some(h=>_hamming(h,hash)<=6)) continue;  // perceptual near-dupe
+    if(hash) hashes.push(hash);
+    accepted.push(path);
+  }
+  return accepted;
+}
+function splitParagraphs(text){
+  if(!text) return [];
+  // Honour explicit paragraph breaks if OMDb supplies any.
+  let parts=text.split(/\n{2,}|\r\n\r\n/).map(s=>s.trim()).filter(Boolean);
+  if(parts.length>1) return parts;
+  // Otherwise group sentences into ~3 pseudo-paragraphs.
+  const sentences=text.replace(/\s+/g," ").trim().match(/[^.!?]+[.!?]+(?:["'’”)\]]+)?|\S.*$/g)||[text];
+  if(sentences.length<=2) return [text.trim()];
+  const per=Math.ceil(sentences.length/3),groups=[];
+  for(let i=0;i<sentences.length;i+=per) groups.push(sentences.slice(i,i+per).join(" ").trim());
+  return groups.filter(Boolean);
+}
+function dpStoryHTML(paragraphs,imgPaths){
+  if(!paragraphs.length) return "";
+  const figs=imgPaths.map(p=>
+    `<figure class="dp-story-fig"><img loading="lazy" decoding="async" alt="" src="https://image.tmdb.org/t/p/w780${p}"></figure>`);
+  let html=`<section class="dp-story"><div class="dp-story-head"><h3>Storyline</h3></div>`;
+  paragraphs.forEach((p,i)=>{
+    html+=`<p class="dp-story-p">${esc(p)}</p>`;
+    if(i<paragraphs.length-1&&figs.length) html+=figs.shift();
+  });
+  while(figs.length) html+=figs.shift();  // leftover images trail the last paragraph
+  return html+`</section>`;
 }
 function fmtMoney(n){
   n=Number(n)||0;
@@ -4773,6 +4851,22 @@ function enrichDetailPage(c,m,isMovie,appendStats){
           else{ tKw.setAttribute("hidden",""); tags.classList.remove("revealed"); }
           tBtn.setAttribute("aria-expanded",show?"true":"false");
         };
+      }
+      // 5. Storyline — OMDb full plot split into paragraphs with de-duplicated
+      //    TMDB backdrops interleaved between them. Runs last (and async, so the
+      //    image hashing never blocks the rest of the enrichment); inserts just
+      //    below the hero once ready.
+      const fullPlot=od?.Plot&&od.Plot!=="N/A"?od.Plot:"";
+      const summ=(m.summary||"").trim();
+      const dupOfSummary=summ&&fullPlot&&fullPlot.slice(0,60).toLowerCase()===summ.slice(0,60).toLowerCase();
+      if(fullPlot&&!dupOfSummary){
+        const paras=splitParagraphs(fullPlot);
+        (async()=>{
+          const imgs=paras.length>1?await pickUniqueBackdrops(td?.images?.backdrops,3):[];
+          const story=dpStoryHTML(paras,imgs);
+          const hero=c.querySelector(".dp-hero");
+          if(story&&hero&&!c.querySelector(".dp-story")) hero.insertAdjacentHTML("afterend",story);
+        })();
       }
     })
     .catch(()=>{
