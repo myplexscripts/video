@@ -768,12 +768,14 @@
   .wave-wrap{margin:18px 0;display:flex;justify-content:center}
   .wave-wrap svg{width:100%;max-width:240px;display:block}
   /* Pull quote — tagline sits above the billboard art (order:2 on mobile),
-     a clean centered editorial treatment with a short accent rule above */
+     a clean centered editorial treatment with accent rules above and below */
   .dp-dropquote{order:2;margin:0 auto;font-family:var(--font-head);font-style:italic;
-    font-weight:500;font-size:clamp(19px,4.4vw,28px);line-height:1.4;color:var(--text);
-    text-align:center;padding:48px var(--edge) 44px;max-width:22ch;position:relative}
-  .dp-dropquote::before{content:"";display:block;width:32px;height:2px;border-radius:2px;
-    background:var(--accent);opacity:.85;margin:0 auto 22px}
+    font-weight:500;font-size:clamp(22px,5vw,34px);line-height:1.35;color:var(--text);
+    text-align:center;padding:52px var(--edge) 52px;max-width:20ch;position:relative}
+  .dp-dropquote::before,.dp-dropquote::after{content:"";display:block;width:32px;height:2px;
+    border-radius:2px;background:var(--quote-accent,var(--accent));opacity:.85;margin:0 auto}
+  .dp-dropquote::before{margin-bottom:24px}
+  .dp-dropquote::after{margin-top:24px}
   /* Stars inside the header, directly under the wave divider */
   .dp-head .dp-rate{padding:2px 0 0;width:auto}
   .dp-head .rate-stars button{width:34px;height:34px}
@@ -4134,20 +4136,51 @@ function trailerIconBtnHTML(extras){
   const trailer=(extras||[]).find(e=>/trailer/i.test(e.subtype||""));
   return trailer?`<button class="btn glass icon" id="ratingsTrailerBtn" aria-label="Watch trailer" title="Watch trailer">${svgIcon("trailer")}</button>`:"";
 }
-/* SVG wave helpers — horizontal divider and vertical squiggle */
+/* SVG wave helpers — horizontal divider and vertical squiggle.
+   Both use currentColor so --squiggle-color (set dynamically from art) drives the tint. */
 function waveHorizSVG(){
-  return `<div class="wave-wrap"><svg viewBox="0 0 360 28" xmlns="http://www.w3.org/2000/svg">
+  return `<div class="wave-wrap"><svg viewBox="0 0 360 28" xmlns="http://www.w3.org/2000/svg" style="color:var(--squiggle-color,white)">
     <path d="M 12 14 C 18 8, 24 8, 30 14 S 42 20, 48 14 S 60 8, 66 14 S 78 20, 84 14 S 96 8, 102 14 S 114 20, 120 14 S 132 8, 138 14 S 150 20, 156 14 S 168 8, 174 14 S 186 20, 192 14 S 204 8, 210 14 S 222 20, 228 14 S 240 8, 246 14 S 258 20, 264 14 S 276 8, 282 14 S 294 20, 300 14 S 312 8, 318 14 S 330 20, 336 14 S 348 8, 354 14"
-      fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
   </svg></div>`;
 }
 function waveVertSVG(){
-  // preserveAspectRatio="none" lets the wave stretch to the container height,
-  // so the squiggle grows/shrinks to match the summary text length.
-  return `<svg viewBox="0 0 28 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="color:var(--faint)">
+  return `<svg viewBox="0 0 28 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="color:var(--squiggle-color,var(--faint))">
     <path d="M 14 12 C 8 18, 8 24, 14 30 S 20 42, 14 48 S 8 60, 14 66 S 20 78, 14 84 S 8 96, 14 102 S 20 114, 14 120 S 8 132, 14 138 S 20 150, 14 156 S 8 168, 14 174 S 20 186, 14 192 S 8 204, 14 210 S 20 222, 14 228 S 8 240, 14 246 S 20 258, 14 264 S 8 276, 14 282 S 20 294, 14 300 S 8 312, 14 318 S 20 330, 14 336 S 8 348, 14 354"
       fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </svg>`;
+}
+/* Dominant-colour extraction — samples the poster/art at 48×48,
+   finds the most vivid hue bucket, then sets two CSS custom properties
+   on the hero element: --squiggle-color (waves) and --quote-accent (tagline rules). */
+function _rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),l=(max+min)/2;
+  if(max===min) return [0,0,l];
+  const d=max-min,s=l>.5?d/(2-max-min):d/(max+min);
+  const h=max===r?((g-b)/d+(g<b?6:0)):max===g?((b-r)/d+2):((r-g)/d+4);
+  return [h/6*360,s,l];
+}
+function extractImgAccent(imgEl,heroEl){
+  if(!heroEl||!imgEl) return;
+  try{
+    const cv=document.createElement("canvas");
+    cv.width=cv.height=48;
+    const cx=cv.getContext("2d");
+    cx.drawImage(imgEl,0,0,48,48);
+    const px=cx.getImageData(0,0,48,48).data;
+    const buckets=new Array(36).fill(0);
+    for(let i=0;i<px.length;i+=4){
+      const [h,s,l]=_rgbToHsl(px[i],px[i+1],px[i+2]);
+      if(s>.2&&l>.1&&l<.88) buckets[Math.floor(h/10)%36]++;
+    }
+    let best=0,bestN=0;
+    buckets.forEach((n,i)=>{if(n>bestN){bestN=n;best=i;}});
+    if(!bestN) return;
+    const h=best*10+5;
+    heroEl.style.setProperty("--squiggle-color",`hsl(${h},70%,62%)`);
+    heroEl.style.setProperty("--quote-accent",`hsl(${(h+180)%360},65%,65%)`);
+  }catch(_){}
 }
 function dpStarsHTML(){
   const stars=[1,2,3,4,5].map(n=>
@@ -4157,10 +4190,9 @@ function dpStarsHTML(){
 function dpStatsHTML(m,isMovie){
   const stats=[];
   if(m.addedAt) stats.push({l:"Added to Library",v:fmtDate(m.addedAt)});
-  if(m.lastViewedAt) stats.push({l:"Last Watched",v:fmtDate(m.lastViewedAt),k:"last-watched"});
-  if(!isMovie&&m.leafCount) stats.push({l:"Episodes Watched",v:`${m.viewedLeafCount||0} of ${m.leafCount}`});
-  else if(isMovie&&m.viewCount) stats.push({l:"Times Watched",v:String(m.viewCount)});
-  if(!stats.length) return "";
+  stats.push({l:"Last Watched",v:m.lastViewedAt?fmtDate(m.lastViewedAt):"Not yet viewed",k:"last-watched"});
+  if(!isMovie) stats.push({l:"Episodes Watched",v:m.leafCount?`${m.viewedLeafCount||0} of ${m.leafCount}`:"—"});
+  else stats.push({l:"Times Watched",v:m.viewCount?String(m.viewCount):"Not yet viewed"});
   return `<div class="dp-stats" id="dpStats">${stats.map(s=>
     `<div class="dp-stat"${s.k?` data-stat="${s.k}"`:""}>`+
     `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
@@ -4795,21 +4827,28 @@ function wireCollArt(c,m){
 }
 function wireDetailArt(c,m,isEp){
   clearUltraBlur();
+  const hero=c.querySelector(".dp-hero");
   const posterImg=c.querySelector("#dpPosterImg");
   if(posterImg){
     if(isEp){
       const src=m.thumb||m.art||m.grandparentArt;
-      if(src){posterImg.onload=()=>posterImg.classList.add("loaded");posterImg.src=img(src,960,540);}
+      if(src){posterImg.onload=()=>{posterImg.classList.add("loaded");extractImgAccent(posterImg,hero);};posterImg.src=img(src,960,540);}
     } else {
       const squareUrl=(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url;
       const src=squareUrl||m.thumb||m.art;
-      if(src){posterImg.onload=()=>posterImg.classList.add("loaded");posterImg.src=img(src,800,800);}
+      if(src){posterImg.onload=()=>{posterImg.classList.add("loaded");extractImgAccent(posterImg,hero);};posterImg.src=img(src,800,800);}
     }
   }
   const backdropImg=c.querySelector("#dpBackdropImg");
   if(backdropImg){
     const src=m.art||m.grandparentArt||m.thumb;
-    if(src){backdropImg.onload=()=>backdropImg.classList.add("loaded");backdropImg.src=img(src,1600,900);}
+    if(src){
+      backdropImg.onload=()=>{
+        backdropImg.classList.add("loaded");
+        if(!posterImg||!posterImg.src) extractImgAccent(backdropImg,hero);
+      };
+      backdropImg.src=img(src,1600,900);
+    }
   }
 }
 function wireBackdrop(c,art,mobileArt){
