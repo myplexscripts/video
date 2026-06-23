@@ -3084,12 +3084,15 @@ function heroInnerHTML(it,opts={}){
 }
 function wireHero(wrap,it,opts={}){
   const isEp=it.type==="episode";
-  const art=it.art||it.grandparentArt||it.parentArt||it.thumb;
+  const isMobile=window.innerWidth<=560;
+  const squareArt=(it.Image||[]).find(i=>i.type==="backgroundSquare")?.url;
+  const art=isMobile&&squareArt ? squareArt : (it.art||it.grandparentArt||it.parentArt||it.thumb);
+  const [iw,ih]=isMobile&&squareArt ? [800,800] : [1920,1080];
   wrap.querySelector(".hero-bg-blur").style.backgroundImage=`url('${imgAmbient(art)}')`;
   const bgImg=wrap.querySelector(".hero-bg-img");
   bgImg.onload=()=>bgImg.classList.add("loaded");
   bgImg.onerror=()=>bgImg.remove();
-  bgImg.src=img(art,1920,1080);
+  bgImg.src=img(art,iw,ih);
   applyBackdropContrast(wrap,art);
   const goToDetail=()=>{
     const target=isEp?{ratingKey:it.grandparentRatingKey,type:"show"}:it;
