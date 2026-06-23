@@ -6,8 +6,8 @@
    - TMDB-proxy Worker (/tmdb): stale-while-revalidate for instant repeats
    - Plex posters/art: cache-first on a capped, durable store (the native feel)
    - Plex API JSON + video streams: never cached here (JSON handled in-app) */
-const CACHE = "hume-v3";
-const RUNTIME = "hume-runtime-v3";
+const CACHE = "hume-v4";
+const RUNTIME = "hume-runtime-v4";
 // Dedicated, durable poster/art cache — this is what makes revisits feel
 // native: an image is fetched (and transcoded by Plex) once, then served from
 // disk forever. Capped so it can't grow without bound (oldest evicted first).

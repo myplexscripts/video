@@ -32,12 +32,21 @@
 <link rel="preload" href="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js" as="script" crossorigin>
 <script>
   if("serviceWorker" in navigator){
-    addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
-    // Re-send the connection info whenever a new SW takes control, so its
-    // image-caching strategy always knows local vs remote/relay.
+    // Whether a SW already controls this page. Used so the auto-reload below
+    // only fires when we SWAP an old version for a new one — never on the very
+    // first install (which would reload pointlessly).
+    var __hadController=!!navigator.serviceWorker.controller, __swRefreshing=false;
+    addEventListener("load",()=>navigator.serviceWorker.register("sw.js")
+      .then(reg=>{ reg.update&&reg.update(); })  // poll for a fresh deploy each launch
+      .catch(()=>{}));
     navigator.serviceWorker.addEventListener("controllerchange",()=>{
+      // Re-send the connection info whenever a new SW takes control, so its
+      // image-caching strategy always knows local vs remote/relay.
       if(window.__swServerMsg && navigator.serviceWorker.controller)
         navigator.serviceWorker.controller.postMessage(window.__swServerMsg);
+      // A new SW just took over an already-running page → a deploy landed.
+      // Reload once so the fresh index.html/JS actually render.
+      if(__hadController && !__swRefreshing){ __swRefreshing=true; location.reload(); }
     });
   }
 </script>
