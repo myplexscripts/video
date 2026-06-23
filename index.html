@@ -857,11 +857,36 @@
   .dp-stat{padding:18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
   .dp-stat:nth-child(even){border-right:none}
   .dp-stat:nth-last-child(-n+2){border-bottom:none}
+  /* When budget/box office cells are injected, restore border logic for 4-cell grids */
+  .dp-stat:last-child{border-bottom:none}
+  .dp-stat:nth-last-child(2){border-bottom:none}
   .dp-sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
     color:var(--faint);display:block;margin-bottom:8px}
   /* Stats values in serif for character and dimension */
   .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block;
     font-family:'Playfair Display',Georgia,'Times New Roman',serif}
+  /* Awards one-liner — below stats grid */
+  .dp-award{font-style:italic;color:var(--dim);font-size:13.5px;line-height:1.5;
+    padding:0 var(--edge) 32px;margin:-28px 0 0}
+  .dp-award::before{content:"◆  ";color:var(--accent);font-style:normal;font-size:9px}
+  /* Keyword / theme pills */
+  .dp-keywords{display:flex;flex-wrap:wrap;gap:8px;padding:0 var(--edge) 40px}
+  .dp-keyword{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:5px 10px;
+    line-height:1}
+  /* Full crew grid — mirrors .dp-stats visual language */
+  .dp-crew-section{padding:0 0 48px}
+  .dp-crew-section>h3{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
+    line-height:1.08;padding:0 var(--edge) 18px;margin:0}
+  .dp-crew{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
+    margin:0 var(--edge)}
+  .dp-crew-item{padding:18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .dp-crew-item:nth-child(even){border-right:none}
+  .dp-crew-item:nth-last-child(-n+2){border-bottom:none}
+  .dp-crew-item:last-child{border-bottom:none}
+  .dp-cl{display:block;font-size:9px;font-weight:700;text-transform:uppercase;
+    letter-spacing:1.4px;color:var(--faint);margin-bottom:6px}
+  .dp-cn{font-size:15px;font-weight:600;line-height:1.3}
   /* ---- RATINGS ---- flat badges, no frost */
   .ratings-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
   .rating-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text)}
@@ -1496,6 +1521,10 @@
     .dp-stat{border-bottom:none}
     .dp-stat:nth-child(even){border-right:1px solid var(--line)}
     .dp-stat:last-child{border-right:none}
+    /* Crew grid: 4 columns on desktop */
+    .dp-crew{grid-template-columns:repeat(4,1fr)}
+    .dp-crew-item:nth-child(n){border-right:1px solid var(--line);border-bottom:none}
+    .dp-crew-item:last-child{border-right:none}
   }
   @media(max-width:900px){
     .rate-stars{gap:5px}
@@ -4644,6 +4673,86 @@ async function tmdbFetch(path){
   return r.json();
 }
 
+/* ---- DETAIL PAGE ENRICHMENT (TMDB + OMDb) ---- */
+function getExternalIds(m){
+  const ids={};
+  (m.Guid||[]).forEach(g=>{
+    if(g.id.startsWith("tmdb://")) ids.tmdb=g.id.slice(7);
+    if(g.id.startsWith("imdb://")) ids.imdb=g.id.slice(7);
+  });
+  return ids;
+}
+async function fetchTmdbEnrich(ids,isMovie){
+  if(!ids.tmdb) return null;
+  const type=isMovie?"movie":"tv";
+  try{ return await tmdbFetch(`/${type}/${ids.tmdb}?append_to_response=keywords,credits`); }
+  catch(_){ return null; }
+}
+const OMDB_KEY="e1236de7";
+async function fetchOmdb(imdbId){
+  if(!imdbId||!OMDB_KEY) return null;
+  try{
+    const r=await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${imdbId}`);
+    const d=await r.json();
+    return d.Response==="True"?d:null;
+  }catch(_){ return null; }
+}
+function fmtMoney(n){
+  n=Number(n)||0;
+  if(n<=0) return null;
+  if(n>=1e9) return `$${(n/1e9).toFixed(1)}B`;
+  if(n>=1e6) return `$${Math.round(n/1e6)}M`;
+  return `$${n.toLocaleString()}`;
+}
+function dpEnrichHTML(td,od,isMovie){
+  const parts=[];
+  // --- Keywords ---
+  const kws=(td?.keywords?.keywords||td?.keywords?.results||[]).slice(0,12);
+  if(kws.length){
+    parts.push(`<div class="dp-keywords">${kws.map(k=>`<span class="dp-keyword">${esc(k.name)}</span>`).join("")}</div>`);
+  }
+  // --- Full Crew ---
+  const CREW_JOBS=[
+    {label:"Director of Photography",jobs:["Director of Photography"]},
+    {label:"Music",jobs:["Original Music Composer","Music"]},
+    {label:"Production Design",jobs:["Production Designer"]},
+    {label:"Costume Design",jobs:["Costume Designer"]},
+  ];
+  const crew=td?.credits?.crew||[];
+  const crewItems=CREW_JOBS.map(({label,jobs})=>{
+    const found=crew.find(c=>jobs.includes(c.job));
+    return found?`<div class="dp-crew-item"><span class="dp-cl">${esc(label)}</span><span class="dp-cn">${esc(found.name)}</span></div>`:null;
+  }).filter(Boolean);
+  if(crewItems.length){
+    parts.push(`<div class="dp-crew-section"><h3>Crew</h3><div class="dp-crew">${crewItems.join("")}</div></div>`);
+  }
+  // --- Awards ---
+  const awards=od?.Awards&&od.Awards!=="N/A"?od.Awards:null;
+  if(awards) parts.push(`<p class="dp-award">${esc(awards)}</p>`);
+  return parts.join("");
+}
+function enrichDetailPage(c,m,isMovie){
+  const ids=getExternalIds(m);
+  if(!ids.tmdb&&!ids.imdb) return;
+  Promise.all([fetchTmdbEnrich(ids,isMovie),fetchOmdb(ids.imdb)])
+    .then(([td,od])=>{
+      // Box office cells — inject into existing stats grid
+      if(isMovie&&td){
+        const grid=c.querySelector("#dpStats");
+        if(grid){
+          const budget=fmtMoney(td.budget);
+          const gross=fmtMoney(td.revenue)||(od?.BoxOffice&&od.BoxOffice!=="N/A"?od.BoxOffice:null);
+          if(budget) grid.insertAdjacentHTML("beforeend",`<div class="dp-stat"><span class="dp-sl">Budget</span><span class="dp-sv">${budget}</span></div>`);
+          if(gross) grid.insertAdjacentHTML("beforeend",`<div class="dp-stat"><span class="dp-sl">Box Office</span><span class="dp-sv">${esc(gross)}</span></div>`);
+        }
+      }
+      // Keywords + crew + awards
+      const html=dpEnrichHTML(td,od,isMovie);
+      if(html) c.insertAdjacentHTML("beforeend",html);
+    })
+    .catch(()=>{});
+}
+
 async function openActor(id){
   const cached=actorCache[id]||{};
   const name=cached.name||"Actor", thumb=cached.thumb||"";
@@ -4892,6 +5001,7 @@ async function openMovie(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+    enrichDetailPage(c,m,true);
 
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
@@ -4932,6 +5042,7 @@ async function openShow(it,jumpSeasonKey){
     wireCastRail(c);
     injectFirstWatched(show.ratingKey,true);
     wireRateFloat(c,show);
+    enrichDetailPage(c,show,false);
 
     const rail=$("#seasonRail");
     let activeSeason=seasons[0];
@@ -5120,6 +5231,7 @@ async function openEpisode(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+    enrichDetailPage(c,m,true);
 
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
