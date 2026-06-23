@@ -4761,7 +4761,7 @@ async function pickUniqueBackdrops(backdrops,max){
     .filter(b=>b.file_path&&b.aspect_ratio>=1.6&&b.aspect_ratio<=2.0)
     .filter(b=>!seen.has(b.file_path)&&seen.add(b.file_path))
     .sort((a,b)=>(b.vote_average-a.vote_average)||(b.width-a.width))
-    .slice(0,8);
+    .slice(1,9);  // skip index 0 — it's usually the hero backdrop already shown
   const loaded=await Promise.all(pool.map(async b=>{
     const im=await _loadCorsImg(`https://image.tmdb.org/t/p/w300${b.file_path}`);
     return {path:b.file_path,hash:im?_aHash(im):null};
@@ -4789,14 +4789,14 @@ function splitParagraphs(text){
 }
 function dpStoryHTML(paragraphs,imgPaths){
   if(!paragraphs.length) return "";
-  const figs=imgPaths.map(p=>
+  // One image per paragraph max, placed before its paragraph. Never trailing images.
+  const figs=imgPaths.slice(0,paragraphs.length).map(p=>
     `<figure class="dp-story-fig"><img loading="lazy" decoding="async" alt="" src="https://image.tmdb.org/t/p/w780${p}"></figure>`);
   let html=`<section class="dp-story"><div class="dp-story-head"><h3>Storyline</h3></div>`;
   paragraphs.forEach((p,i)=>{
+    if(figs[i]) html+=figs[i];
     html+=`<p class="dp-story-p">${esc(p)}</p>`;
-    if(i<paragraphs.length-1&&figs.length) html+=figs.shift();
   });
-  while(figs.length) html+=figs.shift();  // leftover images trail the last paragraph
   return html+`</section>`;
 }
 function fmtMoney(n){
@@ -4873,7 +4873,7 @@ function enrichDetailPage(c,m,isMovie,appendStats){
       if(fullPlot&&!dupOfSummary){
         const paras=splitParagraphs(fullPlot);
         (async()=>{
-          const imgs=await pickUniqueBackdrops(td?.images?.backdrops,4);
+          const imgs=await pickUniqueBackdrops(td?.images?.backdrops,paras.length);
           const story=dpStoryHTML(paras,imgs);
           const hero=c.querySelector(".dp-hero");
           if(story&&hero&&!c.querySelector(".dp-story")) hero.insertAdjacentHTML("afterend",story);
