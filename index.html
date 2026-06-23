@@ -61,7 +61,9 @@
     --radius:0px; --radius-sm:0px; --radius-xs:0px; --radius-lg:0px;
     --shadow-sm:0 1px 3px rgba(0,0,0,.3); --shadow:0 4px 24px rgba(0,0,0,.4);
     --shadow-lg:0 12px 48px rgba(0,0,0,.55);
-    --font:'Circular','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --font:'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    /* All headings render in this serif; body and UI use --font (Inter) */
+    --font-head:'Playfair Display','Georgia','Times New Roman',serif;
     --ease:cubic-bezier(.22,1,.36,1);
     /* Floating menu-toggle/search pills sit at top:max(16px,safe-area) and are
        44px tall — flat pages need at least that much clearance so their first
@@ -157,6 +159,8 @@
   input,textarea{user-select:text;-webkit-user-select:text}
   button,input{font-family:inherit;color:inherit}
   button{cursor:pointer}
+  /* All headings render serif; body and UI stay Inter (--font) */
+  h1,h2,h3,h4{font-family:var(--font-head)}
   img{display:block;-webkit-touch-callout:none;-webkit-user-drag:none;user-drag:none}
   .hidden{display:none !important}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
@@ -381,9 +385,8 @@
   .hub-grid-art{width:72px;height:72px;flex:0 0 72px;overflow:hidden}
   .hub-grid-title{font-size:13px;font-weight:700;padding:0 12px;line-height:1.35;
     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .rail-ambient{position:absolute;top:-90px;left:6%;right:6%;height:260px;
-    background-size:cover;background-position:center;opacity:.28;
-    filter:blur(70px) saturate(1.8);pointer-events:none;transform:scale(1.25)}
+  /* Per-rail ambient color washes removed — shelves/hubs use the flat dark bg */
+  .rail-ambient{display:none}
   .rail-head{display:flex;align-items:flex-end;gap:12px;margin:0 var(--edge) 16px;position:relative}
   .rail-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
   .rail-lib{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:var(--fw-bold)}
@@ -737,18 +740,23 @@
      .dp-hero--split, then full-bleed backdrop with bottom scrim, summary
      overlapping the scrim, and large-heading rails below. */
   .dp-wrap{background:var(--bg)}
-  /* Mobile-first: single flex column. Explicit order lays out the deliberate
-     stack — header → square art → meta → controls → backdrop → summary. */
+  /* Mobile-first: single flex column. The fold (header → square art → meta →
+     controls) fills the first viewport; backdrop + summary follow below. */
   .dp-hero{display:flex;flex-direction:column}
+  .dp-fold{order:1;display:flex;flex-direction:column;min-height:100dvh;
+    padding-bottom:calc(var(--tab-h,64px) + env(safe-area-inset-bottom) + 20px)}
   .dp-head{order:1}
   .dp-poster{order:2}
-  .dp-meta{order:3}
+  /* margin-top:auto pushes meta + controls to the bottom of the fold, so the
+     play row lands near the viewport bottom (header + art stay up top) */
+  .dp-meta{order:3;margin-top:auto}
   .dp-controls{order:4}
   .dp-backdrop{order:5}
   .dp-summary-wrap{order:6}
-  /* Header: serif title, wave divider, italic tagline — centered on mobile */
+  /* Header: serif title, wave divider, italic tagline — centered on mobile.
+     Top padding aligns the title with the floating back button. */
   .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
-    padding:calc(var(--pill-clear)+18px) var(--edge) 0}
+    padding:max(20px,calc(env(safe-area-inset-top) + 4px)) var(--edge) 0}
   .dp-kicker{display:inline-flex;align-items:center;gap:9px;font-size:11px;letter-spacing:1.3px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px;
     background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
@@ -817,8 +825,10 @@
   /* Two-column body: vertical squiggle | summary text */
   .dp-summary-body{display:grid;grid-template-columns:24px 1fr;gap:0 16px;
     padding:18px var(--edge) 48px;align-items:start}
-  .dp-squiggle{align-self:stretch;width:24px;overflow:hidden;min-height:110px}
-  .dp-squiggle svg{width:24px;height:100%;min-height:110px;display:block}
+  /* align-self:stretch makes the cell fill the row height (= summary text
+     height); the SVG then stretches to match via preserveAspectRatio=none */
+  .dp-squiggle{align-self:stretch;width:24px;overflow:hidden;min-height:56px}
+  .dp-squiggle svg{width:100%;height:100%;display:block}
   .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim)}
   /* Large headings for child rails */
   .dp-wrap .section{padding-top:40px;padding-bottom:0}
@@ -1428,6 +1438,9 @@
   /* ---- RESPONSIVE ---- */
   /* ---- DETAIL PAGE: desktop two-column hero ---- */
   @media(min-width:681px){
+    /* Fold wrapper dissolves on desktop so its children land in the grid
+       (split heroes) or in normal flow (single-column episode heroes) */
+    .dp-fold{display:contents}
     /* Editorial asymmetric grid (matches the desktop mockup):
          row1: backdrop (left, partial width) | meta floats top-right
          row2: stars/badges/buttons (left)    | title/wave/tagline (right)
@@ -1637,7 +1650,6 @@
     .dp-title{font-size:clamp(26px,7.5vw,40px)}
     .dp-summary-body{grid-template-columns:20px 1fr;gap:0 12px}
     .dp-squiggle{width:20px}
-    .dp-squiggle svg{width:20px}
     .ep-card{width:220px}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
@@ -1896,18 +1908,16 @@ const FONT_STACKS={
 function _loadGFont(family){
   const id="gf-"+family.toLowerCase(); if(document.getElementById(id)) return;
   const l=document.createElement("link"); l.id=id; l.rel="stylesheet";
-  l.href=`https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700;900&display=swap`;
+  l.href=`https://fonts.googleapis.com/css2?family=${family.replace(/ /g,"+")}:wght@400;500;600;700;800;900&display=swap`;
   document.head.appendChild(l);
 }
-function applyFont(name,save=true){
-  const stack=FONT_STACKS[name]||FONT_STACKS.circular;
-  document.documentElement.style.setProperty("--font",stack);
-  if(name==="inter") _loadGFont("Inter");
-  else if(name==="outfit") _loadGFont("Outfit");
-  if(save){ localStorage.setItem(LS.font,name); pushRemoteSettings(); toast("Settings saved"); }
+// Typography is fixed: Inter for body/UI, Playfair Display for all headings.
+// (applyFont ignores its argument — kept as a no-op shim for legacy callers.)
+function applyFont(){
+  document.documentElement.style.setProperty("--font",FONT_STACKS.inter);
+  _loadGFont("Inter"); _loadGFont("Playfair Display");
 }
-// Set font before first content render so there's no flash of wrong typeface
-applyFont(localStorage.getItem(LS.font)||"circular",false);
+applyFont();
 // Restore TV mode (applies body class before paint so cursor:none is immediate)
 if(localStorage.getItem(LS.tvMode)==="1") document.body.classList.add("tv-mode");
 
@@ -1981,10 +1991,6 @@ async function loadRemoteSettings(){
       if(remote[LS.navCollapsed]!=null){
         const next=String(remote[LS.navCollapsed]);
         if(next!==localStorage.getItem(LS.navCollapsed)){ localStorage.setItem(LS.navCollapsed,next); changed=true; }
-      }
-      if(remote[LS.font]&&FONT_STACKS[remote[LS.font]]){
-        const next=remote[LS.font];
-        if(next!==localStorage.getItem(LS.font)){ localStorage.setItem(LS.font,next); applyFont(next,false); changed=true; }
       }
       if(remote[LS.detailArt]==="backdrop"||remote[LS.detailArt]==="square"){
         const next=remote[LS.detailArt];
@@ -3670,24 +3676,14 @@ function renderLibGrid(){
 async function showSettings(){
   setTitle("Settings"); clearUltraBlur(); hideLibNav();
   const c=$("#content");
-  const cf=localStorage.getItem(LS.font)||"circular";
   const da=localStorage.getItem(LS.detailArt)||"backdrop";
   const hs=getHeroStyle();
-  const fBtn=(id,label)=>`<button class="rail-style-btn${cf===id?" active":""}" data-font="${id}">${label}</button>`;
   const daBtn=(id,label)=>`<button class="rail-style-btn${da===id?" active":""}" data-detailart="${id}">${label}</button>`;
   const hsBtn=(id,label)=>`<button class="rail-style-btn${hs===id?" active":""}" data-herostyle="${id}">${label}</button>`;
   c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>Settings</h2></div></div>
     <div class="settings-wrap">
     <div class="settings-group">
       <div class="settings-group-head">Appearance</div>
-      <div class="settings-row">
-        <div class="settings-label">Font
-          <small>Applies to the entire app interface.</small>
-        </div>
-        <div class="rail-style-btns" id="settingsFontBtns">
-          ${fBtn("circular","Circular")}${fBtn("inter","Inter")}${fBtn("outfit","Outfit")}
-        </div>
-      </div>
       <div class="settings-row">
         <div class="settings-label">Detail Art
           <small>Art style on movie &amp; show pages on mobile.</small>
@@ -3748,13 +3744,6 @@ async function showSettings(){
         <span class="sync-dot" id="syncDot"></span>
       </div>
     </div></div>`;
-  // Wire font picker
-  c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(btn=>{
-    btn.onclick=()=>{
-      applyFont(btn.dataset.font);
-      c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
-    };
-  });
   // Wire detail art picker
   c.querySelectorAll("#settingsDetailArtBtns .rail-style-btn").forEach(btn=>{
     btn.onclick=()=>{
@@ -3997,17 +3986,19 @@ function collHero(m,kicker,items,square){
     const fallbackIconHTML=square?`<span class="art-fallback">${svgIcon("playlist")}</span>`:`<span class="art-fallback">${svgIcon("stack-fill")}</span>`;
     return `<div class="dp-hero dp-hero--split">
       ${backdrop?`<div class="dp-backdrop"><img id="collBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
-      <div class="dp-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>
-      <div class="dp-head">
-        <p class="dp-kicker">${esc(kicker)}</p>
-        <h1 class="dp-title">${esc(m.title)}</h1>
-        ${waveHorizSVG()}
-      </div>
-      <div class="dp-controls">
-        ${playBtns?`<div class="dp-actions">${playBtns}</div>`:""}
-      </div>
-      <div class="dp-poster${square?"":" dp-poster--portrait"}">
-        ${src?`<img id="collPosterImg" alt="" src="${src}">`:`<div class="coll-art${square?" square":""}${mosaic?"":" broken"}">${mosaic||""}${fallbackIconHTML}</div>`}
+      <div class="dp-fold">
+        <div class="dp-head">
+          <p class="dp-kicker">${esc(kicker)}</p>
+          <h1 class="dp-title">${esc(m.title)}</h1>
+          ${waveHorizSVG()}
+        </div>
+        <div class="dp-poster${square?"":" dp-poster--portrait"}">
+          ${src?`<img id="collPosterImg" alt="" src="${src}">`:`<div class="coll-art${square?" square":""}${mosaic?"":" broken"}">${mosaic||""}${fallbackIconHTML}</div>`}
+        </div>
+        <div class="dp-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>
+        <div class="dp-controls">
+          ${playBtns?`<div class="dp-actions">${playBtns}</div>`:""}
+        </div>
       </div>
       ${dpSummaryHTML(m.summary,"",!!backdrop)}
     </div>`;
@@ -4127,7 +4118,7 @@ function applyBackdropContrast(heroEl,art){
 }
 function trailerIconBtnHTML(extras){
   const trailer=(extras||[]).find(e=>/trailer/i.test(e.subtype||""));
-  return trailer?`<button class="detail-trailer-btn" id="ratingsTrailerBtn" aria-label="Watch trailer" title="Watch trailer">${svgIcon("trailer")}</button>`:"";
+  return trailer?`<button class="btn glass icon" id="ratingsTrailerBtn" aria-label="Watch trailer" title="Watch trailer">${svgIcon("trailer")}</button>`:"";
 }
 /* SVG wave helpers — horizontal divider and vertical squiggle */
 function waveHorizSVG(){
@@ -4137,9 +4128,11 @@ function waveHorizSVG(){
   </svg></div>`;
 }
 function waveVertSVG(){
-  return `<svg viewBox="0 0 28 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" style="color:var(--faint)">
+  // preserveAspectRatio="none" lets the wave stretch to the container height,
+  // so the squiggle grows/shrinks to match the summary text length.
+  return `<svg viewBox="0 0 28 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="color:var(--faint)">
     <path d="M 14 12 C 8 18, 8 24, 14 30 S 20 42, 14 48 S 8 60, 14 66 S 20 78, 14 84 S 8 96, 14 102 S 20 114, 14 120 S 8 132, 14 138 S 20 150, 14 156 S 8 168, 14 174 S 20 186, 14 192 S 8 204, 14 210 S 20 222, 14 228 S 8 240, 14 246 S 20 258, 14 264 S 8 276, 14 282 S 20 294, 14 300 S 8 312, 14 318 S 20 330, 14 336 S 8 348, 14 354"
-      fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </svg>`;
 }
 function dpStarsHTML(){
@@ -4187,18 +4180,20 @@ function detailHero(m,isMovie,actionsHTML,extras){
   </div>`:"";
   return `<div class="dp-hero dp-hero--split">
     ${hasBackdrop?`<div class="dp-backdrop"><img id="dpBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
-    <div class="dp-meta">${metaBits(m,isMovie)}</div>
-    <div class="dp-head">
-      <h1 class="dp-title">${esc(m.title||"")}</h1>
-      ${waveHorizSVG()}
-      ${m.tagline?`<p class="dp-tagline">${esc(m.tagline)}</p>`:""}
+    <div class="dp-fold">
+      <div class="dp-head">
+        <h1 class="dp-title">${esc(m.title||"")}</h1>
+        ${waveHorizSVG()}
+        ${m.tagline?`<p class="dp-tagline">${esc(m.tagline)}</p>`:""}
+      </div>
+      <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high">${creditsHTML}</div>
+      <div class="dp-meta">${metaBits(m,isMovie)}</div>
+      <div class="dp-controls">
+        ${dpStarsHTML()}
+        ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+        <div class="dp-actions">${actionsHTML}${trailer}</div>
+      </div>
     </div>
-    <div class="dp-controls">
-      ${dpStarsHTML()}
-      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
-      <div class="dp-actions">${actionsHTML}${trailer}</div>
-    </div>
-    <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high">${creditsHTML}</div>
     ${dpSummaryHTML(m.summary,top3genres,hasBackdrop)}
   </div>`;
 }
@@ -4208,17 +4203,19 @@ function episodeHero(m,actionsHTML){
   if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
   const badges=ratingBadgesHTML(m);
   return `<div class="dp-hero">
-    <div class="dp-head">
-      <button class="dp-kicker" id="epBackBtn">${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}</button>
-      <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
-      ${waveHorizSVG()}
-    </div>
-    <div class="dp-poster dp-poster--wide"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
-    <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
-    <div class="dp-controls">
-      ${dpStarsHTML()}
-      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
-      <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
+    <div class="dp-fold">
+      <div class="dp-head">
+        <button class="dp-kicker" id="epBackBtn">${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}</button>
+        <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
+        ${waveHorizSVG()}
+      </div>
+      <div class="dp-poster dp-poster--wide"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
+      <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
+      <div class="dp-controls">
+        ${dpStarsHTML()}
+        ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+        <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
+      </div>
     </div>
     ${dpSummaryHTML(m.summary,"",false)}
   </div>`;
@@ -4430,15 +4427,6 @@ function transcodeTrailer(video,ratingKey,fail){
     video.src=m3u8; video.onerror=fail;
     video.onloadedmetadata=()=>video.play().catch(()=>{});
   }
-}
-function crewHTML(m){
-  const dirs=(m.Director||[]).map(d=>esc(d.tag));
-  const writers=(m.Writer||[]).map(w=>esc(w.tag));
-  if(!dirs.length&&!writers.length) return "";
-  return `<div class="section"><div class="crew">
-    ${dirs.length?`<div><span style="color:var(--faint)">Directed by</span> <b>${dirs.slice(0,3).join(", ")}</b></div>`:""}
-    ${writers.length?`<div><span style="color:var(--faint)">Written by</span> <b>${writers.slice(0,3).join(", ")}</b></div>`:""}
-  </div></div>`;
 }
 function castRailHTML(m){
   const cast=(m.Role||[]).slice(0,12);
@@ -4841,7 +4829,7 @@ async function openMovie(it){
       <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
     c.classList.add("dp-wrap");
-    c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
+    c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras);
     appendRelatedRails(c,related,m);
     c.insertAdjacentHTML("beforeend",dpStatsHTML(m,true));
     wireDetailArt(c,m,false);
@@ -4884,8 +4872,7 @@ async function openShow(it,jumpSeasonKey){
         <div class="season-rail" id="seasonRail"></div></div>`:"")
       +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`
       +castRailHTML(show)
-      +extrasRailHTML(extras)
-      +crewHTML(show);
+      +extrasRailHTML(extras);
     appendRelatedRails(c,related,show);
     c.insertAdjacentHTML("beforeend",dpStatsHTML(show,false));
     wireDetailArt(c,show,false);
@@ -5054,7 +5041,7 @@ async function openEpisode(it){
     const siblingsMc=m.parentRatingKey?await api(`/library/metadata/${m.parentRatingKey}/children`).catch(()=>({})):{};
     const siblings=(siblingsMc.Metadata||[]).filter(s=>s.type==="episode");
     c.classList.add("dp-wrap");
-    c.innerHTML=episodeHero(m,resume)+crewHTML(m)+castRailHTML(m)
+    c.innerHTML=episodeHero(m,resume)+castRailHTML(m)
       +(siblings.length?`<div class="rail-section"><div class="rail-head"><h3>More from Season ${m.parentIndex||""}</h3><span class="count">${siblings.length}</span></div>
         <div class="carousel" id="epSiblingRail"></div></div>`:"");
     if(siblings.length){ const row=$("#epSiblingRail");
