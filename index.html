@@ -752,10 +752,10 @@
   .dp-controls{order:4}
   .dp-backdrop{order:5}
   .dp-summary-wrap{order:6}
-  /* Split hero (movies/shows): art → actions → meta → tagline */
+  /* Split hero (movies/shows): art → meta → actions → tagline */
   .dp-hero--split .dp-poster{order:2}
-  .dp-hero--split .dp-actions{order:3}
-  .dp-hero--split .dp-meta{order:4;margin-top:auto}
+  .dp-hero--split .dp-meta{order:3;margin-top:auto}
+  .dp-hero--split .dp-actions{order:4}
   .dp-hero--split .dp-quote-block{order:5}
   /* Header: serif title, wave divider, italic tagline — centered on mobile.
      Top padding aligns the title with the floating back button. */
@@ -847,8 +847,8 @@
   .dp-squiggle svg{position:absolute;inset:0;width:100%;height:100%;display:block}
   .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim)}
   /* Large headings for child rails */
-  .dp-wrap .section{padding-top:40px;padding-bottom:0}
-  .dp-wrap .rail-section{padding-top:40px}
+  .dp-wrap .section{padding-top:60px;padding-bottom:0}
+  .dp-wrap .rail-section{padding-top:60px}
   .dp-wrap .rail-head{margin:0;padding:0 var(--edge) 16px}
   .dp-wrap .rail-head h3,.dp-wrap .section h3{font-size:clamp(24px,6vw,34px);font-weight:800;
     letter-spacing:-.03em;line-height:1.08}
@@ -5057,7 +5057,7 @@ async function openShow(it,jumpSeasonKey){
     const show=(meta.Metadata||[])[0]||it;
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
     const actions=`<button class="btn lg" id="playShow">${svgIcon("play-fill")} Play</button>
-      <button class="btn glass lg" id="shuffleShow">${svgIcon("shuffle")} Shuffle</button>${watchedToggleHTML(show,false)}`;
+      <button class="btn glass lg icon" id="shuffleShow" aria-label="Shuffle" title="Shuffle">${svgIcon("shuffle")}</button>${watchedToggleHTML(show,false)}`;
     c.classList.add("dp-wrap");
     c.innerHTML=detailHero(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
