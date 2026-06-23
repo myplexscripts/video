@@ -61,7 +61,7 @@
     --radius:0px; --radius-sm:0px; --radius-xs:0px; --radius-lg:0px;
     --shadow-sm:0 1px 3px rgba(0,0,0,.3); --shadow:0 4px 24px rgba(0,0,0,.4);
     --shadow-lg:0 12px 48px rgba(0,0,0,.55);
-    --font:'Circular','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --font:'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     --ease:cubic-bezier(.22,1,.36,1);
     /* Floating menu-toggle/search pills sit at top:max(16px,safe-area) and are
        44px tall — flat pages need at least that much clearance so their first
@@ -136,7 +136,7 @@
     /* CARD DIMENSIONS
        portrait cards (movies/shows): --card-w wide, 3:2 ratio (height auto)
        wide cards (episodes/extras):  --card-w-wide */
-    --card-w:170px; --card-w-wide:280px; --grid-gap:0px; --rail-gap:0px;
+    --card-w:220px; --card-w-wide:220px; --grid-gap:0px; --rail-gap:12px;
     /* FLOATING NAV RULES
        Library page title → pure typography, no glass pill.
          font-size: 19px / weight 800 / letter-spacing -.025em
@@ -459,7 +459,7 @@
   .see-all:hover{color:var(--text)}
   .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
   .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
-  .carousel{display:flex;gap:0;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
+  .carousel{display:flex;gap:var(--rail-gap);overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
     scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .carousel::-webkit-scrollbar{height:0}
   /* ---- RAIL ARROWS ----
@@ -564,8 +564,8 @@
      play affordance — no movement, scaling, or stacked effects. */
   .card{scroll-snap-align:start;cursor:pointer;border:none;background:none;text-align:left;
     flex:0 0 auto;color:inherit;outline:none;border-radius:var(--radius-sm);touch-action:manipulation}
-  .carousel .card{width:220px}
-  .carousel .card.wide{width:300px}
+  .carousel .card{width:var(--card-w)}
+  .carousel .card.wide{width:var(--card-w)}
   /* Gold focus ring lives on .art, not the card button, so it follows the visible image edge. */
   .card:focus-visible .art{
     box-shadow:0 0 0 2.5px var(--accent),0 0 0 6px rgba(232,184,37,.18),0 16px 48px rgba(232,184,37,.2) !important;
@@ -623,16 +623,16 @@
   .season-card .cs{display:block;font-size:12px;color:var(--dim);margin-top:3px;font-weight:500;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* Featured (first rail): bigger cards */
-  .featured .carousel .card{width:300px}
-  .featured .carousel .card.wide{width:380px}
+  /* Featured (first rail): same width as all cards for grid alignment */
+  .featured .carousel .card{width:var(--card-w)}
+  .featured .carousel .card.wide{width:var(--card-w)}
   .featured .art img{aspect-ratio:2/3}
   .featured .art img.wide{aspect-ratio:16/9}
 
   /* ---- BILLBOARD CARD ----
      Secondary showcase card: square art + centered logo + blurred-art
      metadata panel beneath. Rules: only in billboard rails. */
-  .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column;
+  .carousel .card.billboard{width:var(--card-w);display:flex;flex-direction:column;
     position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate;
     background:var(--bg2);transform:translateZ(0);clip-path:inset(0)}
   /* Flat dark panel behind the card — no ambient blur wash. */
@@ -664,7 +664,7 @@
     color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
   /* Suppress legacy card text rows — all metadata lives in .bill-meta */
   .card.billboard .ct,.card.billboard > .cs,.bill-desc{display:none}
-  @media(max-width:680px){.carousel .card.billboard{width:220px}}
+  @media(max-width:680px){.carousel .card.billboard{width:var(--card-w)}}
 
   /* ---- EDITORIAL SECTION — magazine-style featured items ----
      A title-page feature row: wide 16:9 art on large screens (1:1 on phones),
@@ -888,10 +888,10 @@
   .genre-card--square{width:160px}
   .genre-card--square .genre-art{aspect-ratio:1/1}
   .genre-card--square .genre-fade{display:none}
-  .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
+  .cast-row{display:flex;gap:var(--rail-gap);overflow-x:auto;padding:4px var(--edge) 16px;
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .cast-row::-webkit-scrollbar{height:0}
-  .cast{flex:0 0 auto;width:112px;text-align:center;background:none;border:none;
+  .cast{flex:0 0 auto;width:var(--card-w);text-align:center;background:none;border:none;
     padding:0;cursor:default;font-family:var(--font);color:var(--text)}
   .cast[data-actor-id]{cursor:pointer}
   .cast[data-actor-id]:hover .art{border-color:var(--accent)}
@@ -999,9 +999,9 @@
   .trailer-state i,.trailer-state .svgi{font-size:28px;width:28px;height:28px;color:var(--faint)}
 
   /* ---- SEASON SWITCHER (artwork, not pill tabs) ---- */
-  .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .season-rail{display:flex;gap:var(--rail-gap);overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .season-rail::-webkit-scrollbar{height:0}
-  .season-card{width:150px}
+  .season-card{width:var(--card-w)}
   .season-card .art{aspect-ratio:2/3;outline:2px solid transparent;outline-offset:2px;
     transition:outline-color .15s var(--ease),box-shadow .2s var(--ease)}
   .season-card.active .art{outline-color:var(--accent);box-shadow:var(--shadow)}
@@ -1423,8 +1423,7 @@
     .coll-info{min-width:unset;width:100%}
     .coll-meta{justify-content:center}
     .coll-actions{justify-content:center}
-    .carousel .card{width:150px}.carousel .card.wide{width:216px}
-    .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:272px}
+    .carousel .card,.carousel .card.wide,.featured .carousel .card,.featured .carousel .card.wide{width:180px}
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
     .p-pause{padding:0 44px 120px}
@@ -1574,9 +1573,8 @@
     .ec-title h3{font-size:clamp(22px,7vw,34px)}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     /* Peeking carousel: one card at a time, next card peeks ~40px */
-    .carousel .card{width:calc(100vw - var(--edge) - 40px);max-width:280px}
-    .carousel .card.wide{width:calc(100vw - var(--edge) - 40px);max-width:320px}
-    .featured .carousel .card{width:calc(100vw - var(--edge) - 40px);max-width:320px}
+    .carousel .card,.carousel .card.wide,.featured .carousel .card,.featured .carousel .card.wide{
+      width:calc(100vw - var(--edge) - 40px);max-width:280px}
     .detail-info h2{font-size:28px}
     .rate-float{display:none}
     .detail-poster{width:110px}
@@ -1677,13 +1675,9 @@
     .settings-row .toggle-btn{margin-left:auto}
   }
   /* ---- SERIF HEADLINE FONT (opt-in via settings) ---- */
-  body.serif-headlines .hero h2,
-  body.serif-headlines .hub-carousel .hero-top h2,
-  body.serif-headlines .detail-top h2,
-  body.serif-headlines .detail-info h2,
-  body.serif-headlines .ec-title h3,
-  body.serif-headlines .page-head h2,
-  body.serif-headlines .editorial-head h2{
+  body.serif-headlines h1,
+  body.serif-headlines h2,
+  body.serif-headlines h3{
     font-family:'Playfair Display',Georgia,'Times New Roman',serif;
     letter-spacing:-.02em;
   }
@@ -1890,7 +1884,7 @@ function applyHeadlineFont(name,save=true){
   if(save){ localStorage.setItem(LS.headlineFont,name); pushRemoteSettings(); toast("Settings saved"); }
 }
 // Set font before first content render so there's no flash of wrong typeface
-applyFont(localStorage.getItem(LS.font)||"circular",false);
+applyFont("inter",false);
 applyHeadlineFont(localStorage.getItem(LS.headlineFont)||"sans",false);
 // Restore TV mode (applies body class before paint so cursor:none is immediate)
 if(localStorage.getItem(LS.tvMode)==="1") document.body.classList.add("tv-mode");
@@ -3293,8 +3287,8 @@ function card(it,wide,square){
     : it._collection ? "Collection"
     : it.type==="playlist" ? `${it.leafCount||0} items`
     : [it.year, it.type==="show"?`${it.childCount||it.leafCount||""} Seasons`:""].filter(Boolean).join(" · ");
-  const dim = square ? 320 : (useWide?480:340);
-  const dim2 = square ? 320 : (useWide?270:510);
+  const dim = square ? 640 : (useWide?800:600);
+  const dim2 = square ? 640 : (useWide?450:900);
   const src=img(thumb,dim,dim2);
   const mosaic=src?"":mosaicHTML(it._mosaicItems);
   const fallbackIconHTML = it._collection ? `<span class="art-fallback">${svgIcon("stack-fill")}</span>`
@@ -3353,7 +3347,7 @@ function editorialCard(it){
   // 16:9 cinematic art: prefer backdrop art, fall back to the poster thumb.
   // The image fills a landscape frame on desktop and a 1:1 crop on mobile (CSS).
   const art=it.art||it.grandparentArt||it.thumb||it.parentThumb;
-  const imgSrc=art?img(art,960,540):"";
+  const imgSrc=art?img(art,1920,1080):"";
   const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
   const metaParts=[year,it.contentRating,
     it.type==="show"?(it.childCount>1?`${it.childCount} Seasons`:(it.childCount===1?"1 Season":"")):"",
@@ -3641,11 +3635,9 @@ function renderLibGrid(){
 async function showSettings(){
   setTitle("Settings"); clearUltraBlur(); hideLibNav();
   const c=$("#content");
-  const cf=localStorage.getItem(LS.font)||"circular";
   const hf=localStorage.getItem(LS.headlineFont)||"sans";
   const da=localStorage.getItem(LS.detailArt)||"backdrop";
   const hs=getHeroStyle();
-  const fBtn=(id,label)=>`<button class="rail-style-btn${cf===id?" active":""}" data-font="${id}">${label}</button>`;
   const hfBtn=(id,label)=>`<button class="rail-style-btn${hf===id?" active":""}" data-hf="${id}">${label}</button>`;
   const daBtn=(id,label)=>`<button class="rail-style-btn${da===id?" active":""}" data-detailart="${id}">${label}</button>`;
   const hsBtn=(id,label)=>`<button class="rail-style-btn${hs===id?" active":""}" data-herostyle="${id}">${label}</button>`;
@@ -3658,15 +3650,7 @@ async function showSettings(){
           <small>Font used for titles, heroes, and section headings.</small>
         </div>
         <div class="rail-style-btns" id="settingsHeadlineFontBtns">
-          ${hfBtn("sans","Sans-serif (Circular)")}${hfBtn("serif","Serif")}
-        </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-label">Interface Font
-          <small>Applies to the entire app interface.</small>
-        </div>
-        <div class="rail-style-btns" id="settingsFontBtns">
-          ${fBtn("circular","Circular")}${fBtn("inter","Inter")}${fBtn("outfit","Outfit")}
+          ${hfBtn("sans","Sans-serif")}${hfBtn("serif","Serif")}
         </div>
       </div>
       <div class="settings-row">
@@ -3734,13 +3718,6 @@ async function showSettings(){
     btn.onclick=()=>{
       applyHeadlineFont(btn.dataset.hf);
       c.querySelectorAll("#settingsHeadlineFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
-    };
-  });
-  // Wire interface font picker
-  c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(btn=>{
-    btn.onclick=()=>{
-      applyFont(btn.dataset.font);
-      c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
     };
   });
   // Wire detail art picker
@@ -4767,7 +4744,7 @@ async function openMovie(it){
 function seasonCard(s,active){
   const b=el("button","card season-card"+(active?" active":""));
   if(active) b.setAttribute("aria-current","true");
-  b.innerHTML=`<div class="art"><img loading="lazy" alt="" src="${img(s.thumb,300,450)}"></div>
+  b.innerHTML=`<div class="art"><img loading="lazy" alt="" src="${img(s.thumb,440,660)}"></div>
     <div class="ct">${esc(s.title||`Season ${s.index}`)}</div>
     <div class="cs">${s.leafCount?`${s.leafCount} episodes`:""}</div>`;
   return b;
