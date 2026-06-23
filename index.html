@@ -756,7 +756,7 @@
   .dp-hero--split .dp-poster{order:2}
   .dp-hero--split .dp-actions{order:3}
   .dp-hero--split .dp-meta{order:4;margin-top:auto}
-  .dp-hero--split .dp-dropquote{order:5}
+  .dp-hero--split .dp-quote-block{order:5}
   /* Header: serif title, wave divider, italic tagline — centered on mobile.
      Top padding aligns the title with the floating back button. */
   .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
@@ -774,11 +774,11 @@
   /* Pull quote — tagline sits between the poster art and the film credits */
   .dp-dropquote{margin:0 auto;font-family:var(--font-head);font-style:normal;
     font-weight:400;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--dim);
-    text-align:center;padding:24px var(--edge) 16px;max-width:28ch;position:relative}
-  .dp-dropquote::before,.dp-dropquote::after{content:"";display:block;width:32px;height:2px;
-    border-radius:2px;background:var(--quote-accent,var(--accent));opacity:.85;margin:0 auto}
-  .dp-dropquote::before{margin-bottom:24px}
-  .dp-dropquote::after{margin-top:24px}
+    text-align:center;padding:24px var(--edge) 0;max-width:28ch;position:relative}
+  /* Triple wave under the tagline — tinted by --quote-accent */
+  .dp-quote-wave{display:flex;justify-content:center;padding:18px var(--edge) 8px;
+    color:var(--quote-accent,var(--accent))}
+  .dp-quote-wave svg{width:100%;max-width:200px;height:auto;display:block}
   /* Stars inside the header, directly under the wave divider */
   .dp-head .dp-rate{padding:0;width:auto}
   .dp-head .rate-stars button{width:34px;height:34px}
@@ -1480,8 +1480,9 @@
       padding-top:0}
     .dp-hero.dp-hero--split>*{order:0}
     /* Pull quote sits full-width above the billboard art */
-    .dp-hero.dp-hero--split .dp-dropquote{grid-area:quote;margin:0 auto;
-      padding:40px var(--edge) 36px;max-width:40ch}
+    .dp-hero.dp-hero--split .dp-quote-block{grid-area:quote;display:flex;flex-direction:column;
+      align-items:center;padding:40px var(--edge) 28px}
+    .dp-hero.dp-hero--split .dp-dropquote{margin:0 auto;padding:0;max-width:40ch}
     .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:78%;margin-bottom:10px}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 56px);
       width:auto;padding:0;justify-content:flex-end}
@@ -4164,6 +4165,15 @@ function waveVertSVG(){
       fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </svg>`;
 }
+/* Triple-stacked wave — sits under the tagline. Uses currentColor so the
+   --quote-accent tint (set dynamically from art) drives all three strokes. */
+function waveTriSVG(){
+  return `<div class="dp-quote-wave"><svg viewBox="0 0 240 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 20 C12 8 24 8 36 20 S60 32 72 20 S96 8 108 20 S132 32 144 20 S168 8 180 20 S204 32 216 20 S240 8 252 20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+    <path d="M0 35 C12 23 24 23 36 35 S60 47 72 35 S96 23 108 35 S132 47 144 35 S168 23 180 35 S204 47 216 35 S240 23 252 35" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+    <path d="M0 50 C12 38 24 38 36 50 S60 62 72 50 S96 38 108 50 S132 62 144 50 S168 38 180 50 S204 62 216 50 S240 38 252 50" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".35"/>
+  </svg></div>`;
+}
 /* Dominant-colour extraction — samples the poster/art at 48×48,
    finds the most vivid hue bucket, then sets two CSS custom properties
    on the hero element: --squiggle-color (waves) and --quote-accent (tagline rules). */
@@ -4263,7 +4273,7 @@ function detailHero(m,isMovie,actionsHTML,extras){
       <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
       <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
       <div class="dp-meta">${metaBits(m,isMovie)}</div>
-      ${m.tagline?`<p class="dp-dropquote">${esc(m.tagline)}</p>`:""}
+      ${m.tagline?`<div class="dp-quote-block"><p class="dp-dropquote">${esc(m.tagline)}</p>${waveTriSVG()}</div>`:""}
     </div>
     ${dpSummaryHTML(m.summary,top3genres,hasBackdrop,badges)}
   </div>`;
