@@ -61,7 +61,7 @@
     --radius:0px; --radius-sm:0px; --radius-xs:0px; --radius-lg:0px;
     --shadow-sm:0 1px 3px rgba(0,0,0,.3); --shadow:0 4px 24px rgba(0,0,0,.4);
     --shadow-lg:0 12px 48px rgba(0,0,0,.55);
-    --font:'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    --font:'Circular','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     --ease:cubic-bezier(.22,1,.36,1);
     /* Floating menu-toggle/search pills sit at top:max(16px,safe-area) and are
        44px tall — flat pages need at least that much clearance so their first
@@ -136,7 +136,7 @@
     /* CARD DIMENSIONS
        portrait cards (movies/shows): --card-w wide, 3:2 ratio (height auto)
        wide cards (episodes/extras):  --card-w-wide */
-    --card-w:220px; --card-w-wide:220px; --grid-gap:0px; --rail-gap:12px;
+    --card-w:170px; --card-w-wide:280px; --grid-gap:24px; --rail-gap:20px;
     /* FLOATING NAV RULES
        Library page title → pure typography, no glass pill.
          font-size: 19px / weight 800 / letter-spacing -.025em
@@ -165,7 +165,7 @@
     padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;
     transition:top .15s var(--ease)}
   .skip-link:focus-visible{top:12px}
-  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
   ::-webkit-scrollbar{display:none}
   *{scrollbar-width:none}
   @media (prefers-reduced-motion: reduce){
@@ -187,7 +187,7 @@
   .btn i,.btn .svgi{font-size:17px;width:17px;height:17px}
   .btn.lg{padding:14px 30px;font-size:15px}
   .btn.sm{padding:8px 16px;font-size:13px}
-  .btn.icon{width:48px;height:48px;padding:0;justify-content:center;border-radius:0;font-size:19px}
+  .btn.icon{width:48px;height:48px;padding:0;justify-content:center;border-radius:50%;font-size:19px}
   .btn.icon.active{background:var(--accent-glass);color:#141005;border-color:rgba(255,255,255,.3);box-shadow:var(--frost-edge-sm),0 4px 20px rgba(232,184,37,.25)}
   .btn.icon.active:hover{background:var(--accent-glass-hover)}
 
@@ -214,11 +214,16 @@
   .badge.remote{background:var(--accent-wash);color:var(--accent)}
   .badge.relay{background:rgba(255,100,100,.1);color:#ff9090}
 
-  /* ---- ULTRABLUR UNDERLAY — REMOVED ----
-     The editorial design is flat: crisp images on a solid background, no soft
-     ambient colour washes anywhere. The element is kept in the DOM (JS still
-     references it) but never paints. */
-  #ultraBlur{display:none !important}
+  /* ---- ULTRABLUR UNDERLAY ----
+     Single fixed, blurred color wash derived from the current page's artwork.
+     Used on detail-style pages (movie/show/season/collection/playlist) and the
+     player. Grid/list pages leave it hidden to keep things calm and legible. */
+  #ultraBlur{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .ub-layer{position:absolute;inset:-20%;background-size:cover;background-position:center;
+    opacity:0;transition:opacity 1.2s var(--ease);filter:blur(110px) saturate(1.9) brightness(1.05)}
+  .ub-layer.show{opacity:.65}
+  .ub-scrim{position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(10,10,12,.35) 0%,rgba(10,10,12,.6) 50%,rgba(10,10,12,.78) 100%)}
 
   /* ---- APP SHELL ---- */
   #app{display:none;height:100%;position:relative;z-index:1}
@@ -307,19 +312,19 @@
   /* ---- HERO ---- */
   /* ---- HERO — editorial full-bleed ---- */
   .hero{position:relative;overflow:hidden;cursor:pointer;
-    aspect-ratio:16/9;height:auto;min-height:0;max-height:90svh;
+    aspect-ratio:16/9;max-height:92vh;min-height:460px;
     display:flex;flex-direction:column;justify-content:flex-end}
-  .hero-bg{position:absolute;inset:0;overflow:hidden;background:var(--bg2)}
-  /* Blurred ambient echo removed — the image is full-bleed and crisp. */
-  .hero-bg-blur{display:none}
+  .hero-bg{position:absolute;inset:0;overflow:hidden}
+  .hero-bg-blur{position:absolute;inset:-15%;background-size:cover;background-position:center;
+    filter:blur(100px) saturate(1.9) brightness(1.05)}
   /* Full-bleed cover — image fills the entire hero frame */
   .hero-bg-img,.hero-video{position:absolute;inset:0;width:100%;height:100%;
     object-fit:cover;object-position:center 20%;
     opacity:0;transition:opacity .6s var(--ease)}
   .hero-bg-img.loaded,.hero-video.show{opacity:1}
-  /* Subtle bottom-up gradient for legibility */
+  /* Cinematic bottom scrim — heavy at the foot for type legibility */
   .hero-scrim{position:absolute;inset:0;
-    background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.9) 0%,rgba(0,0,0,.52) 40%,transparent 68%)}
+    background:linear-gradient(to top,rgba(10,10,12,1) 0%,rgba(10,10,12,.82) 14%,rgba(10,10,12,.45) 38%,rgba(10,10,12,.1) 68%,transparent 88%)}
   .hero-top,.hero-bottom{position:relative;z-index:2;max-width:none}
   .hero-top{padding:0 var(--edge) 0}
   .hero-bottom{padding:16px var(--edge) 48px}
@@ -327,13 +332,14 @@
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
   .hero-kicker i,.hero-kicker .svgi{font-size:16px}
   /* Editorial title — larger, tighter tracking, cinematic depth shadow */
-  .hero h2{font-size:clamp(40px,8vw,110px);font-weight:900;letter-spacing:-.05em;line-height:.9}
+  .hero h2{font-size:clamp(40px,8vw,110px);font-weight:900;letter-spacing:-.05em;line-height:.9;
+    text-shadow:0 2px 40px rgba(0,0,0,.45),0 4px 80px rgba(0,0,0,.35)}
   /* Tagline: uppercase kicker beneath title */
   .hero-tagline{font-size:clamp(10px,1.1vw,13px);letter-spacing:.16em;text-transform:uppercase;
     color:rgba(255,255,255,.5);margin-top:14px;font-weight:500}
   .hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
     margin:18px 0 14px;font-weight:500}
-  .hero-meta .sep{width:4px;height:4px;border-radius:0;background:var(--faint)}
+  .hero-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
   .pill{display:inline-flex;align-items:center;gap:5px;background:var(--frost-bg);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));border:1px solid var(--frost-border);border-radius:0;padding:4px 10px;
     font-size:12px;font-weight:600;box-shadow:var(--frost-shadow-sm)}
@@ -350,9 +356,14 @@
   .title-logo{display:block;max-width:min(80%,680px);max-height:160px;width:auto;height:auto;
     object-fit:contain;object-position:left bottom;margin-bottom:2px;
     filter:drop-shadow(0 0 22px var(--img-glow,transparent))}
-  /* No adaptive veil — flat editorial. Legibility via text-shadow only. */
+  /* Adaptive legibility veil for bright backdrops */
+  .hero-scrim::after,.detail-scrim::after{content:"";position:absolute;inset:0;opacity:0;pointer-events:none;
+    transition:opacity .45s var(--ease);
+    background:linear-gradient(to top,rgba(6,6,8,.65) 0%,transparent 44%),
+    linear-gradient(102deg,rgba(6,6,8,.6) 0%,transparent 58%)}
+  .bright-bg .hero-scrim::after,.bright-bg .detail-scrim::after{opacity:1}
   .bright-bg .hero-top h2,.bright-bg .detail-top h2,.bright-bg .detail-info h2{
-    text-shadow:none}
+    text-shadow:0 2px 18px rgba(0,0,0,.85),0 1px 4px rgba(0,0,0,.72)}
 
   /* ---- SECTION / RAIL ----
      Each rail can carry its own ambient color wash (.rail-ambient), a
@@ -370,8 +381,9 @@
   .hub-grid-art{width:72px;height:72px;flex:0 0 72px;overflow:hidden}
   .hub-grid-title{font-size:13px;font-weight:700;padding:0 12px;line-height:1.35;
     overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  /* Per-rail ambient colour wash removed for the flat editorial look. */
-  .rail-ambient{display:none !important}
+  .rail-ambient{position:absolute;top:-90px;left:6%;right:6%;height:260px;
+    background-size:cover;background-position:center;opacity:.28;
+    filter:blur(70px) saturate(1.8);pointer-events:none;transform:scale(1.25)}
   .rail-head{display:flex;align-items:flex-end;gap:12px;margin:0 var(--edge) 16px;position:relative}
   .rail-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
   .rail-lib{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:var(--fw-bold)}
@@ -387,7 +399,7 @@
      hover/touch. Each slide reuses the .hero-* content classes; .hub-cs-slide
      carries the stacking/positioning for the wipe transition. */
   .hub-carousel-section{padding:0;overflow:visible}
-  .hub-carousel{position:relative;aspect-ratio:16/9;height:auto;min-height:0;max-height:90svh;overflow:hidden;touch-action:pan-y}
+  .hub-carousel{position:relative;aspect-ratio:16/9;max-height:92vh;min-height:480px;overflow:hidden;touch-action:pan-y}
   .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;visibility:hidden;
     will-change:transform;display:flex;flex-direction:column;justify-content:flex-end;
     padding:0 var(--edge) 48px}
@@ -396,12 +408,13 @@
   .hub-carousel .hero-bg-img{position:absolute;inset:0;width:100%;height:100%;
     object-fit:cover;object-position:center 20%}
   .hub-carousel .hero-bg-blur{-webkit-mask-image:none;mask-image:none}
-  .hub-carousel .hero-scrim{background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.9) 0%,rgba(0,0,0,.52) 40%,transparent 68%)}
+  .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(10,10,12,1) 0%,rgba(10,10,12,.82) 14%,rgba(10,10,12,.45) 38%,rgba(10,10,12,.1) 68%,transparent 88%)}
   .hub-carousel .hero-top,.hub-carousel .hero-bottom{position:relative;z-index:2;padding:0;max-width:none;text-align:left}
   .hub-carousel .hero-meta{justify-content:flex-start}
   .hub-carousel .hero-actions{justify-content:flex-start}
   /* Slides aren't .hero elements — style title + summary directly */
-  .hub-carousel .hero-top h2{font-size:clamp(28px,5vw,72px);font-weight:900;letter-spacing:-.05em;line-height:.9}
+  .hub-carousel .hero-top h2{font-size:clamp(28px,5vw,72px);font-weight:900;letter-spacing:-.05em;line-height:.9;
+    text-shadow:0 2px 40px rgba(0,0,0,.45)}
   .hub-carousel .hero-top .hero-summary{color:var(--dim);line-height:1.6;font-size:14px;max-width:560px;text-align:left;margin:0 0 22px;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .hub-carousel .title-logo{display:block;height:auto;width:auto;max-width:min(72%,540px);max-height:120px;
@@ -421,7 +434,7 @@
   .hub-cd.active{background:#fff;width:18px}
   /* Prev/next arrows (appear on hover) */
   .hub-ca{position:absolute;top:50%;transform:translateY(-50%);z-index:3;
-    width:38px;height:38px;border-radius:0;background:rgba(0,0,0,.4);
+    width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.4);
     border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
     cursor:pointer;color:var(--text);opacity:0;transition:opacity .2s var(--ease)}
   .hub-carousel:hover .hub-ca{opacity:1}
@@ -450,7 +463,7 @@
       overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none}
   }
   .rail-head.with-avatar{align-items:center}
-  .rail-head-avatar{width:48px;height:48px;border-radius:0;overflow:hidden;flex:0 0 auto;
+  .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
     box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--frost-border),var(--frost-shadow-sm)}
   .rail-head-avatar img{width:100%;height:100%;object-fit:cover;display:block}
   .see-all{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;
@@ -459,7 +472,7 @@
   .see-all:hover{color:var(--text)}
   .see-all i,.see-all .svgi{font-size:14px;width:14px;height:14px;transition:transform .15s var(--ease)}
   .see-all:hover i,.see-all:hover .svgi{transform:translateX(2px)}
-  .carousel{display:flex;gap:var(--rail-gap);overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
+  .carousel{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;scroll-snap-type:x mandatory;
     scroll-padding-inline:var(--edge);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .carousel::-webkit-scrollbar{height:0}
   /* ---- RAIL ARROWS ----
@@ -467,7 +480,7 @@
      Shown only when the rail overflows; the edge arrow hides at each end. */
   .rail-viewport{position:relative}
   .rail-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;
-    width:44px;height:44px;border-radius:0;display:flex;align-items:center;justify-content:center;
+    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     background:rgba(20,20,24,.7);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     -webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
     border:1px solid var(--frost-border);box-shadow:var(--frost-shadow);color:var(--text);
@@ -481,7 +494,7 @@
   .rail-viewport.has-overflow:hover .rail-arrow:not(.edge),
   .rail-viewport.has-overflow:focus-within .rail-arrow:not(.edge){opacity:1;pointer-events:auto}
   @media (hover:none){ .rail-viewport.has-overflow .rail-arrow:not(.edge){opacity:1;pointer-events:auto} }
-  .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0;
+  .grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:24px;
     padding:4px var(--edge) 16px}
 
   /* ---- LIBRARY TABS ----
@@ -564,8 +577,8 @@
      play affordance — no movement, scaling, or stacked effects. */
   .card{scroll-snap-align:start;cursor:pointer;border:none;background:none;text-align:left;
     flex:0 0 auto;color:inherit;outline:none;border-radius:var(--radius-sm);touch-action:manipulation}
-  .carousel .card{width:var(--card-w)}
-  .carousel .card.wide{width:var(--card-w)}
+  .carousel .card{width:180px}
+  .carousel .card.wide{width:262px}
   /* Gold focus ring lives on .art, not the card button, so it follows the visible image edge. */
   .card:focus-visible .art{
     box-shadow:0 0 0 2.5px var(--accent),0 0 0 6px rgba(232,184,37,.18),0 16px 48px rgba(232,184,37,.2) !important;
@@ -589,7 +602,7 @@
     overflow:hidden}
   .art .watch-prog > i{display:block;height:100%;background:var(--accent)}
   .art.ep-blur img{filter:blur(20px) brightness(.6);transform:scale(1.1)}
-  .art .unwatched-dot{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:0;
+  .art .unwatched-dot{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;
     background:var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.45)}
   .art .watched-check{position:absolute;top:7px;right:7px;font-size:17px;line-height:1;
     color:var(--accent);filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));pointer-events:none}
@@ -615,30 +628,29 @@
   .art-mosaic.n2{grid-template-rows:1fr}
   .art-mosaic.n3 img:first-child{grid-row:1/3}
 
-  /* Card text hidden for clean poster-only look; shown on season/extra cards that need labels */
-  .card .ct{display:none}
-  .card .cs{display:none}
-  .season-card .ct,.extra-card .ct{display:block;font-size:13.5px;margin-top:10px;line-height:1.3;
-    font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .season-card .cs{display:block;font-size:12px;color:var(--dim);margin-top:3px;font-weight:500;
+  .card .ct{font-size:13.5px;margin-top:10px;line-height:1.3;font-weight:600;letter-spacing:-.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card .cs{font-size:12px;color:var(--dim);margin-top:3px;font-weight:500;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* Featured (first rail): same width as all cards for grid alignment */
-  .featured .carousel .card{width:var(--card-w)}
-  .featured .carousel .card.wide{width:var(--card-w)}
+  /* Featured (first rail): bigger cards */
+  .featured .carousel .card{width:260px}
+  .featured .carousel .card.wide{width:344px}
   .featured .art img{aspect-ratio:2/3}
   .featured .art img.wide{aspect-ratio:16/9}
 
   /* ---- BILLBOARD CARD ----
      Secondary showcase card: square art + centered logo + blurred-art
      metadata panel beneath. Rules: only in billboard rails. */
-  .carousel .card.billboard{width:var(--card-w);display:flex;flex-direction:column;
+  .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column;
     position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate;
     background:var(--bg2);transform:translateZ(0);clip-path:inset(0)}
-  /* Flat dark panel behind the card — no ambient blur wash. */
+  /* Shared blurred-art wash behind the whole card: the art's bottom dissolves
+     into it and the meta strip rides on it, so there's no hard seam between them. */
   .card.billboard::before{content:'';position:absolute;inset:0;z-index:0;
-    background:var(--bg2)}
-  /* Art: square; transparent bg + above the panel */
+    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
+    filter:blur(30px) saturate(1.7) brightness(.32)}
+  /* Art: square, rounded only at top; transparent bg + above the wash */
   .card.billboard .art{aspect-ratio:1/1;border-radius:0;flex:0 0 auto;
     z-index:1;background:transparent}
   /* Scrim for logo legibility; faded out at the very bottom with the image */
@@ -657,71 +669,53 @@
   .bill-title{font-size:22px;font-weight:var(--fw-black);letter-spacing:-.03em;line-height:1.05;
     color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.7);text-align:center;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  /* Metadata strip: flat dark panel, no blur */
-  .bill-meta{position:relative;z-index:1;flex:0 0 auto;background:var(--bg2);
+  /* Metadata strip: rides the shared wash — no own blur, just a readability tint */
+  .bill-meta{position:relative;z-index:1;flex:0 0 auto;
     padding:6px 12px 13px;text-align:center;overflow:hidden}
+  .bill-meta::before{content:'';position:absolute;inset:-24px;z-index:-1;
+    background:var(--bill-bg,var(--bg2)) center/cover no-repeat;
+    filter:blur(48px) saturate(1.8) brightness(.52)}
   .bill-meta .cs{position:relative;z-index:1;font-size:var(--t-sm);font-weight:500;
     color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
   /* Suppress legacy card text rows — all metadata lives in .bill-meta */
   .card.billboard .ct,.card.billboard > .cs,.bill-desc{display:none}
-  @media(max-width:680px){.carousel .card.billboard{width:var(--card-w)}}
+  @media(max-width:680px){.carousel .card.billboard{width:220px}}
 
   /* ---- EDITORIAL SECTION — magazine-style featured items ----
-     A title-page feature row: wide 16:9 art on large screens (1:1 on phones),
-     the logo/headline straddling the image's right edge into a right-hand
-     text column where the standfirst sits, right-aligned. Hard rules, no
-     rounding, no ambient blur — flat editorial composition. */
-  .editorial-section{padding:0 0 40px;border-top:2px solid var(--text)}
+     Each card: square 1:1 art on the left, large overlapping title straddling
+     the image/background boundary, right-aligned meta below. */
+  .editorial-section{padding:0 0 48px;border-top:2px solid var(--text)}
   .editorial-head{display:flex;align-items:baseline;justify-content:space-between;
-    gap:12px;padding:18px var(--edge) 4px}
-  .editorial-head h2{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    gap:12px;padding:18px var(--edge) 20px}
+  .editorial-head h2{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
     color:var(--faint)}
-  .editorial-head .count{font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.08em}
-  /* Card: image column + text column. align-items:center keeps the standfirst
-     vertically centred against the 16:9 art. */
-  .editorial-card{position:relative;display:grid;grid-template-columns:58% 42%;
-    align-items:center;width:100%;cursor:pointer;border:none;background:none;color:inherit;
-    font-family:var(--font);text-align:right;touch-action:manipulation;padding:30px 0;gap:0}
+  .editorial-head .count{font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.06em}
+  .editorial-card{position:relative;display:grid;grid-template-columns:55% 1fr;grid-template-rows:1fr auto;
+    width:100%;cursor:pointer;border:none;background:none;color:inherit;font-family:var(--font);
+    text-align:left;touch-action:manipulation;padding:32px 0 40px;gap:0}
   .editorial-card+.editorial-card{border-top:1px solid var(--line)}
-  /* 16:9 cinematic art, flush to the card's left edge */
-  .ec-art{grid-column:1;grid-row:1;position:relative;overflow:hidden;aspect-ratio:16/9;background:var(--bg2)}
+  /* Square art: full left column, no horizontal padding */
+  .ec-art{grid-column:1;grid-row:1/3;position:relative;overflow:hidden;aspect-ratio:1/1;align-self:start}
   .ec-art img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--ease)}
-  .editorial-card:hover .ec-art img,.editorial-card:focus-visible .ec-art img{transform:scale(1.035)}
-  /* Fallback icon hidden unless the image genuinely fails — this is the fix for
-     the square art that wasn't showing (the overlay used to paint over a valid image). */
-  .ec-art .art-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
-    font-size:44px;color:var(--faint);background:var(--bg2)}
-  .ec-art.broken img{display:none}
-  .ec-art.broken .art-fallback{display:flex}
-  /* Subtle right-edge fade so overlapping title stays readable */
-  .ec-art::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(to right,transparent 52%,rgba(0,0,0,.58) 100%)}
-  /* Text column: left-aligned, vertically centred, anchored to the page edge */
-  .ec-body{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;
-    justify-content:center;text-align:left;padding:0 var(--edge) 0 0;gap:14px;min-width:0;
-    position:relative;z-index:2}
-  /* Headline slightly overlaps the image right edge — no shadow, gradient does the work */
-  .ec-title{align-self:stretch;margin-left:-8%;filter:none}
-  .ec-title h3{font-size:clamp(26px,3.4vw,60px);font-weight:900;letter-spacing:-.04em;line-height:.92}
-  .ec-title .ec-logo{display:block;max-width:min(100%,440px);max-height:118px;object-fit:contain;
-    object-position:right center;margin-left:auto}
-  .ec-label{font-size:var(--t-label);text-transform:uppercase;letter-spacing:.16em;
-    color:var(--faint);font-weight:700}
-  .ec-summary{font-size:var(--t-body);color:var(--dim);line-height:1.6;max-width:34ch;
+  .editorial-card:hover .ec-art img,.editorial-card:focus-visible .ec-art img{transform:scale(1.03)}
+  .ec-art .art-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:48px;color:var(--faint);background:var(--bg2)}
+  /* Right-edge fade — image dissolves into background where the title overlaps */
+  .ec-art::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to right,transparent 70%,var(--bg) 98%)}
+  /* Title: spans both columns, right-side content right-aligned */
+  .ec-title{grid-column:1/3;grid-row:1;align-self:center;pointer-events:none;
+    padding:0 var(--edge) 0 48%;position:relative;z-index:1;text-align:right}
+  .ec-title h3{font-size:clamp(22px,4vw,68px);font-weight:900;letter-spacing:-.04em;line-height:.95;
+    text-shadow:0 2px 24px rgba(0,0,0,.95),0 4px 48px rgba(0,0,0,.8)}
+  .ec-title .ec-logo{display:block;max-width:260px;max-height:96px;object-fit:contain;
+    object-position:right center;margin-left:auto;filter:drop-shadow(0 2px 14px rgba(0,0,0,.95))}
+  /* Meta + summary: right column only, right-aligned */
+  .ec-meta{grid-column:2;grid-row:2;padding:14px var(--edge) 0 24px;text-align:right}
+  .ec-label{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;
+    color:var(--faint);font-weight:700;margin-bottom:8px}
+  .ec-summary{font-size:var(--t-body);color:var(--dim);line-height:1.65;
     display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-  /* TABLET + PHONE (≤768px): editorial cards stack — 1:1 square art, the
-     logo overlapping the bottom of the image, standfirst left-aligned below. */
-  @media(max-width:768px){
-    .editorial-card{grid-template-columns:1fr;grid-template-rows:auto auto;
-      align-items:start;padding:22px 0 28px;text-align:left}
-    .ec-art{grid-column:1;grid-row:1;aspect-ratio:1/1}
-    .ec-body{grid-column:1;grid-row:2;align-items:flex-start;text-align:left;
-      padding:0 var(--edge);gap:10px}
-    .ec-title{align-self:stretch;margin-left:0;margin-top:-52px;position:relative;z-index:2}
-    .ec-title .ec-logo{margin-left:0;object-position:left center;max-height:72px;max-width:min(72%,300px)}
-    .ec-title h3{font-size:clamp(24px,5.4vw,40px);text-align:left}
-    .ec-summary{max-width:none;-webkit-line-clamp:3}
-  }
 
   .loading,.empty{color:var(--dim);font-size:14px;padding:48px var(--edge)}
   .empty i,.empty .svgi{font-size:38px;color:var(--faint);display:block;margin-bottom:12px}
@@ -738,102 +732,15 @@
   .err-offline .btn{margin-left:auto}
 
   /* ---- DETAIL ----
-     The global UltraBlur underlay supplies the ambient color wash. Movie/show
-     detail pages use the "full" variant: a near-full-viewport hero with a
-     crisp backdrop, metadata pinned top-left (.detail-top) and cast/stats
-     pinned bottom-left (.detail-bottom), leaving the art to read large on the
-     right. Episode pages keep the original poster+info row layout. */
-  .detail-wrap{position:relative}
-  .detail-hero{position:relative;min-height:520px;display:flex;align-items:flex-start;overflow:hidden}
-  .detail-hero.full{min-height:100svh;align-items:stretch;flex-direction:column;
-    justify-content:flex-end;padding:calc(var(--pill-clear) + 8px) var(--edge) var(--edge)}
-  .detail-bg{position:absolute;inset:0;overflow:hidden}
-  /* Blurred ambient echo removed for the flat editorial look. */
-  .detail-bg-blur{display:none}
-  .detail-bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-    object-position:center 20%;
-    opacity:0;transition:opacity .6s var(--ease)}
-  .detail-bg-img.loaded{opacity:1}
-  /* Subtle bottom-up gradient for legibility */
-  .detail-scrim{position:absolute;inset:0;
-    background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.9) 0%,rgba(0,0,0,.52) 40%,transparent 68%)}
-  .detail-hero.full .detail-scrim{background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.92) 0%,rgba(0,0,0,.55) 40%,transparent 68%)}
-  .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
-    align-items:flex-start;width:100%}
-  .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-lg);aspect-ratio:2/3;object-fit:cover;background:var(--bg2)}
-  /* Episode thumbnail: pinned top-right with its top edge aligned to the
-     breadcrumb, so the info column reads cleanly down the left. */
-  .detail-poster.wide{width:360px;aspect-ratio:16/9;border:1px solid var(--line2)}
-  .detail-info{flex:1;min-width:0;padding-bottom:6px}
-  /* breadcrumb back-nav: a glass circular arrow chip + show / season crumb */
-  .ep-kicker{display:inline-flex;align-items:center;gap:11px;font-size:11.5px;letter-spacing:1.4px;
-    text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:20px;
-    background:none;border:none;padding:0;cursor:pointer}
-  .ep-kicker-ico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-    border-radius:50%;background:var(--frost-bg);border:1px solid var(--frost-border);font-size:14px;flex:0 0 auto;
-    backdrop-filter:blur(12px) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(12px) saturate(var(--frost-sat));
-    box-shadow:var(--frost-shadow-sm);
-    transition:background-color .15s var(--ease),transform .15s var(--ease)}
-  .ep-kicker:hover .ep-kicker-ico{background:var(--frost-bg-hover);transform:translateX(-2px)}
-  .ep-kicker-text{display:inline-flex;align-items:center;gap:10px;min-width:0;text-align:left}
-  .ep-kicker .sep{width:4px;height:4px;border-radius:0;background:var(--accent);opacity:.55;flex:0 0 auto}
-  .detail-info h2{font-size:clamp(28px,3.8vw,48px);font-weight:900;letter-spacing:-.04em;line-height:.98}
-  .detail-info .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
-    margin:16px 0;font-weight:500}
-  .sub .sep{width:4px;height:4px;border-radius:0;background:var(--faint)}
-  .summary{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin-bottom:22px}
-  .detail-hero:not(.full) .summary{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-  .detail-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-
-  /* ---- FULL HERO (movie/show detail) ---- */
-  .detail-top{position:relative;max-width:800px}
-  .detail-top h2{font-size:clamp(40px,7.5vw,92px);font-weight:900;letter-spacing:-.04em;line-height:.97}
-  .detail-top .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
-    margin:16px 0;font-weight:500}
-  .genres{color:var(--dim);font-size:14px;font-weight:500;margin:0 0 16px}
-  .detail-bottom{position:relative;max-width:800px;display:flex;flex-direction:column;gap:18px}
-  .detail-bottom .stat-row{padding:0;border-top:none}
-  /* Trailer button uses .btn.glass — merged into detail-actions row */
-  /* ---- BELOW-HERO METADATA SECTION ---- */
-  .detail-meta{padding:32px var(--edge) 0}
-  .detail-meta .sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--dim);font-size:13px;
-    margin:0 0 14px;font-weight:500}
-  .detail-meta .genres{color:var(--dim);font-size:14px;font-weight:500;margin:0 0 14px}
-  .detail-meta .summary{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin:0 0 22px}
-  .detail-meta .ratings-row{margin:0 0 4px}
-  /* Personal viewing data — grid with faint outline */
-  .detail-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-    border:1px solid var(--line);margin-top:28px}
-  .detail-stat-grid .stat-row{display:contents}
-  .detail-stat-grid .stat{padding:16px 20px;border-right:1px solid var(--line)}
-  .detail-stat-grid .stat:last-child{border-right:none}
-  .detail-stat-grid .sl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;
-    color:var(--faint);font-weight:700;display:block;margin-bottom:4px}
-  .detail-stat-grid .sv{font-size:14px;font-weight:600;color:var(--text);display:block}
-
-  /* ---- RATE FLOAT (star rating) ---- */
-  .rate-float{position:absolute;right:var(--edge);bottom:var(--edge);z-index:4;
-    background:var(--frost-tint);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
-    border:1px solid var(--frost-border);border-radius:var(--radius);padding:12px 16px;
-    box-shadow:var(--frost-shadow-lg)}
-  .rate-stars{display:flex;gap:8px}
-  .rate-stars button{background:none;border:none;padding:0;cursor:pointer;font-size:24px;line-height:1;
-    width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;
-    color:var(--faint);transition:color .15s,transform .15s var(--ease)}
-  .rate-stars button .svgi.filled{color:var(--accent)}
-  .rate-stars button:hover{transform:scale(1.15);color:var(--accent2)}
-
-  /* ==== DETAIL PAGE v2 ====
-     Mobile-first: a centered editorial hero (title, tagline, portrait poster,
-     stars, meta, ratings, actions), a wide backdrop strip, then left-aligned
-     content sections with large headings and a stats grid at the foot.
-     Desktop (>680px) reflows the hero into two columns (info left, poster
-     right) while keeping the same type scale and full-bleed rails. */
+     Mobile: stacked column (info → square art → backdrop → summary).
+     Desktop (>680px): two-column hero grid (info left, square art right) via
+     .dp-hero--split, then full-bleed backdrop with bottom scrim, summary
+     overlapping the scrim, and large-heading rails below. */
   .dp-wrap{background:var(--bg)}
-  .dp-hero{display:flex;flex-direction:column;align-items:center;text-align:center}
-  .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;
-    padding:calc(var(--pill-clear)+24px) var(--edge) 0}
+  .dp-hero{display:flex;flex-direction:column}
+  .dp-info{display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding-top:calc(var(--pill-clear)+24px)}
+  .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;padding:0 var(--edge)}
   .dp-kicker{display:inline-flex;align-items:center;gap:9px;font-size:11px;letter-spacing:1.3px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px;
     background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
@@ -841,34 +748,64 @@
   .dp-kicker .svgi{width:14px;height:14px}
   .dp-title{font-size:clamp(30px,8vw,52px);font-weight:900;letter-spacing:-.04em;
     line-height:1.02;margin:0;max-width:18ch}
-  .dp-divider{width:64px;height:2px;background:var(--accent);opacity:.5;margin:16px 0 12px}
+  /* SVG wave divider between title and tagline */
+  .wave-wrap{margin:16px 0 10px;display:flex;justify-content:center}
+  .wave-wrap svg{width:100%;max-width:240px;display:block}
   .dp-tagline{margin:0;font-style:italic;color:var(--dim);font-size:14.5px;line-height:1.55;max-width:36ch}
-  .dp-poster{width:100%;margin-top:24px;background:var(--bg2);overflow:hidden;position:relative}
-  .dp-poster img{width:100%;height:auto;display:block;opacity:0;transition:opacity .5s var(--ease)}
+  /* Square art poster (1:1) */
+  .dp-poster{width:100%;background:var(--bg2);overflow:hidden;position:relative;flex-shrink:0}
+  .dp-poster img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;opacity:0;
+    transition:opacity .5s var(--ease)}
   .dp-poster img.loaded{opacity:1}
+  /* Director/Writer overlay — bottom-right corner of the poster */
+  .dp-credits{position:absolute;bottom:0;right:0;padding:40px 16px 16px;text-align:right;
+    background:linear-gradient(135deg,transparent 30%,rgba(0,0,0,.88) 100%);
+    max-width:85%;pointer-events:none}
+  .dp-credits .cr-group{margin-bottom:10px}
+  .dp-credits .cr-group:last-child{margin-bottom:0}
+  .dp-credits .cr-label{font-size:8px;font-weight:700;text-transform:uppercase;
+    letter-spacing:1.4px;color:rgba(255,255,255,.42);display:block;margin-bottom:3px}
+  .dp-credits .cr-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.88);
+    display:block;line-height:1.35}
+  /* Backdrop strip — full bleed with bottom-up dark gradient */
   .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}
+  .dp-backdrop::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(to top,rgba(0,0,0,.76) 0%,rgba(0,0,0,.14) 52%,transparent 74%)}
   .dp-backdrop img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:0;
     transition:opacity .5s var(--ease)}
   .dp-backdrop img.loaded{opacity:1}
-  .dp-backdrop--hero{margin-top:24px}
+  /* Stars/rating row */
   .dp-rate{padding:26px var(--edge) 0;display:flex;justify-content:center;width:100%}
-  .dp-rate .rate-stars{display:flex;gap:6px}
-  .dp-rate .rate-stars button{width:42px;height:42px;font-size:32px;padding:0}
+  .rate-stars{display:flex;gap:6px}
+  .rate-stars button{background:none;border:none;padding:0;cursor:pointer;font-size:28px;line-height:1;
+    width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;
+    color:var(--faint);transition:color .15s,transform .15s var(--ease)}
+  .rate-stars button .svgi.filled{color:var(--accent)}
+  .rate-stars button:hover{transform:scale(1.15);color:var(--accent2)}
   .dp-meta{padding:18px var(--edge) 0;font-size:14px;color:var(--dim);font-weight:500;
     display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;width:100%}
   .dp-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--faint);flex:0 0 auto}
   .dp-badges{padding:16px var(--edge) 0;display:flex;justify-content:center;width:100%}
   .dp-badges .ratings-row{margin:0;justify-content:center}
-  .dp-actions{display:flex;gap:10px;padding:24px var(--edge) 4px;flex-wrap:wrap;
+  .dp-actions{display:flex;gap:20px;padding:28px var(--edge) 8px;flex-wrap:wrap;
     justify-content:center;width:100%}
-  /* Content sections — left-aligned heading, centered genre kicker */
-  .dp-section{padding:40px var(--edge) 0;text-align:left}
+  /* Pill buttons — override global --radius:0 for detail page actions */
+  .dp-actions .btn{border-radius:999px}
+  /* Summary — base: no overlap */
+  .dp-section{position:relative;z-index:2;padding:40px 0 0}
   .dp-section h2{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
-    line-height:1.08;margin:0 0 16px}
-  .dp-genres{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--faint);margin:0 0 16px;text-align:center}
-  .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim);max-width:760px}
-  /* Large headings for ALL child rails (cast, extras, related) */
+    line-height:1.08;margin:0;padding:0 var(--edge) 28px}
+  /* When backdrop is directly above, Summary heading overlaps the bottom scrim */
+  .dp-section--over-backdrop{margin-top:-52px;padding-top:0}
+  /* Three-column summary body: vertical squiggle | body text | genre list */
+  .dp-summary-body{display:grid;grid-template-columns:28px 1fr auto;gap:0 20px;
+    padding:0 var(--edge) 48px;align-items:start}
+  .dp-squiggle{align-self:stretch;width:28px;overflow:hidden;min-height:120px}
+  .dp-squiggle svg{width:28px;height:100%;min-height:120px;display:block}
+  .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim)}
+  .dp-genres{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);text-align:right;line-height:2;padding-top:2px}
+  /* Large headings for child rails */
   .dp-wrap .section{padding-top:40px;padding-bottom:0}
   .dp-wrap .rail-section{padding-top:40px}
   .dp-wrap .rail-head{margin:0;padding:0 var(--edge) 16px}
@@ -881,37 +818,20 @@
   .dp-stat:nth-last-child(-n+2){border-bottom:none}
   .dp-sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
     color:var(--faint);display:block;margin-bottom:8px}
-  .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block}
-  /* ---- DESKTOP ----
-     The centered editorial hero is kept (matching the mockup's centred title /
-     poster / stars), but the poster and backdrop are capped and centred so they
-     don't balloon on wide screens. Section headings and full-bleed rails stay
-     left-aligned at --edge, giving the same "centred hero → left-aligned body"
-     rhythm the mockup shows. */
-  @media(min-width:681px){
-    .dp-head{padding-top:calc(var(--pill-clear)+44px)}
-    .dp-title{font-size:clamp(44px,5vw,68px);max-width:20ch}
-    .dp-tagline{font-size:16px;max-width:48ch}
-    .dp-poster{max-width:340px;margin-left:auto;margin-right:auto}
-    .dp-backdrop{max-width:1040px;margin-left:auto;margin-right:auto}
-    .dp-backdrop--hero{max-width:920px}
-    .dp-rate .rate-stars button{width:46px;height:46px;font-size:36px}
-    .dp-section{max-width:1100px}
-    .dp-summary{font-size:15.5px}
-    .dp-stats{grid-template-columns:repeat(4,1fr);margin:56px var(--edge) 72px}
-    .dp-stat{border-bottom:none}
-    .dp-stat:nth-child(even){border-right:1px solid var(--line)}
-    .dp-stat:last-child{border-right:none}
-  }
-
-  /* ---- RATINGS ---- flat text, no pill */
+  /* Stats values in serif for character and dimension */
+  .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block;
+    font-family:'Playfair Display',Georgia,'Times New Roman',serif}
+  /* ---- RATINGS ---- flat badges, no frost */
   .ratings-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
   .rating-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text)}
   .rating-badge .src{display:inline-flex;align-items:center;justify-content:center;height:20px;flex:0 0 auto}
   .rating-badge .src img{height:100%;width:auto;display:block}
   .rating-badge b{font-weight:700}
-
-  /* ---- META STAT ROW (added / watched history) ---- */
+  .rating-badge.trailer{padding:7px 16px;cursor:pointer;border:1px solid var(--line2);
+    transition:background-color .15s var(--ease);border-radius:999px}
+  .rating-badge.trailer:hover{background:var(--surface2)}
+  .rating-badge.trailer .svgi{color:var(--accent);font-size:16px}
+  /* ---- STAT ROW (collections/playlists) ---- */
   .stat-row{display:flex;gap:36px;flex-wrap:wrap;padding:26px var(--edge);border-top:1px solid var(--line)}
   .stat{display:flex;flex-direction:column;gap:4px}
   .stat .sl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:700}
@@ -935,7 +855,7 @@
     transition:background .15s,color .15s,border-color .15s;white-space:nowrap}
   .rail-style-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
   .rail-style-btn:hover:not(.active){background:var(--surface2);color:var(--text)}
-  .sync-dot{width:9px;height:9px;border-radius:0;flex-shrink:0;background:var(--faint)}
+  .sync-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--faint)}
   .sync-dot.ok{background:#3ecf6b;box-shadow:0 0 0 3px rgba(62,207,107,.18)}
   .sync-dot.bad{background:#e0556b;box-shadow:0 0 0 3px rgba(224,85,107,.18)}
   /* ---- GENRE RAIL ---- */
@@ -955,7 +875,7 @@
     text-align:center;padding:10px 14px 13px;letter-spacing:.01em;line-height:1.2;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Billboard: label floats centered over the image, no solid bottom strip */
-  .genre-card--billboard{width:var(--card-w);position:relative}
+  .genre-card--billboard{width:252px;position:relative}
   .genre-card--billboard .genre-art{aspect-ratio:16/9}
   .genre-card--billboard .genre-fade{
     background:linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(0,0,0,.5) 100%)}
@@ -965,13 +885,13 @@
     font-size:15px;font-weight:800;letter-spacing:.03em;
     text-shadow:0 2px 20px rgba(0,0,0,.7),0 1px 4px rgba(0,0,0,.4);
     padding:0 16px}
-  .genre-card--square{width:var(--card-w)}
+  .genre-card--square{width:160px}
   .genre-card--square .genre-art{aspect-ratio:1/1}
   .genre-card--square .genre-fade{display:none}
-  .cast-row{display:flex;gap:var(--rail-gap);overflow-x:auto;padding:4px var(--edge) 16px;
+  .cast-row{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .cast-row::-webkit-scrollbar{height:0}
-  .cast{flex:0 0 auto;width:120px;text-align:center;background:none;border:none;
+  .cast{flex:0 0 auto;width:112px;text-align:center;background:none;border:none;
     padding:0;cursor:default;font-family:var(--font);color:var(--text)}
   .cast[data-actor-id]{cursor:pointer}
   .cast[data-actor-id]:hover .art{border-color:var(--accent)}
@@ -979,12 +899,12 @@
   .cast .art{width:112px;height:112px;border-radius:50%;overflow:hidden;
     background:var(--bg2);border:1px solid var(--line);margin:0 auto;
     transition:border-color .15s;position:relative}
-  .cast .art::before{content:"";position:absolute;border-radius:0;
+  .cast .art::before{content:"";position:absolute;border-radius:50%;
     width:34%;height:34%;top:18%;left:50%;transform:translateX(-50%);
     background:rgba(255,255,255,.15)}
   .cast .art::after{content:"";position:absolute;
     width:60%;height:33%;bottom:0;left:50%;transform:translateX(-50%);
-    background:rgba(255,255,255,.11)}
+    border-radius:50% 50% 0 0;background:rgba(255,255,255,.11)}
   .cast .art img{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:1}
   .cast .art.no-img img{display:none}
   .cast .nm{font-size:12.5px;font-weight:600;line-height:1.3;margin-top:9px;
@@ -992,8 +912,8 @@
   .cast .rl{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.25}
   .crew{display:flex;gap:28px;flex-wrap:wrap;color:var(--dim);font-size:13px;margin-top:4px}
   .crew b{color:var(--text);font-weight:600}
-  .person-card .person-art{aspect-ratio:1/1;border-radius:0;overflow:hidden;background:var(--bg2);border:1px solid var(--line)}
-  .person-card .person-art img{border-radius:0}
+  .person-card .person-art{aspect-ratio:1/1;border-radius:50%;overflow:hidden;background:var(--bg2);border:1px solid var(--line)}
+  .person-card .person-art img{border-radius:50%}
   /* ---- ACTOR DETAIL PAGE ---- */
   .actor-head{display:flex;align-items:flex-end;gap:28px;padding:120px var(--edge) 32px;
     background:linear-gradient(to bottom,transparent 0%,var(--bg) 100%);position:relative}
@@ -1015,7 +935,7 @@
   .bio-modal{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--radius-lg);max-width:580px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden}
   .bio-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--line);flex-shrink:0}
   .bio-modal-head h2{font-size:16px;font-weight:700;letter-spacing:-.02em}
-  .bio-modal-close{background:none;border:none;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:0;width:30px;height:30px;padding:0;font-size:18px}
+  .bio-modal-close{background:none;border:none;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;width:30px;height:30px;padding:0;font-size:18px}
   .bio-modal-close:hover{background:var(--surface);color:var(--text)}
   .bio-modal-body{padding:20px 22px 24px;overflow-y:auto;line-height:1.72;font-size:14px;color:var(--dim)}
   .bio-modal-body p{margin-bottom:12px}
@@ -1074,14 +994,14 @@
   .trailer-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:10px;color:var(--dim);font-size:13px;font-weight:500}
   .trailer-state.hidden{display:none}
-  .trailer-state .ring{width:40px;height:40px;border-radius:0;
+  .trailer-state .ring{width:40px;height:40px;border-radius:50%;
     border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite}
   .trailer-state i,.trailer-state .svgi{font-size:28px;width:28px;height:28px;color:var(--faint)}
 
   /* ---- SEASON SWITCHER (artwork, not pill tabs) ---- */
-  .season-rail{display:flex;gap:var(--rail-gap);overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .season-rail{display:flex;gap:20px;overflow-x:auto;padding:4px var(--edge) 16px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .season-rail::-webkit-scrollbar{height:0}
-  .season-card{width:var(--card-w)}
+  .season-card{width:150px}
   .season-card .art{aspect-ratio:2/3;outline:2px solid transparent;outline-offset:2px;
     transition:outline-color .15s var(--ease),box-shadow .2s var(--ease)}
   .season-card.active .art{outline-color:var(--accent);box-shadow:var(--shadow)}
@@ -1157,7 +1077,7 @@
   .coll-desc{color:var(--dim);line-height:1.65;font-size:14px;max-width:680px;margin-bottom:22px}
   .coll-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--dim);font-size:13px;
     font-weight:500}
-  .coll-meta .sep{width:4px;height:4px;border-radius:0;background:var(--faint)}
+  .coll-meta .sep{width:4px;height:4px;border-radius:50%;background:var(--faint)}
   .coll-actions{display:flex;gap:12px;margin-top:24px}
 
   /* ---- EPISODE ROW LIST ----
@@ -1319,12 +1239,12 @@
     text-overflow:ellipsis;white-space:nowrap}
   .p-top-right{display:flex;align-items:center;gap:6px;position:relative;justify-content:flex-end}
 
-  .pbtn{background:rgba(0,0,0,.65);
-    border:1px solid rgba(255,255,255,.14);
+  .pbtn{background:rgba(255,255,255,.1);backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));-webkit-backdrop-filter:blur(var(--frost-blur)) saturate(var(--frost-sat));
+    border:1px solid rgba(255,255,255,.14);box-shadow:var(--frost-edge-sm);
     color:#fff;width:44px;height:44px;border-radius:0;display:flex;align-items:center;
     justify-content:center;font-size:19px;flex:0 0 auto;
     transition:background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),transform .1s var(--ease)}
-  .pbtn:hover{background:rgba(0,0,0,.82);border-color:rgba(255,255,255,.22)}
+  .pbtn:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.22)}
   .pbtn:active{transform:scale(.94)}
   .pbtn.bare{background:none;border:none;backdrop-filter:none;box-shadow:none;border-radius:0}
   .pbtn.bare:hover{background:rgba(255,255,255,.12)}
@@ -1343,7 +1263,7 @@
   .p-played{position:absolute;left:0;top:0;bottom:0;background:var(--accent);width:0}
   .p-chapter-marks{position:absolute;inset:0;pointer-events:none}
   .p-chapter-mark{position:absolute;top:0;bottom:0;width:2px;background:rgba(10,10,12,.55)}
-  .p-knob{position:absolute;top:50%;width:14px;height:14px;border-radius:0;background:#fff;
+  .p-knob{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;
     transform:translate(-50%,-50%) scale(0);transition:transform .15s var(--ease);
     box-shadow:0 1px 6px rgba(0,0,0,.4);left:0}
   .p-seek-track:hover .p-knob,.p-seek-track:focus-visible .p-knob{transform:translate(-50%,-50%) scale(1)}
@@ -1366,7 +1286,7 @@
     -webkit-backdrop-filter:blur(16px) saturate(var(--frost-sat));
     border:1px solid rgba(255,255,255,.12);box-shadow:var(--frost-edge-sm);padding:5px 12px;margin-right:6px;
     white-space:nowrap;display:flex;align-items:center;gap:6px;font-weight:600}
-  .p-status .dot{width:6px;height:6px;border-radius:0;background:#6ee7a0;flex:0 0 auto}
+  .p-status .dot{width:6px;height:6px;border-radius:50%;background:#6ee7a0;flex:0 0 auto}
   .p-status.transcode .dot{background:var(--accent)}
 
   .p-menu{position:absolute;top:52px;right:0;background:var(--glass);backdrop-filter:blur(var(--frost-blur-lg)) saturate(var(--frost-sat));
@@ -1453,8 +1373,8 @@
     padding:20px 20px max(20px,env(safe-area-inset-bottom));
     transform:translateY(100%);transition:transform .28s var(--ease);pointer-events:none}
   #devicePicker.open{transform:translateY(0);pointer-events:auto}
-  .dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-  .dp-head h3{font-size:16px;font-weight:700;margin:0}
+  #devicePicker .dp-head{display:flex;flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0;width:100%}
+  #devicePicker .dp-head h3{font-size:16px;font-weight:700;margin:0}
   #deviceList .device-item{display:flex;align-items:center;gap:14px;width:100%;
     padding:13px 8px;border:none;background:none;color:inherit;text-align:left;
     border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer}
@@ -1491,11 +1411,31 @@
   .pp-item.now .pp-t,.pp-item.now .pp-s{color:var(--accent)}
 
   /* ---- RESPONSIVE ---- */
+  /* ---- DETAIL PAGE: desktop two-column hero ---- */
+  @media(min-width:681px){
+    .dp-hero.dp-hero--split{display:grid;grid-template-columns:1fr 400px;align-items:stretch}
+    .dp-hero.dp-hero--split .dp-info{grid-column:1;grid-row:1;
+      padding-top:calc(var(--pill-clear)+48px);align-items:flex-start;text-align:left}
+    .dp-hero.dp-hero--split .dp-head{align-items:flex-start;padding-right:48px}
+    .dp-hero.dp-hero--split .dp-rate{justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-meta{justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-badges{justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-badges .ratings-row{justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start}
+    .dp-hero.dp-hero--split .wave-wrap{justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-tagline{text-align:left;max-width:38ch}
+    .dp-hero.dp-hero--split .dp-poster{grid-column:2;grid-row:1;align-self:stretch}
+    .dp-hero.dp-hero--split .dp-poster img{height:100%;width:100%;aspect-ratio:unset}
+    .dp-title{font-size:clamp(44px,4.5vw,72px);max-width:18ch}
+    .rate-stars button{width:46px;height:46px;font-size:36px}
+    .dp-section--over-backdrop{margin-top:-64px}
+    .dp-summary{font-size:15.5px}
+    .dp-stats{grid-template-columns:repeat(4,1fr);margin:56px var(--edge) 72px}
+    .dp-stat{border-bottom:none}
+    .dp-stat:nth-child(even){border-right:1px solid var(--line)}
+    .dp-stat:last-child{border-right:none}
+  }
   @media(max-width:900px){
-    .detail-row{padding:calc(var(--pill-clear) + 4px) var(--edge) 32px;gap:28px}
-    .detail-poster{width:140px}
-    .detail-poster.wide{width:260px}
-    .rate-float{padding:10px 12px;border-radius:var(--radius-sm)}
     .rate-stars{gap:5px}
     .rate-stars button{font-size:18px}
     .coll-hero{padding:28px var(--edge);flex-direction:column;align-items:center;text-align:center;gap:24px}
@@ -1503,7 +1443,8 @@
     .coll-info{min-width:unset;width:100%}
     .coll-meta{justify-content:center}
     .coll-actions{justify-content:center}
-    .carousel .card,.carousel .card.wide,.carousel .card.billboard,.featured .carousel .card,.featured .carousel .card.wide{width:180px}
+    .carousel .card{width:150px}.carousel .card.wide{width:216px}
+    .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:272px}
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
     .p-pause{padding:0 44px 120px}
@@ -1625,21 +1566,21 @@
   }
   @media(max-width:560px){
     .p-vol{display:none}
-    /* ---- MOBILE HERO — square aspect, image fills via object-fit:cover ---- */
-    .hero{aspect-ratio:1/1;height:auto;justify-content:flex-end}
-    .hero-bg-img,.hero-video{inset:0;width:100%;height:100%;object-fit:cover;object-position:center 18%}
-    .hero-top{padding:0 var(--edge) 0;text-align:left}
-    .hero-bottom{padding:12px var(--edge) max(72px,calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px))}
-    .hero h2{font-size:clamp(26px,8.5vw,40px)}
-    .hero .title-logo{height:68px;max-width:min(300px,76vw);width:auto;
-      object-fit:contain;object-position:left bottom;margin:0}
+    /* ---- MOBILE HERO — keep full-bleed, use 4:3ish crop so it's not too squat ---- */
+    .hero{aspect-ratio:unset;height:75vw;min-height:260px;max-height:80vw;justify-content:flex-end}
+    .hero-bg-img,.hero-video{inset:0;width:100%;height:100%;object-fit:cover;object-position:center 20%}
+    .hero-top{padding:0 var(--edge) 0;text-align:center}
+    .hero-bottom{padding:12px var(--edge) 24px}
+    .hero h2{font-size:clamp(22px,7.5vw,34px)}
+    .hero .title-logo{height:60px;max-width:min(260px,72vw);width:100%;
+      object-fit:contain;object-position:center bottom;margin:0 auto}
     .hero-tagline{display:none}
     .hero-kicker{display:none}
-    .hero-actions{justify-content:flex-start}
+    .hero-actions{justify-content:center}
     .hero-trailer-ctrls{bottom:80px}
-    /* Hub carousel on mobile: square */
-    .hub-carousel{aspect-ratio:1/1;height:auto;max-height:none;min-height:0}
-    .hub-cs-slide{padding:0 var(--edge) max(72px,calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px));justify-content:flex-end;align-items:flex-start}
+    /* Hub carousel on mobile: same editorial look, stacked content */
+    .hub-carousel{aspect-ratio:unset;height:calc(100vw * .75 + 180px);max-height:unset;min-height:unset}
+    .hub-cs-slide{padding:0 var(--edge) 48px;justify-content:flex-end;align-items:flex-start}
     .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:left;width:100%}
     .hub-carousel .hero-meta{justify-content:flex-start}
     .hub-carousel .ratings-row{display:none}
@@ -1647,34 +1588,23 @@
     .hub-carousel .title-logo{max-height:80px;max-width:min(68%,300px);object-position:left bottom;margin:0 0 8px}
     .hub-carousel .hero-top h2{font-size:clamp(20px,6.5vw,32px)}
     .hub-carousel-dots{bottom:16px;left:0;right:0;justify-content:center;padding:6px 0}
-    /* Editorial card phone tweaks (stacking handled by the ≤768px block) */
-    .ec-title{margin-top:-44px}
-    .ec-title .ec-logo{max-height:60px;max-width:min(68%,240px)}
-    .ec-title h3{font-size:clamp(22px,7vw,34px)}
+    /* Editorial cards — stack vertically on mobile */
+    .editorial-card{grid-template-columns:1fr;grid-template-rows:auto auto auto;padding:20px 0 28px}
+    .ec-art{grid-column:1;grid-row:1;width:82%;aspect-ratio:1/1}
+    .ec-art::after{background:linear-gradient(to bottom,transparent 62%,var(--bg) 97%)}
+    .ec-title{grid-column:1;grid-row:2;padding:0 var(--edge);margin-top:-28px;align-self:start;text-align:left}
+    .ec-title .ec-logo{margin-left:0;object-position:left center}
+    .ec-title h3{font-size:clamp(20px,7vw,32px)}
+    .ec-meta{grid-column:1;grid-row:3;padding:10px var(--edge) 0;text-align:left}
+    .ec-summary{-webkit-line-clamp:3}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
-    /* Peeking carousel: one card at a time, next card peeks ~40px */
-    .carousel .card,.carousel .card.wide,.carousel .card.billboard,.featured .carousel .card,.featured .carousel .card.wide{
-      width:calc(100vw - var(--edge) - 40px);max-width:280px}
-    .detail-info h2{font-size:28px}
-    .rate-float{display:none}
-    .detail-poster{width:110px}
-    .detail-row{flex-wrap:wrap;gap:20px}
-    /* On phones the thumbnail stacks back on top of the info column. */
-    .detail-poster.wide{width:100%;order:-1}
-    /* ---- MOBILE DETAIL HERO — 1:1 square, full-bleed, flat ----
-       On phones the crisp art is a square (1:1) that fills the top of the hero
-       and fades at its lower edge into the solid background; the title block
-       sits below, left-aligned. No blur echo, no ambient wash. */
-    /* Mobile detail hero — full viewport, art fills behind text (same as desktop) */
-    .detail-hero.full{min-height:100svh;padding:calc(var(--pill-clear) + 8px) var(--edge) max(40px,env(safe-area-inset-bottom));
-      flex-direction:column;justify-content:flex-end}
-    .detail-hero.full .detail-bg{position:absolute;inset:0;overflow:hidden}
-    .detail-hero.full .detail-bg-img{position:absolute;inset:0;width:100%;height:100%;
-      object-fit:cover;object-position:center 18%}
-    .detail-hero.full .detail-top{position:relative;z-index:1;padding:0;max-width:100%;text-align:left}
-    .detail-hero.full .detail-top h2{font-size:clamp(28px,9vw,42px)}
-    .detail-hero.full .detail-actions{justify-content:flex-start}
-    .detail-hero.full .rate-float{display:none}
+    .carousel .card{width:130px}.carousel .card.wide{width:188px}
+    .featured .carousel .card{width:170px}
+    /* Detail page v2 mobile: single-column, poster full-width */
+    .dp-title{font-size:clamp(26px,7.5vw,40px)}
+    .dp-summary-body{grid-template-columns:20px 1fr auto;gap:0 12px}
+    .dp-squiggle{width:20px}
+    .dp-squiggle svg{width:20px}
     .ep-card{width:220px}
     .coll-art{width:120px}
     .coll-hero{gap:20px}
@@ -1753,13 +1683,6 @@
     .settings-row:has(.rail-style-btns){flex-direction:column;align-items:flex-start;gap:8px}
     /* Toggle rows: keep toggle pinned to the right */
     .settings-row .toggle-btn{margin-left:auto}
-  }
-  /* ---- SERIF HEADLINE FONT (opt-in via settings) ---- */
-  body.serif-headlines h1,
-  body.serif-headlines h2,
-  body.serif-headlines h3{
-    font-family:'Playfair Display',Georgia,'Times New Roman',serif;
-    letter-spacing:-.02em;
   }
 </style>
 </head>
@@ -1928,7 +1851,7 @@ console.log("Hume v0.4");
 /* ============================================================ CONFIG */
 const PRODUCT="Hume";
 const PLEX_TV="https://plex.tv";
-const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",headlineFont:"hume_headline_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries",watchedBadges:"hume_watched_badges",spoilerBlur:"hume_spoiler_blur"};
+const LS={clientId:"hume_cid",token:"hume_token",server:"hume_server",railStyles:"hume_rail_styles",navCollapsed:"hume_nav_collapsed",font:"hume_font",detailArt:"hume_detail_art",tvMode:"hume_tv_mode",heroStyle:"hume_hero_style",hubSummaries:"hume_hub_summaries",watchedBadges:"hume_watched_badges",spoilerBlur:"hume_spoiler_blur"};
 const SETTINGS_WORKER="https://hume-settings.contactdavidbusch.workers.dev";
 
 /* ---- FONT THEMING ---- */
@@ -1938,13 +1861,9 @@ const FONT_STACKS={
   outfit:"'Outfit','SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif",
 };
 function _loadGFont(family){
-  const slug="gf-"+family.split(":")[0].replace(/[+\s]/g,"-").toLowerCase();
-  if(document.getElementById(slug)) return;
-  const l=document.createElement("link"); l.id=slug; l.rel="stylesheet";
-  const hasWeights=family.includes(":");
-  l.href=hasWeights
-    ?`https://fonts.googleapis.com/css2?family=${family}&display=swap`
-    :`https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700;900&display=swap`;
+  const id="gf-"+family.toLowerCase(); if(document.getElementById(id)) return;
+  const l=document.createElement("link"); l.id=id; l.rel="stylesheet";
+  l.href=`https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700;900&display=swap`;
   document.head.appendChild(l);
 }
 function applyFont(name,save=true){
@@ -1954,18 +1873,8 @@ function applyFont(name,save=true){
   else if(name==="outfit") _loadGFont("Outfit");
   if(save){ localStorage.setItem(LS.font,name); pushRemoteSettings(); toast("Settings saved"); }
 }
-function applyHeadlineFont(name,save=true){
-  if(name==="serif"){
-    document.body.classList.add("serif-headlines");
-    _loadGFont("Playfair+Display:ital,wght@0,700;0,900;1,700");
-  }else{
-    document.body.classList.remove("serif-headlines");
-  }
-  if(save){ localStorage.setItem(LS.headlineFont,name); pushRemoteSettings(); toast("Settings saved"); }
-}
 // Set font before first content render so there's no flash of wrong typeface
-applyFont("inter",false);
-applyHeadlineFont(localStorage.getItem(LS.headlineFont)||"sans",false);
+applyFont(localStorage.getItem(LS.font)||"circular",false);
 // Restore TV mode (applies body class before paint so cursor:none is immediate)
 if(localStorage.getItem(LS.tvMode)==="1") document.body.classList.add("tv-mode");
 
@@ -2044,10 +1953,6 @@ async function loadRemoteSettings(){
         const next=remote[LS.font];
         if(next!==localStorage.getItem(LS.font)){ localStorage.setItem(LS.font,next); applyFont(next,false); changed=true; }
       }
-      if(remote[LS.headlineFont]==="sans"||remote[LS.headlineFont]==="serif"){
-        const next=remote[LS.headlineFont];
-        if(next!==localStorage.getItem(LS.headlineFont)){ localStorage.setItem(LS.headlineFont,next); applyHeadlineFont(next,false); changed=true; }
-      }
       if(remote[LS.detailArt]==="backdrop"||remote[LS.detailArt]==="square"){
         const next=remote[LS.detailArt];
         if(next!==localStorage.getItem(LS.detailArt)){ localStorage.setItem(LS.detailArt,next); changed=true; }
@@ -2075,7 +1980,6 @@ function pushRemoteSettings(){
         [LS.railStyles]:getRailStyles(),
         [LS.navCollapsed]:localStorage.getItem(LS.navCollapsed)||"0",
         [LS.font]:localStorage.getItem(LS.font)||"circular",
-        [LS.headlineFont]:localStorage.getItem(LS.headlineFont)||"sans",
         [LS.detailArt]:localStorage.getItem(LS.detailArt)||"backdrop",
         [LS.heroStyle]:localStorage.getItem(LS.heroStyle)||"backdrop",
         [LS.hubSummaries]:localStorage.getItem(LS.hubSummaries)||"0",
@@ -2649,7 +2553,7 @@ function setScrollY(y){
 async function route(){
   const gen=++_routeGen;
   setScrollY(0);   // fresh navigation starts at top; pages that restore a saved position override this in their render
-  $("#content")?.classList.remove("dp-wrap");   // detail pages add this marker; clear it for every other page
+  $("#content")?.classList.remove("dp-wrap");
   closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
@@ -2707,6 +2611,8 @@ function billboardCard(it,rank){
   const squareImg=imgs.find(i=>i.type==="backgroundSquare");
   // For episodes use grandparent (show) art; fallback: backdrop → poster
   const artSrc=img((squareImg&&squareImg.url)||it.art||it.grandparentArt||it.thumb,560,560);
+  const logoImg=imgs.find(i=>i.type==="clearLogo");
+  const logoSrc=logoImg?imgLogo(logoImg.url,600,300):"";
   // For episodes display show title, not episode title
   const title=it.type==="episode"?(it.grandparentTitle||it.title||""):(it.title||"");
   // Genre only — no Movie/TV type prefix
@@ -2718,8 +2624,12 @@ function billboardCard(it,rank){
       ${rank!=null?`<div class="bill-rank">${rank}</div>`:""}
       <div class="play-hover">${svgIcon("play-circle-fill")}</div>
       <div class="bill-logo-wrap">
-        <div class="bill-title">${esc(title)}</div>
+        ${logoSrc?`<img class="bill-logo" src="${logoSrc}" alt="${esc(title)}" onerror="this.nextElementSibling.style.display='block';this.remove()">`:""}
+        <div class="bill-title"${logoSrc?' style="display:none"':''}>${esc(title)}</div>
       </div>
+    </div>
+    <div class="bill-meta">
+      <span class="cs">${esc(meta)}</span>
     </div>`;
   // Wash behind the whole card uses the same art; guarded so broken art falls back
   if(artSrc) b.style.setProperty("--bill-bg",`url('${artSrc.replace(/'/g,"\\'")}')`);
@@ -3142,6 +3052,18 @@ function heroInnerHTML(it,opts={}){
   const isEp=it.type==="episode";
   const title=isEp?(it.grandparentTitle||it.title):it.title;
   const tagline=!isEp&&it.tagline?it.tagline:"";
+  let metaBlock="";
+  if(full){
+    const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
+    const meta=isEp
+      ? `S${it.parentIndex||0} · E${it.index||0} · ${esc(it.title||"")}`
+      : [year,fmtDur(it.duration),it.contentRating].filter(Boolean).join(" · ");
+    const ratingBadges=ratingBadgesHTML(it);
+    const ratingFallback=ratingBadges?"":(it.rating?`<span class="pill">${svgIcon("star-fill","","color:var(--accent)")} ${(+it.rating).toFixed(1)}</span>`:"");
+    metaBlock=`${ratingBadges?`<div class="ratings-row">${ratingBadges}</div>`:""}
+      <div class="hero-meta">${ratingFallback}<span>${esc(meta)}</span></div>
+      <p class="hero-summary">${esc(it.summary||"")}</p>`;
+  }
   return `
     <div class="hero-bg"><div class="hero-bg-blur"></div><img class="hero-bg-img" decoding="async" ${priority?'fetchpriority="high"':'loading="lazy"'} alt=""></div>
     <div class="hero-scrim"></div>
@@ -3149,6 +3071,7 @@ function heroInnerHTML(it,opts={}){
       ${kicker?`<div class="hero-kicker">${it.viewOffset?svgIcon("play-circle-fill"):svgIcon("sparkle-fill")}${it.viewOffset?'Continue Watching':'Featured'}</div>`:""}
       ${titleArtHTML(it,title)}
       ${tagline?`<p class="hero-tagline">${esc(tagline)}</p>`:""}
+      ${metaBlock}
     </div>
     <div class="hero-bottom">
       <div class="hero-actions">
@@ -3159,15 +3082,12 @@ function heroInnerHTML(it,opts={}){
 }
 function wireHero(wrap,it,opts={}){
   const isEp=it.type==="episode";
-  const isMobile=window.innerWidth<=560;
-  const squareArt=(it.Image||[]).find(i=>i.type==="backgroundSquare")?.url;
-  const art=isMobile&&squareArt ? squareArt : (it.art||it.grandparentArt||it.parentArt||it.thumb);
-  const [iw,ih]=isMobile&&squareArt ? [800,800] : [1920,1080];
+  const art=it.art||it.grandparentArt||it.parentArt||it.thumb;
   wrap.querySelector(".hero-bg-blur").style.backgroundImage=`url('${imgAmbient(art)}')`;
   const bgImg=wrap.querySelector(".hero-bg-img");
   bgImg.onload=()=>bgImg.classList.add("loaded");
   bgImg.onerror=()=>bgImg.remove();
-  bgImg.src=img(art,iw,ih);
+  bgImg.src=img(art,1920,1080);
   applyBackdropContrast(wrap,art);
   const goToDetail=()=>{
     const target=isEp?{ratingKey:it.grandparentRatingKey,type:"show"}:it;
@@ -3368,8 +3288,8 @@ function card(it,wide,square){
     : it._collection ? "Collection"
     : it.type==="playlist" ? `${it.leafCount||0} items`
     : [it.year, it.type==="show"?`${it.childCount||it.leafCount||""} Seasons`:""].filter(Boolean).join(" · ");
-  const dim = square ? 640 : (useWide?800:600);
-  const dim2 = square ? 640 : (useWide?450:900);
+  const dim = square ? 320 : (useWide?480:340);
+  const dim2 = square ? 320 : (useWide?270:510);
   const src=img(thumb,dim,dim2);
   const mosaic=src?"":mosaicHTML(it._mosaicItems);
   const fallbackIconHTML = it._collection ? `<span class="art-fallback">${svgIcon("stack-fill")}</span>`
@@ -3425,22 +3345,23 @@ function editorialCard(it){
   b.setAttribute("type","button");
   const isEp=it.type==="episode";
   const title=isEp?(it.grandparentTitle||it.title):it.title;
-  // 16:9 cinematic art: prefer backdrop art, fall back to the poster thumb.
-  // The image fills a landscape frame on desktop and a 1:1 crop on mobile (CSS).
-  const art=it.art||it.grandparentArt||it.thumb||it.parentThumb;
-  const imgSrc=art?img(art,1920,1080):"";
+  const art=it.thumb||it.parentThumb||it.grandparentArt||it.art;
+  const imgSrc=art?img(art,640,640):"";
   const year=it.year||(it.originallyAvailableAt||"").slice(0,4);
   const metaParts=[year,it.contentRating,
     it.type==="show"?(it.childCount>1?`${it.childCount} Seasons`:(it.childCount===1?"1 Season":"")):"",
   ].filter(Boolean);
-  const titleHTML=`<h3>${esc(title)}</h3>`;
+  const logo=(it.Image||[]).find(i=>i.type==="clearLogo");
+  const titleHTML=logo
+    ? `<img class="ec-logo" src="${imgLogo(logo.url,560,200)}" alt="${esc(title)}">`
+    : `<h3>${esc(title)}</h3>`;
   b.innerHTML=`
     <div class="ec-art">
       ${imgSrc?`<img loading="lazy" decoding="async" alt="${esc(title)}" src="${imgSrc}" onerror="this.closest('.ec-art').classList.add('broken')">`:""}
       <span class="art-fallback">${svgIcon(it.type==="show"?"television":"movies")}</span>
     </div>
-    <div class="ec-body">
-      <div class="ec-title">${titleHTML}</div>
+    <div class="ec-title">${titleHTML}</div>
+    <div class="ec-meta">
       ${metaParts.length?`<div class="ec-label">${esc(metaParts.join(" · "))}</div>`:""}
       ${it.summary?`<p class="ec-summary">${esc(it.summary)}</p>`:""}
     </div>`;
@@ -3716,10 +3637,10 @@ function renderLibGrid(){
 async function showSettings(){
   setTitle("Settings"); clearUltraBlur(); hideLibNav();
   const c=$("#content");
-  const hf=localStorage.getItem(LS.headlineFont)||"sans";
+  const cf=localStorage.getItem(LS.font)||"circular";
   const da=localStorage.getItem(LS.detailArt)||"backdrop";
   const hs=getHeroStyle();
-  const hfBtn=(id,label)=>`<button class="rail-style-btn${hf===id?" active":""}" data-hf="${id}">${label}</button>`;
+  const fBtn=(id,label)=>`<button class="rail-style-btn${cf===id?" active":""}" data-font="${id}">${label}</button>`;
   const daBtn=(id,label)=>`<button class="rail-style-btn${da===id?" active":""}" data-detailart="${id}">${label}</button>`;
   const hsBtn=(id,label)=>`<button class="rail-style-btn${hs===id?" active":""}" data-herostyle="${id}">${label}</button>`;
   c.innerHTML=`<div class="page-head" style="margin-top:var(--pill-clear)"><div class="page-head-text"><h2>Settings</h2></div></div>
@@ -3727,11 +3648,11 @@ async function showSettings(){
     <div class="settings-group">
       <div class="settings-group-head">Appearance</div>
       <div class="settings-row">
-        <div class="settings-label">Headline Font
-          <small>Font used for titles, heroes, and section headings.</small>
+        <div class="settings-label">Font
+          <small>Applies to the entire app interface.</small>
         </div>
-        <div class="rail-style-btns" id="settingsHeadlineFontBtns">
-          ${hfBtn("sans","Sans-serif")}${hfBtn("serif","Serif")}
+        <div class="rail-style-btns" id="settingsFontBtns">
+          ${fBtn("circular","Circular")}${fBtn("inter","Inter")}${fBtn("outfit","Outfit")}
         </div>
       </div>
       <div class="settings-row">
@@ -3794,11 +3715,11 @@ async function showSettings(){
         <span class="sync-dot" id="syncDot"></span>
       </div>
     </div></div>`;
-  // Wire headline font picker
-  c.querySelectorAll("#settingsHeadlineFontBtns .rail-style-btn").forEach(btn=>{
+  // Wire font picker
+  c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(btn=>{
     btn.onclick=()=>{
-      applyHeadlineFont(btn.dataset.hf);
-      c.querySelectorAll("#settingsHeadlineFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
+      applyFont(btn.dataset.font);
+      c.querySelectorAll("#settingsFontBtns .rail-style-btn").forEach(b=>b.classList.toggle("active",b===btn));
     };
   });
   // Wire detail art picker
@@ -3932,8 +3853,9 @@ async function openPlaylist(p){
     const items=(mc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
     const cover=p.thumb||p.composite||mc.thumb||mc.composite;
     const pl={...p,thumb:cover};
-    setUltraBlur(collArt(pl,items));
+    clearUltraBlur();
     const allEpisodes=items.length&&items.every(x=>x.type==="episode");
+    c.classList.add("dp-wrap");
     c.innerHTML=collHero(pl,"Playlist",items,true)
       +(items.length
         ? allEpisodes
@@ -3944,7 +3866,7 @@ async function openPlaylist(p){
         : `<div class='empty'>${svgIcon("playlist")}This playlist is empty.</div>`);
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
-    wireDetailBg(c,collBackdrop(pl));
+    wireCollArt(c,pl);
 
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -3970,8 +3892,9 @@ async function openCollection(it){
     if(!m.thumb) m.thumb=childrenMc.thumb;
     if(!m.art) m.art=childrenMc.art;
     const items=(childrenMc.Metadata||[]).filter(x=>VIDEO_TYPES.includes(x.type));
-    setUltraBlur(collArt(m,items));
+    clearUltraBlur();
     const allEpisodes=items.length&&items.every(x=>x.type==="episode");
+    c.classList.add("dp-wrap");
     c.innerHTML=collHero(m,"Collection",items,false)
       +(items.length
         ? allEpisodes
@@ -3982,7 +3905,7 @@ async function openCollection(it){
         : `<div class='empty'>${svgIcon("stack")}This collection is empty.</div>`);
     fillCollItems(c,items,allEpisodes);
     wireCollActions(c,items);
-    wireDetailBg(c,collBackdrop(m));
+    wireCollArt(c,m);
 
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -4033,33 +3956,41 @@ function collHero(m,kicker,items,square){
   // Only render the in-hero backdrop layer when there's a real backdrop image;
   // with none, the hero stays transparent so the page's ambient ultrablur
   // shows through instead (item 2).
-  const bgHTML=backdrop?`<div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" decoding="async" fetchpriority="high" alt=""></div>`:"";
-  // A collection with its own logo and/or backdrop art gets the same full-bleed
-  // editorial hero as a movie/show (logo title, no cover poster). Playlists
-  // always keep the cover-poster layout below so their cover stays visible,
-  // regardless of any logo/backdrop they may have (item 1).
+  // A collection with its own backdrop art: use the editorial dp-* layout.
+  // The cover poster goes right, info left — same rhythm as movie/show pages.
   if(m.art||hasLogo){
-    return `<div class="detail-wrap">
-      <div class="detail-hero full">
-        ${bgHTML}
-        <div class="detail-scrim"></div>
-        <div class="detail-top">
-          <div class="coll-kicker">${esc(kicker)}</div>
-          ${titleArtHTML(m)}
-          ${m.summary?`<div class="summary">${esc(m.summary)}</div>`:""}
+    const src=img(m.thumb,440,square?440:660);
+    const mosaic=src?"":mosaicHTML(items);
+    const fallbackIconHTML=square?`<span class="art-fallback">${svgIcon("playlist")}</span>`:`<span class="art-fallback">${svgIcon("stack-fill")}</span>`;
+    const summarySection=m.summary?`<div class="dp-section${backdrop?" dp-section--over-backdrop":""}">
+      <h2>Summary</h2>
+      <div class="dp-summary-body">
+        <div class="dp-squiggle">${waveVertSVG()}</div>
+        <div class="dp-summary">${esc(m.summary)}</div>
+        <div></div>
+      </div>
+    </div>`:"";
+    return `<div class="dp-hero dp-hero--split">
+      <div class="dp-info">
+        <div class="dp-head">
+          <p class="dp-kicker">${esc(kicker)}</p>
+          <h1 class="dp-title">${esc(m.title)}</h1>
+          ${waveHorizSVG()}
         </div>
-        <div class="detail-bottom">
-          ${metaHTML}
-          ${playBtns?`<div class="detail-actions">${playBtns}</div>`:""}
-        </div>
-      </div></div>`;
+        <div class="dp-meta">${metaHTML}</div>
+        ${playBtns?`<div class="dp-actions">${playBtns}</div>`:""}
+      </div>
+      <div class="dp-poster">
+        ${src?`<img id="collPosterImg" alt="" src="${src}">`:`<div class="coll-art${square?" square":""}${mosaic?"":" broken"}">${mosaic||""}${fallbackIconHTML}</div>`}
+      </div>
+    </div>
+    ${backdrop?`<div class="dp-backdrop"><img id="collBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
+    ${summarySection}`;
   }
   const src=img(m.thumb,440,square?440:660);
   const mosaic=src?"":mosaicHTML(items);
   const fallbackIconHTML=square?`<span class="art-fallback">${svgIcon("playlist")}</span>`:`<span class="art-fallback">${svgIcon("stack-fill")}</span>`;
   return `<div class="coll-hero">
-    ${bgHTML}
-    <div class="detail-scrim"></div>
     <div class="coll-art${square?" square":""}${src||mosaic?"":" broken"}">
       ${src?`<img src="${src}" alt="">`:mosaic}
       ${fallbackIconHTML}
@@ -4127,7 +4058,8 @@ function wireCollActions(c,items){
    and shows; use it in place of the plain text title when available. */
 function titleArtHTML(item,fallbackTitle){
   const title=fallbackTitle!=null?fallbackTitle:(item.title||"");
-  return `<h2>${esc(title)}</h2>`;
+  const logo=(item.Image||[]).find(i=>i.type==="clearLogo");
+  return logo?`<img class="title-logo" src="${imgLogo(logo.url,800,300)}" alt="${esc(title)}">`:`<h2>${esc(title)}</h2>`;
 }
 /* ---- BACKDROP CONTRAST DETECTION ----
    White title logos/headlines wash out over bright artwork (snow, sky, sand).
@@ -4170,59 +4102,103 @@ function applyBackdropContrast(heroEl,art){
 }
 function trailerIconBtnHTML(extras){
   const trailer=(extras||[]).find(e=>/trailer/i.test(e.subtype||""));
-  return trailer?`<button class="btn glass" id="ratingsTrailerBtn">${svgIcon("trailer")} Trailer</button>`:"";
+  return trailer?`<button class="detail-trailer-btn" id="ratingsTrailerBtn" aria-label="Watch trailer" title="Watch trailer">${svgIcon("trailer")}</button>`:"";
+}
+/* SVG wave helpers — horizontal divider and vertical squiggle */
+function waveHorizSVG(){
+  return `<div class="wave-wrap"><svg viewBox="0 0 360 28" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 12 14 C 18 8, 24 8, 30 14 S 42 20, 48 14 S 60 8, 66 14 S 78 20, 84 14 S 96 8, 102 14 S 114 20, 120 14 S 132 8, 138 14 S 150 20, 156 14 S 168 8, 174 14 S 186 20, 192 14 S 204 8, 210 14 S 222 20, 228 14 S 240 8, 246 14 S 258 20, 264 14 S 276 8, 282 14 S 294 20, 300 14 S 312 8, 318 14 S 330 20, 336 14 S 348 8, 354 14"
+      fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg></div>`;
+}
+function waveVertSVG(){
+  return `<svg viewBox="0 0 28 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" style="color:var(--faint)">
+    <path d="M 14 12 C 8 18, 8 24, 14 30 S 20 42, 14 48 S 8 60, 14 66 S 20 78, 14 84 S 8 96, 14 102 S 20 114, 14 120 S 8 132, 14 138 S 20 150, 14 156 S 8 168, 14 174 S 20 186, 14 192 S 8 204, 14 210 S 20 222, 14 228 S 8 240, 14 246 S 20 258, 14 264 S 8 276, 14 282 S 20 294, 14 300 S 8 312, 14 318 S 20 330, 14 336 S 8 348, 14 354"
+      fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+function dpStarsHTML(){
+  const stars=[1,2,3,4,5].map(n=>
+    `<button data-star="${n}" aria-label="Rate ${n} star${n===1?"":"s"}">${svgIcon("star-empty")}</button>`).join("");
+  return `<div class="dp-rate"><div class="rate-stars" role="group" aria-label="Your rating">${stars}</div></div>`;
+}
+function dpStatsHTML(m,isMovie){
+  const stats=[];
+  if(m.addedAt) stats.push({l:"Added to Library",v:fmtDate(m.addedAt)});
+  if(m.lastViewedAt) stats.push({l:"Last Watched",v:fmtDate(m.lastViewedAt),k:"last-watched"});
+  if(!isMovie&&m.leafCount) stats.push({l:"Episodes Watched",v:`${m.viewedLeafCount||0} of ${m.leafCount}`});
+  else if(isMovie&&m.viewCount) stats.push({l:"Times Watched",v:String(m.viewCount)});
+  if(!stats.length) return "";
+  return `<div class="dp-stats" id="dpStats">${stats.map(s=>
+    `<div class="dp-stat"${s.k?` data-stat="${s.k}"`:""}>`+
+    `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
+  ).join("")}</div>`;
 }
 function detailHero(m,isMovie,actionsHTML,extras){
-  return `<div class="detail-wrap">
-    <div class="detail-hero full">
-      <div class="detail-bg"><div class="detail-bg-blur"></div><img class="detail-bg-img" decoding="async" fetchpriority="high" alt=""><div class="detail-scrim"></div></div>
-      <div class="detail-top">
-        ${titleArtHTML(m)}
-        ${m.tagline?`<p class="hero-tagline">${esc(m.tagline)}</p>`:""}
-        <div class="detail-actions">${actionsHTML}${trailerIconBtnHTML(extras)}</div>
+  const top3genres=(m.Genre||[]).slice(0,3).map(g=>esc(g.tag)).join("<br>");
+  const badges=ratingBadgesHTML(m);
+  const trailer=trailerIconBtnHTML(extras);
+  const squareUrl=(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url||"";
+  const hasBackdrop=!!m.art&&(squareUrl?true:m.art!==m.thumb);
+  const directors=(m.Director||[]).slice(0,2).map(d=>esc(d.tag)).join(", ");
+  const writers=(m.Writer||[]).slice(0,2).map(w=>esc(w.tag)).join(", ");
+  const creditsHTML=directors||writers?`<div class="dp-credits">
+    ${directors?`<div class="cr-group"><span class="cr-label">Directed by</span><span class="cr-name">${directors}</span></div>`:""}
+    ${writers?`<div class="cr-group"><span class="cr-label">Written by</span><span class="cr-name">${writers}</span></div>`:""}
+  </div>`:"";
+  const summarySection=m.summary||top3genres?`<div class="dp-section${hasBackdrop?" dp-section--over-backdrop":""}">
+    <h2>Summary</h2>
+    <div class="dp-summary-body">
+      <div class="dp-squiggle">${waveVertSVG()}</div>
+      ${m.summary?`<div class="dp-summary">${esc(m.summary)}</div>`:"<div></div>"}
+      ${top3genres?`<div class="dp-genres">${top3genres}</div>`:"<div></div>"}
+    </div>
+  </div>`:"";
+  return `<div class="dp-hero dp-hero--split">
+    <div class="dp-info">
+      <div class="dp-head">
+        <h1 class="dp-title">${esc(m.title||"")}</h1>
+        ${waveHorizSVG()}
+        ${m.tagline?`<p class="dp-tagline">${esc(m.tagline)}</p>`:""}
       </div>
-      ${rateFloatHTML(m)}
-    </div></div>`;
+      ${dpStarsHTML()}
+      <div class="dp-meta">${metaBits(m,isMovie)}</div>
+      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+      <div class="dp-actions">${actionsHTML}${trailer}</div>
+    </div>
+    <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high">${creditsHTML}</div>
+  </div>
+  ${hasBackdrop?`<div class="dp-backdrop"><img id="dpBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
+  ${summarySection}`;
 }
-function detailMetaHTML(m,isMovie){
-  const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
-  const stats=statRowHTML(m,isMovie);
-  return `<div class="detail-meta">
-    <div class="sub">${metaBits(m,isMovie)}</div>
-    ${ratingsRowHTML(m,[])}
-    ${genres?`<div class="genres">${genres}</div>`:""}
-    ${m.summary?`<div class="summary">${esc(m.summary)}</div>`:""}
-    ${stats?`<div class="detail-stat-grid">${stats}</div>`:""}
-  </div>`;
-}
-/* ---- EPISODE DETAIL HERO ----
-   Like detailHero, but for a single episode: 16:9 thumbnail, a "back to show"
-   kicker, air date / runtime / rating, and a synopsis. */
+/* ---- EPISODE DETAIL HERO ---- */
 function episodeHero(m,actionsHTML){
-  const art=m.art||m.grandparentArt||m.thumb;
-  const bits=[fmtAirDate(m.originallyAvailableAt),fmtDur(m.duration)];
+  const bits=[fmtAirDate(m.originallyAvailableAt),fmtDur(m.duration)].filter(Boolean);
   if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
-  if(m.rating) bits.push(`<span class="pill">${svgIcon("star-fill","","color:var(--accent)")} ${(+m.rating).toFixed(1)}</span>`);
-  return `<div class="detail-wrap">
-    <div class="detail-hero">
-      <div class="detail-bg"><div class="detail-bg-blur"></div></div>
-      <div class="detail-scrim"></div>
-      <div class="detail-row">
-        <div class="detail-info">
-          <button class="ep-kicker" id="epBackBtn">
-            <span class="ep-kicker-ico">${svgIcon("back")}</span>
-            <span class="ep-kicker-text">${esc(m.grandparentTitle||"")}<span class="sep"></span>Season ${m.parentIndex||0}</span>
-          </button>
-          <h2>${m.index?`${m.index}. `:""}${esc(m.title||"")}</h2>
-          <div class="sub">${bits.filter(Boolean).join('<span class="sep"></span>')}</div>
-          ${ratingsRowHTML(m,[])}
-          <div class="summary">${esc(m.summary||"")}</div>
-          <div class="detail-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
-        </div>
-        <img class="detail-poster wide" src="${img(m.thumb,680,382)}" alt="">
+  const badges=ratingBadgesHTML(m);
+  const summarySection=m.summary?`<div class="dp-section dp-section--over-backdrop">
+    <h2>Summary</h2>
+    <div class="dp-summary-body">
+      <div class="dp-squiggle">${waveVertSVG()}</div>
+      <div class="dp-summary">${esc(m.summary)}</div>
+      <div></div>
+    </div>
+  </div>`:"";
+  return `<div class="dp-hero">
+    <div class="dp-info">
+      <div class="dp-head">
+        <button class="dp-kicker" id="epBackBtn">${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}</button>
+        <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
+        ${waveHorizSVG()}
       </div>
-      ${rateFloatHTML(m)}
-    </div></div>`;
+      ${dpStarsHTML()}
+      <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
+      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+      <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
+    </div>
+  </div>
+  <div class="dp-backdrop dp-backdrop--hero"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
+  ${summarySection}`;
 }
 /* ---- RATINGS ROW ----
    Parses Plex's Rating[] (image-keyed by source) into IMDb / Rotten Tomatoes /
@@ -4277,20 +4253,14 @@ function statRowHTML(m,isMovie){
   return stats.length?`<div class="stat-row" id="statRow">${stats.join("")}</div>`:"";
 }
 async function injectFirstWatched(ratingKey,isShow){
-  const row=$("#statRow")||$("#dpStats"); if(!row) return;
+  const row=$("#dpStats"); if(!row) return;
   try{
     const param=isShow?`grandparentRatingKey=${ratingKey}`:`metadataItemID=${ratingKey}`;
     const mc=await api(`/status/sessions/history/all?${param}&sort=viewedAt%3Aasc&X-Plex-Container-Size=1`);
     const first=(mc.Metadata||[])[0]; if(!first||!first.viewedAt) return;
-    if(row.id==="dpStats"){
-      const stat=el("div","dp-stat");
-      stat.innerHTML=`<span class="dp-sl">First watched</span><span class="dp-sv">${esc(fmtDate(first.viewedAt))}</span>`;
-      row.insertBefore(stat,row.querySelector('[data-stat="last-watched"]')||null);
-    }else{
-      const stat=el("div","stat");
-      stat.innerHTML=`<span class="sl">First watched</span><span class="sv">${esc(fmtDate(first.viewedAt))}</span>`;
-      row.insertBefore(stat,row.querySelector('[data-stat="last-watched"]')||null);
-    }
+    const stat=el("div","dp-stat");
+    stat.innerHTML=`<span class="dp-sl">First watched</span><span class="dp-sv">${esc(fmtDate(first.viewedAt))}</span>`;
+    row.insertBefore(stat,row.querySelector('[data-stat="last-watched"]')||null);
   }catch(_){}
 }
 /* ---- EXTRAS RAIL (trailers, behind-the-scenes, deleted scenes...) ---- */
@@ -4334,14 +4304,12 @@ function extraCardHTML(e){
 }
 function extrasRailHTML(extras){
   if(!extras||!extras.length) return "";
-  // One combined "Trailers & Extras" rail (trailers first, then the rest) to
-  // match the detail-page design; wireExtras handles per-card behaviour by subtype.
   const trailers=extras.filter(e=>/trailer/i.test(e.subtype||""));
   const others=extras.filter(e=>!/trailer/i.test(e.subtype||""));
   const items=[...trailers,...others];
   if(!items.length) return "";
   return `<div class="rail-section"><div class="rail-head"><h3>Trailers &amp; Extras</h3><span class="count">${items.length}</span></div>
-      <div class="carousel">${items.map(extraCardHTML).join("")}</div></div>`;
+    <div class="carousel">${items.map(extraCardHTML).join("")}</div></div>`;
 }
 function wireExtras(c,extras,trailerBtnId){
   c.querySelectorAll(".extra-card").forEach(b=>{
@@ -4464,7 +4432,7 @@ function castRailHTML(m){
       else if(r.thumb){const tm=r.thumb.match(/^\/library\/metadata\/(\d+)\/thumb/);if(tm) personRk=tm[1];}
       return `<button class="cast"${r.id?` data-actor-id="${r.id}"`:""} data-actor-name="${esc(r.tag)}" data-actor-thumb="${esc(r.thumb||"")}"${personRk?` data-actor-rk="${personRk}"`:""}>`
         +`<div class="art${r.thumb?"":" no-img"}">${r.thumb?`<img loading="lazy" alt="" src="${img(r.thumb,224,224)}" onerror="this.closest('.art').classList.add('no-img')">`:""}</div>`
-        +`<div class="nm">${esc(r.tag)}</div><div class="rl">${esc(r.role||"")}</div></button>`;
+        +`<div class="nm">${esc(r.tag)}</div><div class="rl">${esc((r.role||"").split("/")[0].trim())}</div></button>`;
     }).join("")+`</div></div>`;
 }
 function wireCastRail(c){
@@ -4741,69 +4709,6 @@ async function openActor(id){
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
-/* ---- DETAIL PAGE v2 HELPERS ---- */
-function dpStarsHTML(){
-  const stars=[1,2,3,4,5].map(n=>
-    `<button data-star="${n}" aria-label="Rate ${n} star${n===1?"":"s"}">${svgIcon("star-empty")}</button>`).join("");
-  return `<div class="dp-rate"><div class="rate-stars" role="group" aria-label="Your rating">${stars}</div></div>`;
-}
-function dpStatsHTML(m,isMovie){
-  const stats=[];
-  if(m.addedAt) stats.push({l:"Added to Library",v:fmtDate(m.addedAt)});
-  if(m.lastViewedAt) stats.push({l:"Last Watched",v:fmtDate(m.lastViewedAt),k:"last-watched"});
-  if(!isMovie&&m.leafCount) stats.push({l:"Episodes Watched",v:`${m.viewedLeafCount||0} of ${m.leafCount}`});
-  else if(isMovie&&m.viewCount) stats.push({l:"Times Watched",v:String(m.viewCount)});
-  if(!stats.length) return "";
-  return `<div class="dp-stats" id="dpStats">${stats.map(s=>
-    `<div class="dp-stat"${s.k?` data-stat="${s.k}"`:""}>`+
-    `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
-  ).join("")}</div>`;
-}
-function detailPageHTML(m,isMovie,actionsHTML,extras){
-  const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
-  const badges=ratingBadgesHTML(m);
-  const trailer=trailerIconBtnHTML(extras);
-  // A wide backdrop strip sits above the summary — but only when the item has a
-  // landscape backdrop distinct from its poster (so we never show the poster twice).
-  const hasBackdrop=!!m.art && m.art!==m.thumb;
-  return `<div class="dp-hero">
-      <div class="dp-head">
-        <h1 class="dp-title">${esc(m.title||"")}</h1>
-        ${m.tagline?`<div class="dp-divider"></div><p class="dp-tagline">${esc(m.tagline)}</p>`:""}
-      </div>
-      <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
-      ${dpStarsHTML()}
-      <div class="dp-meta">${metaBits(m,isMovie)}</div>
-      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
-      <div class="dp-actions">${actionsHTML}${trailer}</div>
-    </div>
-    ${hasBackdrop?`<div class="dp-backdrop"><img id="dpBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
-    ${genres||m.summary?`<div class="dp-section">
-      <h2>Summary</h2>
-      ${genres?`<div class="dp-genres">${genres}</div>`:""}
-      ${m.summary?`<div class="dp-summary">${esc(m.summary)}</div>`:""}
-    </div>`:""}`;
-}
-function episodePageHTML(m,actionsHTML){
-  const bits=[fmtAirDate(m.originallyAvailableAt),fmtDur(m.duration)].filter(Boolean);
-  if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
-  const badges=ratingBadgesHTML(m);
-  // Episodes have no portrait poster — the 16:9 still (.dp-backdrop--hero) is
-  // the hero artwork, otherwise the centered editorial layout is identical.
-  return `<div class="dp-hero">
-      <div class="dp-head">
-        <button class="dp-kicker" id="epBackBtn">${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}</button>
-        <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
-      </div>
-      <div class="dp-backdrop dp-backdrop--hero"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
-      ${dpStarsHTML()}
-      <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
-      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
-      <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
-    </div>
-    ${m.summary?`<div class="dp-section"><h2>Summary</h2><div class="dp-summary">${esc(m.summary)}</div></div>`:""}`;
-}
-
 /* ---- RATE FLOAT ----
    Floating glass widget in the hero's bottom-right corner: a 5-star personal
    rating control that writes to Plex via PUT /:/rate, plus previous/shuffle/
@@ -4849,36 +4754,46 @@ function wireRateFloat(c,m){
   });
   group.onmouseleave=()=>paintStars(root,current());
 }
-function wireBackdrop(c,art,mobileArt){
-  const isMobile=window.innerWidth<=560;
-  const pref=localStorage.getItem(LS.detailArt)||"backdrop";
-  const useSq=isMobile&&pref==="square"&&!!mobileArt;
-  const src=useSq?mobileArt:art;
-  setUltraBlur(src);
-  wireDetailBg(c,art,mobileArt);
+/* Flat editorial art loader for movie/show/episode pages.
+   Uses Plex backgroundSquare (1:1) for the poster, m.art for the backdrop strip.
+   No ambient blur — flat editorial look. */
+function wireCollArt(c,m){
+  const posterImg=c.querySelector("#collPosterImg");
+  if(posterImg){
+    if(posterImg.complete) posterImg.classList.add("loaded");
+    else posterImg.onload=()=>posterImg.classList.add("loaded");
+  }
+  const backdropImg=c.querySelector("#collBackdropImg");
+  if(backdropImg){
+    const src=collBackdrop(m);
+    if(src){backdropImg.onload=()=>backdropImg.classList.add("loaded");backdropImg.src=img(src,1600,900);}
+  }
 }
-/* Detail page v2 artwork loader. The hero shows a portrait poster (movie/show)
-   or the 16:9 still (episode); movies/shows also get a wide backdrop strip
-   above the summary. The page background stays solid — no ambient blur — to
-   match the flat editorial layout, so we clear any lingering ultrablur. */
 function wireDetailArt(c,m,isEp){
   clearUltraBlur();
   const posterImg=c.querySelector("#dpPosterImg");
   if(posterImg){
-    const src=isEp?(m.thumb||m.art||m.grandparentArt):(m.thumb||m.art);
-    if(src){
-      posterImg.onload=()=>posterImg.classList.add("loaded");
-      posterImg.src=isEp?img(src,960,540):img(src,640,960);
+    if(isEp){
+      const src=m.thumb||m.art||m.grandparentArt;
+      if(src){posterImg.onload=()=>posterImg.classList.add("loaded");posterImg.src=img(src,960,540);}
+    } else {
+      const squareUrl=(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url;
+      const src=squareUrl||m.thumb||m.art;
+      if(src){posterImg.onload=()=>posterImg.classList.add("loaded");posterImg.src=img(src,800,800);}
     }
   }
   const backdropImg=c.querySelector("#dpBackdropImg");
   if(backdropImg){
     const src=m.art||m.grandparentArt||m.thumb;
-    if(src){
-      backdropImg.onload=()=>backdropImg.classList.add("loaded");
-      backdropImg.src=img(src,1600,900);
-    }
+    if(src){backdropImg.onload=()=>backdropImg.classList.add("loaded");backdropImg.src=img(src,1600,900);}
   }
+}
+function wireBackdrop(c,art,mobileArt){
+  const isMobile=window.innerWidth<=560;
+  const pref=localStorage.getItem(LS.detailArt)||"backdrop";
+  const ubSrc=isMobile&&pref==="square"&&mobileArt?mobileArt:art;
+  setUltraBlur(ubSrc);
+  wireDetailBg(c,art,mobileArt);
 }
 function wireDetailBg(c,art,mobileArt){
   if(!art) return;
@@ -4903,7 +4818,7 @@ async function openMovie(it){
       <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
     c.classList.add("dp-wrap");
-    c.innerHTML=detailPageHTML(m,true,resume,extras)+castRailHTML(m)+crewHTML(m)+extrasRailHTML(extras);
+    c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
     appendRelatedRails(c,related,m);
     c.insertAdjacentHTML("beforeend",dpStatsHTML(m,true));
     wireDetailArt(c,m,false);
@@ -4914,6 +4829,7 @@ async function openMovie(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -4921,7 +4837,7 @@ async function openMovie(it){
 function seasonCard(s,active){
   const b=el("button","card season-card"+(active?" active":""));
   if(active) b.setAttribute("aria-current","true");
-  b.innerHTML=`<div class="art"><img loading="lazy" alt="" src="${img(s.thumb,440,660)}"></div>
+  b.innerHTML=`<div class="art"><img loading="lazy" alt="" src="${img(s.thumb,300,450)}"></div>
     <div class="ct">${esc(s.title||`Season ${s.index}`)}</div>
     <div class="cs">${s.leafCount?`${s.leafCount} episodes`:""}</div>`;
   return b;
@@ -4940,12 +4856,13 @@ async function openShow(it,jumpSeasonKey){
     const actions=`<button class="btn lg" id="playShow">${svgIcon("play-fill")} Play</button>
       <button class="btn glass lg" id="shuffleShow">${svgIcon("shuffle")} Shuffle</button>${watchedToggleHTML(show,false)}`;
     c.classList.add("dp-wrap");
-    c.innerHTML=detailPageHTML(show,false,actions,extras)
+    c.innerHTML=detailHero(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
         <div class="season-rail" id="seasonRail"></div></div>`:"")
-      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div>
-        <div class="ep-list carousel" id="epList"></div>`
-      +castRailHTML(show)+crewHTML(show)+extrasRailHTML(extras);
+      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`
+      +castRailHTML(show)
+      +extrasRailHTML(extras)
+      +crewHTML(show);
     appendRelatedRails(c,related,show);
     c.insertAdjacentHTML("beforeend",dpStatsHTML(show,false));
     wireDetailArt(c,show,false);
@@ -4953,6 +4870,7 @@ async function openShow(it,jumpSeasonKey){
     wireCastRail(c);
     injectFirstWatched(show.ratingKey,true);
     wireRateFloat(c,show);
+
     const rail=$("#seasonRail");
     let activeSeason=seasons[0];
     if(jumpSeasonKey){ const f=seasons.find(s=>String(s.ratingKey)===String(jumpSeasonKey)); if(f) activeSeason=f; }
@@ -4974,6 +4892,7 @@ async function openShow(it,jumpSeasonKey){
       const eps=mc2.Metadata||[]; if(eps.length) playItem(eps[Math.floor(Math.random()*eps.length)],0);
     };
     wireWatchedToggle(c,show,false,()=>{ if(activeSeason) loadEpisodes(activeSeason); });
+
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -5020,11 +4939,8 @@ function wireWatchedToggle(c,m,isMovie,onChange){
       else m.viewedLeafCount=next?(m.leafCount||0):0;
       m.lastViewedAt=next?Math.floor(Date.now()/1000):null;
       paintWatchedToggle(btn,m,isMovie);
-      const statEl=c.querySelector("#statRow")||c.querySelector("#dpStats");
-      if(statEl){
-        if(statEl.id==="dpStats"){const h=dpStatsHTML(m,isMovie);statEl.outerHTML=h||"";}
-        else{const h=statRowHTML(m,isMovie);if(h) statEl.outerHTML=h; else statEl.remove();}
-      }
+      const row=c.querySelector("#statRow"), html=statRowHTML(m,isMovie);
+      if(row){ if(html) row.outerHTML=html; else row.remove(); }
       if(next) injectFirstWatched(m.ratingKey,!isMovie);
       if(onChange) onChange(next);
     }catch(_){}
@@ -5115,10 +5031,9 @@ async function openEpisode(it){
     const siblingsMc=m.parentRatingKey?await api(`/library/metadata/${m.parentRatingKey}/children`).catch(()=>({})):{};
     const siblings=(siblingsMc.Metadata||[]).filter(s=>s.type==="episode");
     c.classList.add("dp-wrap");
-    c.innerHTML=episodePageHTML(m,resume)+crewHTML(m)+castRailHTML(m)
+    c.innerHTML=episodeHero(m,resume)+crewHTML(m)+castRailHTML(m)
       +(siblings.length?`<div class="rail-section"><div class="rail-head"><h3>More from Season ${m.parentIndex||""}</h3><span class="count">${siblings.length}</span></div>
         <div class="carousel" id="epSiblingRail"></div></div>`:"");
-    c.insertAdjacentHTML("beforeend",dpStatsHTML(m,true));
     if(siblings.length){ const row=$("#epSiblingRail");
       const sfrag=document.createDocumentFragment();
       siblings.forEach(s=>{
@@ -5133,6 +5048,7 @@ async function openEpisode(it){
       });
       row.appendChild(sfrag);
     }
+    c.insertAdjacentHTML("beforeend",dpStatsHTML(m,true));
     wireDetailArt(c,m,true);
     wireCastRail(c);
     const back=$("#epBackBtn");
@@ -5142,6 +5058,7 @@ async function openEpisode(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
