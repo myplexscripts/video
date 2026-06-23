@@ -307,7 +307,7 @@
   /* ---- HERO ---- */
   /* ---- HERO — editorial full-bleed ---- */
   .hero{position:relative;overflow:hidden;cursor:pointer;
-    height:100svh;min-height:0;max-height:none;
+    aspect-ratio:16/9;height:auto;min-height:0;max-height:90svh;
     display:flex;flex-direction:column;justify-content:flex-end}
   .hero-bg{position:absolute;inset:0;overflow:hidden;background:var(--bg2)}
   /* Blurred ambient echo removed — the image is full-bleed and crisp. */
@@ -319,7 +319,7 @@
   .hero-bg-img.loaded,.hero-video.show{opacity:1}
   /* Subtle bottom-up gradient for legibility */
   .hero-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.28) 44%,transparent 72%)}
+    background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.9) 0%,rgba(0,0,0,.52) 40%,transparent 68%)}
   .hero-top,.hero-bottom{position:relative;z-index:2;max-width:none}
   .hero-top{padding:0 var(--edge) 0}
   .hero-bottom{padding:16px var(--edge) 48px}
@@ -327,8 +327,7 @@
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
   .hero-kicker i,.hero-kicker .svgi{font-size:16px}
   /* Editorial title — larger, tighter tracking, cinematic depth shadow */
-  .hero h2{font-size:clamp(40px,8vw,110px);font-weight:900;letter-spacing:-.05em;line-height:.9;
-    text-shadow:0 2px 40px rgba(0,0,0,.45),0 4px 80px rgba(0,0,0,.35)}
+  .hero h2{font-size:clamp(40px,8vw,110px);font-weight:900;letter-spacing:-.05em;line-height:.9}
   /* Tagline: uppercase kicker beneath title */
   .hero-tagline{font-size:clamp(10px,1.1vw,13px);letter-spacing:.16em;text-transform:uppercase;
     color:rgba(255,255,255,.5);margin-top:14px;font-weight:500}
@@ -353,7 +352,7 @@
     filter:drop-shadow(0 0 22px var(--img-glow,transparent))}
   /* No adaptive veil — flat editorial. Legibility via text-shadow only. */
   .bright-bg .hero-top h2,.bright-bg .detail-top h2,.bright-bg .detail-info h2{
-    text-shadow:0 2px 18px rgba(0,0,0,.85),0 1px 4px rgba(0,0,0,.72)}
+    text-shadow:none}
 
   /* ---- SECTION / RAIL ----
      Each rail can carry its own ambient color wash (.rail-ambient), a
@@ -388,7 +387,7 @@
      hover/touch. Each slide reuses the .hero-* content classes; .hub-cs-slide
      carries the stacking/positioning for the wipe transition. */
   .hub-carousel-section{padding:0;overflow:visible}
-  .hub-carousel{position:relative;height:100svh;min-height:0;max-height:none;overflow:hidden;touch-action:pan-y}
+  .hub-carousel{position:relative;aspect-ratio:16/9;height:auto;min-height:0;max-height:90svh;overflow:hidden;touch-action:pan-y}
   .hub-cs-slide{position:absolute;inset:0;transform:translateX(0);pointer-events:none;visibility:hidden;
     will-change:transform;display:flex;flex-direction:column;justify-content:flex-end;
     padding:0 var(--edge) 48px}
@@ -397,13 +396,12 @@
   .hub-carousel .hero-bg-img{position:absolute;inset:0;width:100%;height:100%;
     object-fit:cover;object-position:center 20%}
   .hub-carousel .hero-bg-blur{-webkit-mask-image:none;mask-image:none}
-  .hub-carousel .hero-scrim{background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.28) 44%,transparent 72%)}
+  .hub-carousel .hero-scrim{background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.9) 0%,rgba(0,0,0,.52) 40%,transparent 68%)}
   .hub-carousel .hero-top,.hub-carousel .hero-bottom{position:relative;z-index:2;padding:0;max-width:none;text-align:left}
   .hub-carousel .hero-meta{justify-content:flex-start}
   .hub-carousel .hero-actions{justify-content:flex-start}
   /* Slides aren't .hero elements — style title + summary directly */
-  .hub-carousel .hero-top h2{font-size:clamp(28px,5vw,72px);font-weight:900;letter-spacing:-.05em;line-height:.9;
-    text-shadow:0 2px 40px rgba(0,0,0,.45)}
+  .hub-carousel .hero-top h2{font-size:clamp(28px,5vw,72px);font-weight:900;letter-spacing:-.05em;line-height:.9}
   .hub-carousel .hero-top .hero-summary{color:var(--dim);line-height:1.6;font-size:14px;max-width:560px;text-align:left;margin:0 0 22px;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .hub-carousel .title-logo{display:block;height:auto;width:auto;max-width:min(72%,540px);max-height:120px;
@@ -695,16 +693,16 @@
     font-size:44px;color:var(--faint);background:var(--bg2)}
   .ec-art.broken img{display:none}
   .ec-art.broken .art-fallback{display:flex}
-  /* Edge fade removed — hard editorial border */
-  .ec-art::after{content:none}
-  /* Text column: right-aligned, vertically centred, anchored to the page edge */
-  .ec-body{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-end;
-    justify-content:center;text-align:right;padding:0 var(--edge) 0 0;gap:14px;min-width:0;
+  /* Subtle right-edge fade so overlapping title stays readable */
+  .ec-art::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to right,transparent 52%,rgba(0,0,0,.58) 100%)}
+  /* Text column: left-aligned, vertically centred, anchored to the page edge */
+  .ec-body{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;
+    justify-content:center;text-align:left;padding:0 var(--edge) 0 0;gap:14px;min-width:0;
     position:relative;z-index:2}
-  /* Logo/headline pulls left over the image's right edge (overlap), right edge stays at page margin */
-  .ec-title{align-self:stretch;margin-left:-46%;filter:drop-shadow(0 3px 22px rgba(0,0,0,.92))}
-  .ec-title h3{font-size:clamp(26px,3.4vw,60px);font-weight:900;letter-spacing:-.04em;line-height:.92;
-    text-shadow:0 2px 24px rgba(0,0,0,.92),0 4px 48px rgba(0,0,0,.7)}
+  /* Headline slightly overlaps the image right edge — no shadow, gradient does the work */
+  .ec-title{align-self:stretch;margin-left:-8%;filter:none}
+  .ec-title h3{font-size:clamp(26px,3.4vw,60px);font-weight:900;letter-spacing:-.04em;line-height:.92}
   .ec-title .ec-logo{display:block;max-width:min(100%,440px);max-height:118px;object-fit:contain;
     object-position:right center;margin-left:auto}
   .ec-label{font-size:var(--t-label);text-transform:uppercase;letter-spacing:.16em;
@@ -758,8 +756,8 @@
   .detail-bg-img.loaded{opacity:1}
   /* Subtle bottom-up gradient for legibility */
   .detail-scrim{position:absolute;inset:0;
-    background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.28) 44%,transparent 72%)}
-  .detail-hero.full .detail-scrim{background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.3) 42%,transparent 68%)}
+    background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.9) 0%,rgba(0,0,0,.52) 40%,transparent 68%)}
+  .detail-hero.full .detail-scrim{background:radial-gradient(ellipse at 0% 100%,rgba(0,0,0,.92) 0%,rgba(0,0,0,.55) 40%,transparent 68%)}
   .detail-row{position:relative;display:flex;gap:40px;padding:calc(var(--pill-clear) + 8px) var(--edge) 48px;
     align-items:flex-start;width:100%}
   .detail-poster{width:220px;flex:0 0 auto;border-radius:var(--radius-lg);
@@ -1548,8 +1546,8 @@
   }
   @media(max-width:560px){
     .p-vol{display:none}
-    /* ---- MOBILE HERO — full viewport, image fills via object-fit:cover ---- */
-    .hero{height:100svh;justify-content:flex-end}
+    /* ---- MOBILE HERO — square aspect, image fills via object-fit:cover ---- */
+    .hero{aspect-ratio:1/1;height:auto;justify-content:flex-end}
     .hero-bg-img,.hero-video{inset:0;width:100%;height:100%;object-fit:cover;object-position:center 18%}
     .hero-top{padding:0 var(--edge) 0;text-align:left}
     .hero-bottom{padding:12px var(--edge) max(72px,calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px))}
@@ -1560,8 +1558,8 @@
     .hero-kicker{display:none}
     .hero-actions{justify-content:flex-start}
     .hero-trailer-ctrls{bottom:80px}
-    /* Hub carousel on mobile: full viewport */
-    .hub-carousel{height:100svh;max-height:none;min-height:0}
+    /* Hub carousel on mobile: square */
+    .hub-carousel{aspect-ratio:1/1;height:auto;max-height:none;min-height:0}
     .hub-cs-slide{padding:0 var(--edge) max(72px,calc(var(--tab-h) + env(safe-area-inset-bottom) + 16px));justify-content:flex-end;align-items:flex-start}
     .hub-carousel .hero-top,.hub-carousel .hero-bottom{text-align:left;width:100%}
     .hub-carousel .hero-meta{justify-content:flex-start}
