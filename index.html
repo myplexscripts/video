@@ -824,6 +824,56 @@
   .rate-stars button .svgi.filled{color:var(--accent)}
   .rate-stars button:hover{transform:scale(1.15);color:var(--accent2)}
 
+  /* ==== DETAIL PAGE v2 ==== */
+  .dp-wrap{background:var(--bg)}
+  .dp-hero{display:flex;flex-direction:column}
+  .dp-head{padding:calc(var(--pill-clear)+28px) var(--edge) 22px}
+  .dp-kicker{display:inline-flex;align-items:center;gap:10px;font-size:11px;letter-spacing:1.3px;
+    text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:16px;
+    background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
+  .dp-kicker:hover{opacity:.75}
+  .dp-title{font-size:clamp(28px,8vw,56px);font-weight:900;letter-spacing:-.04em;line-height:1.03;margin:0}
+  .dp-divider{height:1px;background:var(--line);margin:14px 0 10px}
+  .dp-tagline{margin:0;font-style:italic;color:var(--dim);font-size:14px;line-height:1.5}
+  .dp-art{width:100%;position:relative;overflow:hidden;background:var(--bg2)}
+  .dp-art img{width:100%;display:block;object-fit:cover;aspect-ratio:16/9}
+  .dp-rate{padding:22px var(--edge) 0}
+  .dp-rate .rate-stars{display:flex;gap:4px}
+  .dp-rate .rate-stars button{width:44px;height:44px;font-size:34px;padding:0}
+  .dp-meta{padding:12px var(--edge) 0;font-size:14px;color:var(--dim);
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .dp-badges{padding:12px var(--edge) 0}
+  .dp-badges .ratings-row{margin:0}
+  .dp-actions{display:flex;gap:10px;padding:20px var(--edge) 4px;flex-wrap:wrap}
+  .dp-section{padding:36px var(--edge) 0}
+  .dp-section h2{font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:0 0 14px}
+  .dp-genres{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 14px;text-align:center}
+  .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim)}
+  /* Large headings for ALL sections inside detail pages */
+  .dp-wrap .section{padding-left:0;padding-right:0}
+  .dp-wrap .section,.dp-wrap .rail-section{padding-top:36px}
+  .dp-wrap .rail-head{margin:0;padding:0 var(--edge) 14px}
+  .dp-wrap .rail-head h3,.dp-wrap .section h3{font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+  /* Stats 2×2 grid (4-col on desktop) */
+  .dp-stats{display:grid;grid-template-columns:1fr 1fr;margin:40px var(--edge) 56px;border:1px solid var(--line)}
+  .dp-stat{padding:18px 18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .dp-stat:nth-child(even){border-right:none}
+  .dp-stat:nth-last-child(-n+2){border-bottom:none}
+  .dp-sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);display:block;margin-bottom:8px}
+  .dp-sv{font-size:20px;font-weight:700;letter-spacing:-.02em;display:block}
+  /* Desktop: 2-col hero, 4-col stats */
+  @media(min-width:681px){
+    .dp-hero{display:grid;grid-template-columns:45fr 55fr;min-height:500px}
+    .dp-head{display:flex;flex-direction:column;justify-content:flex-end;
+      padding:calc(var(--pill-clear)+36px) var(--edge) 48px}
+    .dp-art{height:100%;min-height:380px}
+    .dp-art img{aspect-ratio:unset;height:100%;width:100%;object-fit:cover}
+    .dp-stats{grid-template-columns:repeat(4,1fr);margin:48px var(--edge) 64px}
+    .dp-stat:nth-child(even){border-right:1px solid var(--line)}
+    .dp-stat:nth-last-child(-n+4){border-bottom:none}
+  }
+
   /* ---- RATINGS ---- flat text, no pill */
   .ratings-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:2px 0 16px}
   .rating-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text)}
@@ -4196,14 +4246,20 @@ function statRowHTML(m,isMovie){
   return stats.length?`<div class="stat-row" id="statRow">${stats.join("")}</div>`:"";
 }
 async function injectFirstWatched(ratingKey,isShow){
-  const row=$("#statRow"); if(!row) return;
+  const row=$("#statRow")||$("#dpStats"); if(!row) return;
   try{
     const param=isShow?`grandparentRatingKey=${ratingKey}`:`metadataItemID=${ratingKey}`;
     const mc=await api(`/status/sessions/history/all?${param}&sort=viewedAt%3Aasc&X-Plex-Container-Size=1`);
     const first=(mc.Metadata||[])[0]; if(!first||!first.viewedAt) return;
-    const stat=el("div","stat");
-    stat.innerHTML=`<span class="sl">First watched</span><span class="sv">${esc(fmtDate(first.viewedAt))}</span>`;
-    row.insertBefore(stat,row.querySelector('[data-stat="last-watched"]')||null);
+    if(row.id==="dpStats"){
+      const stat=el("div","dp-stat");
+      stat.innerHTML=`<span class="dp-sl">First watched</span><span class="dp-sv">${esc(fmtDate(first.viewedAt))}</span>`;
+      row.insertBefore(stat,row.querySelector('[data-stat="last-watched"]')||null);
+    }else{
+      const stat=el("div","stat");
+      stat.innerHTML=`<span class="sl">First watched</span><span class="sv">${esc(fmtDate(first.viewedAt))}</span>`;
+      row.insertBefore(stat,row.querySelector('[data-stat="last-watched"]')||null);
+    }
   }catch(_){}
 }
 /* ---- EXTRAS RAIL (trailers, behind-the-scenes, deleted scenes...) ---- */
@@ -4652,6 +4708,69 @@ async function openActor(id){
   }catch(e){ c.innerHTML=errHTML(e); }
 }
 
+/* ---- DETAIL PAGE v2 HELPERS ---- */
+function dpStarsHTML(){
+  const stars=[1,2,3,4,5].map(n=>
+    `<button data-star="${n}" aria-label="Rate ${n} star${n===1?"":"s"}">${svgIcon("star-empty")}</button>`).join("");
+  return `<div class="dp-rate"><div class="rate-stars" role="group" aria-label="Your rating">${stars}</div></div>`;
+}
+function dpStatsHTML(m,isMovie){
+  const stats=[];
+  if(m.addedAt) stats.push({l:"Added to Library",v:fmtDate(m.addedAt)});
+  if(m.lastViewedAt) stats.push({l:"Last Watched",v:fmtDate(m.lastViewedAt),k:"last-watched"});
+  if(!isMovie&&m.leafCount) stats.push({l:"Episodes Watched",v:`${m.viewedLeafCount||0} of ${m.leafCount}`});
+  else if(isMovie&&m.viewCount) stats.push({l:"Times Watched",v:String(m.viewCount)});
+  if(!stats.length) return "";
+  return `<div class="dp-stats" id="dpStats">${stats.map(s=>
+    `<div class="dp-stat"${s.k?` data-stat="${s.k}"`:""}>`+
+    `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
+  ).join("")}</div>`;
+}
+function detailPageHTML(m,isMovie,actionsHTML,extras){
+  const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
+  const badges=ratingBadgesHTML(m);
+  const trailer=trailerIconBtnHTML(extras);
+  return `<div class="dp-wrap">
+    <div class="dp-hero">
+      <div class="dp-head">
+        <h1 class="dp-title">${esc(m.title||"")}</h1>
+        ${m.tagline?`<div class="dp-divider"></div><p class="dp-tagline">${esc(m.tagline)}</p>`:""}
+      </div>
+      <div class="dp-art"><img id="dpArtImg" alt="" decoding="async" fetchpriority="high"></div>
+    </div>
+    ${dpStarsHTML()}
+    <div class="dp-meta">${metaBits(m,isMovie)}</div>
+    ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+    <div class="dp-actions">${actionsHTML}${trailer}</div>
+    ${genres||m.summary?`<div class="dp-section">
+      <h2>Summary</h2>
+      ${genres?`<div class="dp-genres">${genres}</div>`:""}
+      ${m.summary?`<div class="dp-summary">${esc(m.summary)}</div>`:""}
+    </div>`:""}
+  </div>`;
+}
+function episodePageHTML(m,actionsHTML){
+  const bits=[fmtAirDate(m.originallyAvailableAt),fmtDur(m.duration)].filter(Boolean);
+  if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
+  const badges=ratingBadgesHTML(m);
+  return `<div class="dp-wrap">
+    <div class="dp-hero">
+      <div class="dp-head">
+        <button class="dp-kicker" id="epBackBtn">
+          ${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}
+        </button>
+        <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
+      </div>
+      <div class="dp-art"><img id="dpArtImg" alt="" decoding="async" fetchpriority="high"></div>
+    </div>
+    ${dpStarsHTML()}
+    <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
+    ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+    <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
+    ${m.summary?`<div class="dp-section"><h2>Summary</h2><div class="dp-summary">${esc(m.summary)}</div></div>`:""}
+  </div>`;
+}
+
 /* ---- RATE FLOAT ----
    Floating glass widget in the hero's bottom-right corner: a 5-star personal
    rating control that writes to Plex via PUT /:/rate, plus previous/shuffle/
@@ -4676,7 +4795,7 @@ async function rateItem(ratingKey,stars){
     {method:"PUT",headers:plexHeaders(server.token)});
 }
 function wireRateFloat(c,m){
-  const root=c.querySelector(".rate-float"); if(!root) return;
+  const root=c.querySelector(".rate-float,.dp-rate"); if(!root) return;
   const group=root.querySelector(".rate-stars");
   const current=()=>(m.userRating||0)/2;
   paintStars(root,current());
@@ -4700,8 +4819,15 @@ function wireRateFloat(c,m){
 function wireBackdrop(c,art,mobileArt){
   const isMobile=window.innerWidth<=560;
   const pref=localStorage.getItem(LS.detailArt)||"backdrop";
-  const ubSrc=isMobile&&pref==="square"&&mobileArt?mobileArt:art;
-  setUltraBlur(ubSrc);
+  const useSq=isMobile&&pref==="square"&&!!mobileArt;
+  const src=useSq?mobileArt:art;
+  setUltraBlur(src);
+  const dpImg=c.querySelector("#dpArtImg");
+  if(dpImg){
+    if(src) dpImg.src=img(src,isMobile?800:1600,isMobile?450:900);
+    applyBackdropContrast(c.querySelector(".dp-hero"),src);
+    return;
+  }
   wireDetailBg(c,art,mobileArt);
 }
 function wireDetailBg(c,art,mobileArt){
@@ -4726,8 +4852,9 @@ async function openMovie(it){
     const resume=(m.viewOffset?`<button class="btn lg" id="resumeBtn">${svgIcon("play-fill")} Resume · ${fmtClock(m.viewOffset/1000)}</button>
       <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
-    c.innerHTML=detailHero(m,true,resume,extras)+detailMetaHTML(m,true)+castRailHTML(m)+extrasRailHTML(extras)+crewHTML(m);
+    c.innerHTML=detailPageHTML(m,true,resume,extras)+castRailHTML(m)+crewHTML(m)+extrasRailHTML(extras);
     appendRelatedRails(c,related,m);
+    c.insertAdjacentHTML("beforeend",dpStatsHTML(m,true));
     wireBackdrop(c,m.art||m.thumb,(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
@@ -4736,7 +4863,6 @@ async function openMovie(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
-
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -4762,20 +4888,19 @@ async function openShow(it,jumpSeasonKey){
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
     const actions=`<button class="btn lg" id="playShow">${svgIcon("play-fill")} Play</button>
       <button class="btn glass lg" id="shuffleShow">${svgIcon("shuffle")} Shuffle</button>${watchedToggleHTML(show,false)}`;
-    c.innerHTML=detailHero(show,false,actions,extras)+detailMetaHTML(show,false)
+    c.innerHTML=detailPageHTML(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
         <div class="season-rail" id="seasonRail"></div></div>`:"")
-      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`
-      +castRailHTML(show)
-      +extrasRailHTML(extras)
-      +crewHTML(show);
+      +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div>
+        <div class="ep-list carousel" id="epList"></div>`
+      +castRailHTML(show)+crewHTML(show)+extrasRailHTML(extras);
     appendRelatedRails(c,related,show);
+    c.insertAdjacentHTML("beforeend",dpStatsHTML(show,false));
     wireBackdrop(c,show.art||show.thumb,(show.Image||[]).find(i=>i.type==="backgroundSquare")?.url);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
     injectFirstWatched(show.ratingKey,true);
     wireRateFloat(c,show);
-
     const rail=$("#seasonRail");
     let activeSeason=seasons[0];
     if(jumpSeasonKey){ const f=seasons.find(s=>String(s.ratingKey)===String(jumpSeasonKey)); if(f) activeSeason=f; }
@@ -4797,7 +4922,6 @@ async function openShow(it,jumpSeasonKey){
       const eps=mc2.Metadata||[]; if(eps.length) playItem(eps[Math.floor(Math.random()*eps.length)],0);
     };
     wireWatchedToggle(c,show,false,()=>{ if(activeSeason) loadEpisodes(activeSeason); });
-
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
@@ -4844,8 +4968,11 @@ function wireWatchedToggle(c,m,isMovie,onChange){
       else m.viewedLeafCount=next?(m.leafCount||0):0;
       m.lastViewedAt=next?Math.floor(Date.now()/1000):null;
       paintWatchedToggle(btn,m,isMovie);
-      const row=c.querySelector("#statRow"), html=statRowHTML(m,isMovie);
-      if(row){ if(html) row.outerHTML=html; else row.remove(); }
+      const statEl=c.querySelector("#statRow")||c.querySelector("#dpStats");
+      if(statEl){
+        if(statEl.id==="dpStats"){const h=dpStatsHTML(m,isMovie);statEl.outerHTML=h||"";}
+        else{const h=statRowHTML(m,isMovie);if(h) statEl.outerHTML=h; else statEl.remove();}
+      }
       if(next) injectFirstWatched(m.ratingKey,!isMovie);
       if(onChange) onChange(next);
     }catch(_){}
@@ -4935,9 +5062,10 @@ async function openEpisode(it){
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`;
     const siblingsMc=m.parentRatingKey?await api(`/library/metadata/${m.parentRatingKey}/children`).catch(()=>({})):{};
     const siblings=(siblingsMc.Metadata||[]).filter(s=>s.type==="episode");
-    c.innerHTML=episodeHero(m,resume)+statRowHTML(m,true)+crewHTML(m)+castRailHTML(m)
+    c.innerHTML=episodePageHTML(m,resume)+crewHTML(m)+castRailHTML(m)
       +(siblings.length?`<div class="rail-section"><div class="rail-head"><h3>More from Season ${m.parentIndex||""}</h3><span class="count">${siblings.length}</span></div>
         <div class="carousel" id="epSiblingRail"></div></div>`:"");
+    c.insertAdjacentHTML("beforeend",dpStatsHTML(m,true));
     if(siblings.length){ const row=$("#epSiblingRail");
       const sfrag=document.createDocumentFragment();
       siblings.forEach(s=>{
@@ -4952,7 +5080,7 @@ async function openEpisode(it){
       });
       row.appendChild(sfrag);
     }
-    wireBackdrop(c,m.art||m.grandparentArt||m.thumb);
+    wireBackdrop(c,m.thumb||m.art||m.grandparentArt);
     wireCastRail(c);
     const back=$("#epBackBtn");
     if(back) back.onclick=()=>navigate(`/show/${m.grandparentRatingKey}/season/${m.parentRatingKey}`);
@@ -4961,7 +5089,6 @@ async function openEpisode(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
-
     navDone();
   }catch(e){ c.innerHTML=errHTML(e); }
 }
