@@ -737,10 +737,18 @@
      .dp-hero--split, then full-bleed backdrop with bottom scrim, summary
      overlapping the scrim, and large-heading rails below. */
   .dp-wrap{background:var(--bg)}
+  /* Mobile-first: single flex column. Explicit order lays out the deliberate
+     stack — header → square art → meta → controls → backdrop → summary. */
   .dp-hero{display:flex;flex-direction:column}
-  .dp-info{display:flex;flex-direction:column;align-items:center;text-align:center;
-    padding-top:calc(var(--pill-clear)+24px)}
-  .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;padding:0 var(--edge)}
+  .dp-head{order:1}
+  .dp-poster{order:2}
+  .dp-meta{order:3}
+  .dp-controls{order:4}
+  .dp-backdrop{order:5}
+  .dp-summary-wrap{order:6}
+  /* Header: serif title, wave divider, italic tagline — centered on mobile */
+  .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding:calc(var(--pill-clear)+18px) var(--edge) 0}
   .dp-kicker{display:inline-flex;align-items:center;gap:9px;font-size:11px;letter-spacing:1.3px;
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px;
     background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
@@ -749,62 +757,69 @@
   .dp-title{font-size:clamp(30px,8vw,52px);font-weight:900;letter-spacing:-.04em;
     line-height:1.02;margin:0;max-width:18ch}
   /* SVG wave divider between title and tagline */
-  .wave-wrap{margin:16px 0 10px;display:flex;justify-content:center}
+  .wave-wrap{margin:14px 0 12px;display:flex;justify-content:center}
   .wave-wrap svg{width:100%;max-width:240px;display:block}
   .dp-tagline{margin:0;font-style:italic;color:var(--dim);font-size:14.5px;line-height:1.55;max-width:36ch}
-  /* Square art poster (1:1) */
-  .dp-poster{width:100%;background:var(--bg2);overflow:hidden;position:relative;flex-shrink:0}
+  /* Square art poster (1:1) — full bleed on mobile, directly under the header */
+  .dp-poster{width:100%;background:var(--bg2);overflow:hidden;position:relative;flex-shrink:0;
+    margin-top:22px}
   .dp-poster img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;opacity:0;
     transition:opacity .5s var(--ease)}
   .dp-poster img.loaded{opacity:1}
+  /* Wide (16:9) variant for episode stills */
+  .dp-poster--wide img{aspect-ratio:16/9}
+  /* Portrait (2:3) variant for collection covers */
+  .dp-poster--portrait img{aspect-ratio:2/3}
   /* Director/Writer overlay — bottom-right corner of the poster */
-  .dp-credits{position:absolute;bottom:0;right:0;padding:40px 16px 16px;text-align:right;
-    background:linear-gradient(135deg,transparent 30%,rgba(0,0,0,.88) 100%);
-    max-width:85%;pointer-events:none}
+  .dp-credits{position:absolute;bottom:0;right:0;padding:44px 18px 16px;text-align:right;
+    background:linear-gradient(135deg,transparent 30%,rgba(0,0,0,.82) 100%);
+    max-width:80%;pointer-events:none;z-index:2}
   .dp-credits .cr-group{margin-bottom:10px}
   .dp-credits .cr-group:last-child{margin-bottom:0}
   .dp-credits .cr-label{font-size:8px;font-weight:700;text-transform:uppercase;
     letter-spacing:1.4px;color:rgba(255,255,255,.42);display:block;margin-bottom:3px}
   .dp-credits .cr-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.88);
     display:block;line-height:1.35}
-  /* Backdrop strip — full bleed with bottom-up dark gradient */
-  .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}
-  .dp-backdrop::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-    background:linear-gradient(to top,rgba(0,0,0,.76) 0%,rgba(0,0,0,.14) 52%,transparent 74%)}
-  .dp-backdrop img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:0;
-    transition:opacity .5s var(--ease)}
-  .dp-backdrop img.loaded{opacity:1}
-  /* Stars/rating row */
-  .dp-rate{padding:26px var(--edge) 0;display:flex;justify-content:center;width:100%}
+  /* Meta line (year · rating · runtime) */
+  .dp-meta{padding:22px var(--edge) 0;font-size:13.5px;color:var(--dim);font-weight:500;
+    display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;width:100%}
+  .dp-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+  /* Controls group: stars, rating badges, action buttons */
+  .dp-controls{display:flex;flex-direction:column;align-items:center;width:100%}
+  .dp-rate{padding:20px var(--edge) 0;display:flex;justify-content:center;width:100%}
   .rate-stars{display:flex;gap:6px}
   .rate-stars button{background:none;border:none;padding:0;cursor:pointer;font-size:28px;line-height:1;
     width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;
     color:var(--faint);transition:color .15s,transform .15s var(--ease)}
   .rate-stars button .svgi.filled{color:var(--accent)}
   .rate-stars button:hover{transform:scale(1.15);color:var(--accent2)}
-  .dp-meta{padding:18px var(--edge) 0;font-size:14px;color:var(--dim);font-weight:500;
-    display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;width:100%}
-  .dp-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--faint);flex:0 0 auto}
   .dp-badges{padding:16px var(--edge) 0;display:flex;justify-content:center;width:100%}
   .dp-badges .ratings-row{margin:0;justify-content:center}
-  .dp-actions{display:flex;gap:20px;padding:28px var(--edge) 8px;flex-wrap:wrap;
+  .dp-actions{display:flex;gap:16px;padding:24px var(--edge) 32px;flex-wrap:wrap;
     justify-content:center;width:100%}
   /* Pill buttons — override global --radius:0 for detail page actions */
   .dp-actions .btn{border-radius:999px}
-  /* Summary — base: no overlap */
-  .dp-section{position:relative;z-index:2;padding:40px 0 0}
-  .dp-section h2{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
-    line-height:1.08;margin:0;padding:0 var(--edge) 28px}
-  /* When backdrop is directly above, Summary heading overlaps the bottom scrim */
-  .dp-section--over-backdrop{margin-top:-52px;padding-top:0}
-  /* Three-column summary body: vertical squiggle | body text | genre list */
-  .dp-summary-body{display:grid;grid-template-columns:28px 1fr auto;gap:0 20px;
-    padding:0 var(--edge) 48px;align-items:start}
-  .dp-squiggle{align-self:stretch;width:28px;overflow:hidden;min-height:120px}
-  .dp-squiggle svg{width:28px;height:100%;min-height:120px;display:block}
+  /* Backdrop strip — full bleed with bottom-up dark gradient */
+  .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}
+  .dp-backdrop::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.16) 52%,transparent 76%)}
+  .dp-backdrop img{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:62% center;
+    display:block;opacity:0;transition:opacity .5s var(--ease)}
+  .dp-backdrop img.loaded{opacity:1}
+  /* Summary block: heading, genre line, then squiggle + body text */
+  .dp-summary-wrap{position:relative;z-index:2;padding:38px 0 0}
+  /* When a backdrop sits directly above (mobile flow), the heading overlaps its scrim */
+  .dp-summary-wrap.over-backdrop{margin-top:-46px;padding-top:0}
+  .dp-summary-wrap h2{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
+    line-height:1.08;margin:0;padding:0 var(--edge)}
+  .dp-genres{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--faint);padding:14px var(--edge) 0;text-align:right;line-height:1.6}
+  /* Two-column body: vertical squiggle | summary text */
+  .dp-summary-body{display:grid;grid-template-columns:24px 1fr;gap:0 16px;
+    padding:18px var(--edge) 48px;align-items:start}
+  .dp-squiggle{align-self:stretch;width:24px;overflow:hidden;min-height:110px}
+  .dp-squiggle svg{width:24px;height:100%;min-height:110px;display:block}
   .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim)}
-  .dp-genres{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--faint);text-align:right;line-height:2;padding-top:2px}
   /* Large headings for child rails */
   .dp-wrap .section{padding-top:40px;padding-bottom:0}
   .dp-wrap .rail-section{padding-top:40px}
@@ -1413,22 +1428,40 @@
   /* ---- RESPONSIVE ---- */
   /* ---- DETAIL PAGE: desktop two-column hero ---- */
   @media(min-width:681px){
-    .dp-hero.dp-hero--split{display:grid;grid-template-columns:1fr 400px;align-items:stretch}
-    .dp-hero.dp-hero--split .dp-info{grid-column:1;grid-row:1;
-      padding-top:calc(var(--pill-clear)+48px);align-items:flex-start;text-align:left}
-    .dp-hero.dp-hero--split .dp-head{align-items:flex-start;padding-right:48px}
-    .dp-hero.dp-hero--split .dp-rate{justify-content:flex-start}
-    .dp-hero.dp-hero--split .dp-meta{justify-content:flex-start}
-    .dp-hero.dp-hero--split .dp-badges{justify-content:flex-start}
+    /* Editorial asymmetric grid (matches the desktop mockup):
+         row1: backdrop (left, partial width) | meta floats top-right
+         row2: stars/badges/buttons (left)    | title/wave/tagline (right)
+         row3: summary (left)                 | square art (right)
+       The 16:9 backdrop deliberately does NOT span full width — it stops at
+       ~78%, leaving a black gap on the right where the meta line sits. */
+    .dp-hero.dp-hero--split{display:grid;position:relative;
+      grid-template-columns:1.22fr .88fr;column-gap:48px;align-items:start;
+      grid-template-areas:"backdrop backdrop" "controls head" "summary poster";
+      padding-top:0}
+    .dp-hero.dp-hero--split>*{order:0}
+    .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:78%;margin-bottom:10px}
+    .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 56px);
+      width:auto;padding:0;justify-content:flex-end}
+    .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-end;text-align:right;
+      padding:10px var(--edge) 0 0}
+    .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
+    .dp-hero.dp-hero--split .dp-tagline{text-align:right;max-width:40ch}
+    .dp-hero.dp-hero--split .dp-controls{grid-area:controls;align-items:flex-start;
+      padding:8px 0 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-rate{justify-content:flex-start;padding:8px 0 0 0}
+    .dp-hero.dp-hero--split .dp-badges{justify-content:flex-start;padding:18px 0 0 0}
     .dp-hero.dp-hero--split .dp-badges .ratings-row{justify-content:flex-start}
-    .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start}
-    .dp-hero.dp-hero--split .wave-wrap{justify-content:flex-start}
-    .dp-hero.dp-hero--split .dp-tagline{text-align:left;max-width:38ch}
-    .dp-hero.dp-hero--split .dp-poster{grid-column:2;grid-row:1;align-self:stretch}
-    .dp-hero.dp-hero--split .dp-poster img{height:100%;width:100%;aspect-ratio:unset}
-    .dp-title{font-size:clamp(44px,4.5vw,72px);max-width:18ch}
-    .rate-stars button{width:46px;height:46px;font-size:36px}
-    .dp-section--over-backdrop{margin-top:-64px}
+    .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:24px 0 0 0}
+    .dp-hero.dp-hero--split .dp-poster{grid-area:poster;align-self:start;margin-right:var(--edge)}
+    .dp-hero.dp-hero--split .dp-summary-wrap{grid-area:summary;margin-top:0;padding-top:24px}
+    .dp-hero.dp-hero--split .dp-summary-wrap h2{padding:0 24px 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-genres{text-align:left;padding:14px 24px 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-summary-body{padding:18px 24px 8px var(--edge)}
+    /* Single-column heroes (episodes) centered and constrained on desktop */
+    .dp-hero:not(.dp-hero--split){max-width:920px;margin:0 auto}
+    .dp-hero:not(.dp-hero--split) .dp-poster{margin-top:28px}
+    .dp-title{font-size:clamp(40px,4vw,66px);max-width:16ch}
+    .rate-stars button{width:44px;height:44px;font-size:34px}
     .dp-summary{font-size:15.5px}
     .dp-stats{grid-template-columns:repeat(4,1fr);margin:56px var(--edge) 72px}
     .dp-stat{border-bottom:none}
@@ -1602,7 +1635,7 @@
     .featured .carousel .card{width:170px}
     /* Detail page v2 mobile: single-column, poster full-width */
     .dp-title{font-size:clamp(26px,7.5vw,40px)}
-    .dp-summary-body{grid-template-columns:20px 1fr auto;gap:0 12px}
+    .dp-summary-body{grid-template-columns:20px 1fr;gap:0 12px}
     .dp-squiggle{width:20px}
     .dp-squiggle svg{width:20px}
     .ep-card{width:220px}
@@ -3962,30 +3995,22 @@ function collHero(m,kicker,items,square){
     const src=img(m.thumb,440,square?440:660);
     const mosaic=src?"":mosaicHTML(items);
     const fallbackIconHTML=square?`<span class="art-fallback">${svgIcon("playlist")}</span>`:`<span class="art-fallback">${svgIcon("stack-fill")}</span>`;
-    const summarySection=m.summary?`<div class="dp-section${backdrop?" dp-section--over-backdrop":""}">
-      <h2>Summary</h2>
-      <div class="dp-summary-body">
-        <div class="dp-squiggle">${waveVertSVG()}</div>
-        <div class="dp-summary">${esc(m.summary)}</div>
-        <div></div>
-      </div>
-    </div>`:"";
     return `<div class="dp-hero dp-hero--split">
-      <div class="dp-info">
-        <div class="dp-head">
-          <p class="dp-kicker">${esc(kicker)}</p>
-          <h1 class="dp-title">${esc(m.title)}</h1>
-          ${waveHorizSVG()}
-        </div>
-        <div class="dp-meta">${metaHTML}</div>
+      ${backdrop?`<div class="dp-backdrop"><img id="collBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
+      <div class="dp-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>
+      <div class="dp-head">
+        <p class="dp-kicker">${esc(kicker)}</p>
+        <h1 class="dp-title">${esc(m.title)}</h1>
+        ${waveHorizSVG()}
+      </div>
+      <div class="dp-controls">
         ${playBtns?`<div class="dp-actions">${playBtns}</div>`:""}
       </div>
-      <div class="dp-poster">
+      <div class="dp-poster${square?"":" dp-poster--portrait"}">
         ${src?`<img id="collPosterImg" alt="" src="${src}">`:`<div class="coll-art${square?" square":""}${mosaic?"":" broken"}">${mosaic||""}${fallbackIconHTML}</div>`}
       </div>
-    </div>
-    ${backdrop?`<div class="dp-backdrop"><img id="collBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
-    ${summarySection}`;
+      ${dpSummaryHTML(m.summary,"",!!backdrop)}
+    </div>`;
   }
   const src=img(m.thumb,440,square?440:660);
   const mosaic=src?"":mosaicHTML(items);
@@ -4134,8 +4159,22 @@ function dpStatsHTML(m,isMovie){
     `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
   ).join("")}</div>`;
 }
+/* Shared summary block for all dp-* heroes: heading, comma genre line,
+   then vertical squiggle + body text. `over` overlaps the heading onto the
+   backdrop scrim directly above it (mobile flow only). */
+function dpSummaryHTML(summary,genres,over){
+  if(!summary&&!genres) return "";
+  return `<div class="dp-summary-wrap${over?" over-backdrop":""}">
+    <h2>Summary</h2>
+    ${genres?`<div class="dp-genres">${genres}</div>`:""}
+    <div class="dp-summary-body">
+      <div class="dp-squiggle">${waveVertSVG()}</div>
+      ${summary?`<div class="dp-summary">${esc(summary)}</div>`:"<div></div>"}
+    </div>
+  </div>`;
+}
 function detailHero(m,isMovie,actionsHTML,extras){
-  const top3genres=(m.Genre||[]).slice(0,3).map(g=>esc(g.tag)).join("<br>");
+  const top3genres=(m.Genre||[]).slice(0,3).map(g=>esc(g.tag)).join(", ");
   const badges=ratingBadgesHTML(m);
   const trailer=trailerIconBtnHTML(extras);
   const squareUrl=(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url||"";
@@ -4146,59 +4185,43 @@ function detailHero(m,isMovie,actionsHTML,extras){
     ${directors?`<div class="cr-group"><span class="cr-label">Directed by</span><span class="cr-name">${directors}</span></div>`:""}
     ${writers?`<div class="cr-group"><span class="cr-label">Written by</span><span class="cr-name">${writers}</span></div>`:""}
   </div>`:"";
-  const summarySection=m.summary||top3genres?`<div class="dp-section${hasBackdrop?" dp-section--over-backdrop":""}">
-    <h2>Summary</h2>
-    <div class="dp-summary-body">
-      <div class="dp-squiggle">${waveVertSVG()}</div>
-      ${m.summary?`<div class="dp-summary">${esc(m.summary)}</div>`:"<div></div>"}
-      ${top3genres?`<div class="dp-genres">${top3genres}</div>`:"<div></div>"}
-    </div>
-  </div>`:"";
   return `<div class="dp-hero dp-hero--split">
-    <div class="dp-info">
-      <div class="dp-head">
-        <h1 class="dp-title">${esc(m.title||"")}</h1>
-        ${waveHorizSVG()}
-        ${m.tagline?`<p class="dp-tagline">${esc(m.tagline)}</p>`:""}
-      </div>
+    ${hasBackdrop?`<div class="dp-backdrop"><img id="dpBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
+    <div class="dp-meta">${metaBits(m,isMovie)}</div>
+    <div class="dp-head">
+      <h1 class="dp-title">${esc(m.title||"")}</h1>
+      ${waveHorizSVG()}
+      ${m.tagline?`<p class="dp-tagline">${esc(m.tagline)}</p>`:""}
+    </div>
+    <div class="dp-controls">
       ${dpStarsHTML()}
-      <div class="dp-meta">${metaBits(m,isMovie)}</div>
       ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
       <div class="dp-actions">${actionsHTML}${trailer}</div>
     </div>
     <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high">${creditsHTML}</div>
-  </div>
-  ${hasBackdrop?`<div class="dp-backdrop"><img id="dpBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
-  ${summarySection}`;
+    ${dpSummaryHTML(m.summary,top3genres,hasBackdrop)}
+  </div>`;
 }
 /* ---- EPISODE DETAIL HERO ---- */
 function episodeHero(m,actionsHTML){
   const bits=[fmtAirDate(m.originallyAvailableAt),fmtDur(m.duration)].filter(Boolean);
   if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
   const badges=ratingBadgesHTML(m);
-  const summarySection=m.summary?`<div class="dp-section dp-section--over-backdrop">
-    <h2>Summary</h2>
-    <div class="dp-summary-body">
-      <div class="dp-squiggle">${waveVertSVG()}</div>
-      <div class="dp-summary">${esc(m.summary)}</div>
-      <div></div>
-    </div>
-  </div>`:"";
   return `<div class="dp-hero">
-    <div class="dp-info">
-      <div class="dp-head">
-        <button class="dp-kicker" id="epBackBtn">${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}</button>
-        <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
-        ${waveHorizSVG()}
-      </div>
+    <div class="dp-head">
+      <button class="dp-kicker" id="epBackBtn">${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}</button>
+      <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
+      ${waveHorizSVG()}
+    </div>
+    <div class="dp-poster dp-poster--wide"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
+    <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
+    <div class="dp-controls">
       ${dpStarsHTML()}
-      <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
       ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
       <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
     </div>
-  </div>
-  <div class="dp-backdrop dp-backdrop--hero"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
-  ${summarySection}`;
+    ${dpSummaryHTML(m.summary,"",false)}
+  </div>`;
 }
 /* ---- RATINGS ROW ----
    Parses Plex's Rating[] (image-keyed by source) into IMDb / Rotten Tomatoes /
