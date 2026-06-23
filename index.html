@@ -875,7 +875,7 @@
     text-align:center;padding:10px 14px 13px;letter-spacing:.01em;line-height:1.2;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* Billboard: label floats centered over the image, no solid bottom strip */
-  .genre-card--billboard{width:252px;position:relative}
+  .genre-card--billboard{width:var(--card-w);position:relative}
   .genre-card--billboard .genre-art{aspect-ratio:16/9}
   .genre-card--billboard .genre-fade{
     background:linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(0,0,0,.5) 100%)}
@@ -885,13 +885,13 @@
     font-size:15px;font-weight:800;letter-spacing:.03em;
     text-shadow:0 2px 20px rgba(0,0,0,.7),0 1px 4px rgba(0,0,0,.4);
     padding:0 16px}
-  .genre-card--square{width:160px}
+  .genre-card--square{width:var(--card-w)}
   .genre-card--square .genre-art{aspect-ratio:1/1}
   .genre-card--square .genre-fade{display:none}
   .cast-row{display:flex;gap:var(--rail-gap);overflow-x:auto;padding:4px var(--edge) 16px;
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .cast-row::-webkit-scrollbar{height:0}
-  .cast{flex:0 0 auto;width:var(--card-w);text-align:center;background:none;border:none;
+  .cast{flex:0 0 auto;width:120px;text-align:center;background:none;border:none;
     padding:0;cursor:default;font-family:var(--font);color:var(--text)}
   .cast[data-actor-id]{cursor:pointer}
   .cast[data-actor-id]:hover .art{border-color:var(--accent)}
@@ -1423,7 +1423,7 @@
     .coll-info{min-width:unset;width:100%}
     .coll-meta{justify-content:center}
     .coll-actions{justify-content:center}
-    .carousel .card,.carousel .card.wide,.featured .carousel .card,.featured .carousel .card.wide{width:180px}
+    .carousel .card,.carousel .card.wide,.carousel .card.billboard,.featured .carousel .card,.featured .carousel .card.wide{width:180px}
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
     .p-pause{padding:0 44px 120px}
@@ -1573,7 +1573,7 @@
     .ec-title h3{font-size:clamp(22px,7vw,34px)}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     /* Peeking carousel: one card at a time, next card peeks ~40px */
-    .carousel .card,.carousel .card.wide,.featured .carousel .card,.featured .carousel .card.wide{
+    .carousel .card,.carousel .card.wide,.carousel .card.billboard,.featured .carousel .card,.featured .carousel .card.wide{
       width:calc(100vw - var(--edge) - 40px);max-width:280px}
     .detail-info h2{font-size:28px}
     .rate-float{display:none}
