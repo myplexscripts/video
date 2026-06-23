@@ -752,13 +752,12 @@
   .dp-controls{order:4}
   .dp-backdrop{order:5}
   .dp-summary-wrap{order:6}
-  /* Split hero (movies/shows): art → tagline → credits → meta
-     Poster sits right below the head; tagline + credits fill the space
-     between the art and the meta line at the very bottom. */
+  /* Split hero (movies/shows): art → actions → meta → tagline → credits */
   .dp-hero--split .dp-poster{order:2}
-  .dp-hero--split .dp-dropquote{order:3}
-  .dp-hero--split .dp-film-credits{order:4}
-  .dp-hero--split .dp-meta{order:5;margin-top:auto}
+  .dp-hero--split .dp-actions{order:3}
+  .dp-hero--split .dp-meta{order:4;margin-top:auto}
+  .dp-hero--split .dp-dropquote{order:5}
+  .dp-hero--split .dp-film-credits{order:6}
   /* Header: serif title, wave divider, italic tagline — centered on mobile.
      Top padding aligns the title with the floating back button. */
   .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
@@ -768,7 +767,7 @@
     background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
   .dp-kicker:hover{opacity:.75}
   .dp-kicker .svgi{width:14px;height:14px}
-  .dp-title{font-size:clamp(30px,8vw,52px);font-weight:900;letter-spacing:-.04em;
+  .dp-title{font-size:clamp(34px,8vw,52px);font-weight:900;letter-spacing:-.04em;
     line-height:1.02;margin:0;max-width:18ch}
   /* SVG wave divider between title and stars */
   .wave-wrap{margin:18px 0;display:flex;justify-content:center}
@@ -801,7 +800,7 @@
   /* Film credits — centered role/name pairs inside the fold (below tagline, above poster) */
   .dp-film-credits{width:100%;display:flex;flex-direction:column;align-items:center;
     padding:0 var(--edge) 8px;gap:10px}
-  .dp-film-credits .dp-actions{padding-left:0;padding-right:0}
+  .dp-film-credits{padding-bottom:24px}
   .dp-film-credit{display:flex;justify-content:center;align-items:baseline;
     gap:16px;width:100%;max-width:340px}
   .dp-fc-role{font-family:var(--font-head);font-style:italic;font-size:11px;
@@ -870,7 +869,7 @@
     font-family:'Playfair Display',Georgia,'Times New Roman',serif}
   /* Awards one-liner — below stats grid */
   .dp-award{font-style:italic;color:var(--dim);font-size:13.5px;line-height:1.5;
-    padding:0 var(--edge) 32px;margin:-28px 0 0}
+    padding:0 var(--edge) 32px;margin:0}
   .dp-award::before{content:"◆  ";color:var(--accent);font-style:normal;font-size:9px}
   /* Keyword / theme pills */
   .dp-keywords{display:flex;flex-wrap:wrap;gap:8px;padding:0 var(--edge) 40px;justify-content:center}
@@ -1480,7 +1479,7 @@
        ~78%, leaving a black gap on the right where the meta line sits. */
     .dp-hero.dp-hero--split{display:grid;position:relative;
       grid-template-columns:1.22fr .88fr;column-gap:48px;align-items:start;
-      grid-template-areas:"quote quote" "backdrop backdrop" "credits head" "summary poster";
+      grid-template-areas:"quote quote" "backdrop backdrop" "actions head" "credits head" "summary poster";
       padding-top:0}
     .dp-hero.dp-hero--split>*{order:0}
     /* Pull quote sits full-width above the billboard art */
@@ -1500,7 +1499,7 @@
       padding:12px 0 0 var(--edge)}
     .dp-hero.dp-hero--split .dp-film-credit{justify-content:flex-start;max-width:none}
     .dp-hero.dp-hero--split .dp-fc-role{text-align:right;flex:0 0 130px}
-    .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:24px 0 0 0}
+    .dp-hero.dp-hero--split .dp-actions{grid-area:actions;justify-content:flex-start;padding:16px 0 0 var(--edge)}
     .dp-hero.dp-hero--split .dp-keywords{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{justify-content:flex-start;padding-left:var(--edge)}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges .ratings-row{justify-content:flex-start}
@@ -4210,21 +4209,26 @@ function dpStarsHTML(){
     `<button data-star="${n}" aria-label="Rate ${n} star${n===1?"":"s"}">${svgIcon("star-empty")}</button>`).join("");
   return `<div class="dp-rate"><div class="rate-stars" role="group" aria-label="Your rating">${stars}</div></div>`;
 }
-function dpStatsHTML(m,isMovie,td,od){
+function dpStatsHTML(m,isMovie){
   const stats=[];
   if(m.addedAt) stats.push({l:"Added to Library",v:fmtDate(m.addedAt)});
   stats.push({l:"Last Watched",v:m.lastViewedAt?fmtDate(m.lastViewedAt):"Not yet viewed",k:"last-watched"});
   if(!isMovie) stats.push({l:"Episodes Watched",v:m.leafCount?`${m.viewedLeafCount||0} of ${m.leafCount}`:"—"});
   else stats.push({l:"Times Watched",v:m.viewCount?String(m.viewCount):"Not yet viewed"});
-  if(isMovie&&td){
-    const budget=fmtMoney(td.budget);
-    const gross=fmtMoney(td.revenue)||(od?.BoxOffice&&od.BoxOffice!=="N/A"?od.BoxOffice:null);
-    if(budget) stats.push({l:"Budget",v:budget});
-    if(gross) stats.push({l:"Box Office",v:gross});
-  }
   return `<div class="dp-stats" id="dpStats">${stats.map(s=>
     `<div class="dp-stat"${s.k?` data-stat="${s.k}"`:""}>`+
     `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
+  ).join("")}</div>`;
+}
+function dpFilmStatsHTML(td,od,isMovie){
+  if(!isMovie) return "";
+  const items=[];
+  if(td?.budget>0) items.push({l:"Budget",v:fmtMoney(td.budget)});
+  const gross=td?.revenue>0?fmtMoney(td.revenue):(od?.BoxOffice&&od.BoxOffice!=="N/A"?od.BoxOffice:null);
+  if(gross) items.push({l:"Box Office",v:gross});
+  if(!items.length) return "";
+  return `<div class="dp-stats dp-film-stats">${items.map(s=>
+    `<div class="dp-stat"><span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
   ).join("")}</div>`;
 }
 /* Shared summary block for all dp-* heroes: heading, comma genre line,
@@ -4258,14 +4262,14 @@ function detailHero(m,isMovie,actionsHTML,extras){
         ${waveHorizSVG()}
         ${dpStarsHTML()}
       </div>
+      <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
+      <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
+      <div class="dp-meta">${metaBits(m,isMovie)}</div>
       ${m.tagline?`<p class="dp-dropquote">${esc(m.tagline)}</p>`:""}
       <div class="dp-film-credits" id="dpFilmCredits">
         ${directors?`<div class="dp-film-credit"><span class="dp-fc-role">Directed by</span><span class="dp-fc-name">${directors}</span></div>`:""}
         ${writers?`<div class="dp-film-credit"><span class="dp-fc-role">Written by</span><span class="dp-fc-name">${writers}</span></div>`:""}
-        <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
       </div>
-      <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
-      <div class="dp-meta">${metaBits(m,isMovie)}</div>
     </div>
     ${dpSummaryHTML(m.summary,top3genres,hasBackdrop,badges)}
   </div>`;
@@ -4711,37 +4715,44 @@ const CREW_JOBS=[
 function enrichDetailPage(c,m,isMovie,appendStats){
   const ids=getExternalIds(m);
   if(!ids.tmdb&&!ids.imdb){
-    if(appendStats){ c.insertAdjacentHTML("beforeend",dpStatsHTML(m,isMovie,null,null)); injectFirstWatched(m.ratingKey,!isMovie); }
+    if(appendStats){ c.insertAdjacentHTML("beforeend",dpStatsHTML(m,isMovie)); injectFirstWatched(m.ratingKey,!isMovie); }
     return;
   }
   Promise.all([fetchTmdbEnrich(ids,isMovie),fetchOmdb(ids.imdb)])
     .then(([td,od])=>{
-      // 1. Inject additional crew rows into #dpFilmCredits (before #dpActions)
+      // 1. Inject additional crew rows into #dpFilmCredits (appended at end of credits block)
       const creditsBlock=c.querySelector("#dpFilmCredits");
-      const actionsEl=creditsBlock?.querySelector("#dpActions");
-      if(creditsBlock&&actionsEl){
+      if(creditsBlock){
         const crew=td?.credits?.crew||[];
         CREW_JOBS.forEach(({label,jobs})=>{
           const found=crew.find(cr=>jobs.includes(cr.job));
           if(found){
-            actionsEl.insertAdjacentHTML("beforebegin",
+            creditsBlock.insertAdjacentHTML("beforeend",
               `<div class="dp-film-credit"><span class="dp-fc-role">${esc(label)}</span><span class="dp-fc-name">${esc(found.name)}</span></div>`);
           }
         });
       }
-      // 2. Awards one-liner
-      const awards=od?.Awards&&od.Awards!=="N/A"?od.Awards:null;
-      if(awards) c.insertAdjacentHTML("beforeend",`<p class="dp-award">${esc(awards)}</p>`);
-      // 3. Stats grid (with budget/revenue baked in)
-      if(appendStats){ c.insertAdjacentHTML("beforeend",dpStatsHTML(m,isMovie,td,od)); injectFirstWatched(m.ratingKey,!isMovie); }
-      // 4. Keyword pills
+      // 2. Film stats (budget/box office) + awards injected after the anchor (under extras rail)
+      const anchor=c.querySelector("#dpFilmStatsAnchor");
+      if(anchor){
+        const filmStats=dpFilmStatsHTML(td,od,isMovie);
+        if(filmStats) anchor.insertAdjacentHTML("afterend",filmStats);
+        const awards=od?.Awards&&od.Awards!=="N/A"?od.Awards:null;
+        if(awards){
+          const insertAfter=c.querySelector(".dp-film-stats")||anchor;
+          insertAfter.insertAdjacentHTML("afterend",`<p class="dp-award">${esc(awards)}</p>`);
+        }
+      }
+      // 3. Personal stats grid (at very bottom, before keywords)
+      if(appendStats){ c.insertAdjacentHTML("beforeend",dpStatsHTML(m,isMovie)); injectFirstWatched(m.ratingKey,!isMovie); }
+      // 4. Keyword pills (very last)
       const kws=(td?.keywords?.keywords||td?.keywords?.results||[]).slice(0,12);
       if(kws.length){
         c.insertAdjacentHTML("beforeend",`<div class="dp-keywords">${kws.map(k=>`<span class="dp-keyword">${esc(k.name)}</span>`).join("")}</div>`);
       }
     })
     .catch(()=>{
-      if(appendStats){ c.insertAdjacentHTML("beforeend",dpStatsHTML(m,isMovie,null,null)); injectFirstWatched(m.ratingKey,!isMovie); }
+      if(appendStats){ c.insertAdjacentHTML("beforeend",dpStatsHTML(m,isMovie)); injectFirstWatched(m.ratingKey,!isMovie); }
     });
 }
 
@@ -4984,6 +4995,7 @@ async function openMovie(it){
     c.classList.add("dp-wrap");
     c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras);
     appendRelatedRails(c,related,m);
+    c.insertAdjacentHTML("beforeend",'<div id="dpFilmStatsAnchor"></div>');
     wireDetailArt(c,m,false);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
@@ -5026,6 +5038,7 @@ async function openShow(it,jumpSeasonKey){
       +castRailHTML(show)
       +extrasRailHTML(extras);
     appendRelatedRails(c,related,show);
+    c.insertAdjacentHTML("beforeend",'<div id="dpFilmStatsAnchor"></div>');
     wireDetailArt(c,show,false);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
