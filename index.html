@@ -62,8 +62,8 @@
     --shadow-sm:0 1px 3px rgba(0,0,0,.3); --shadow:0 4px 24px rgba(0,0,0,.4);
     --shadow-lg:0 12px 48px rgba(0,0,0,.55);
     --font:'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-    /* All headings render in this serif; body and UI use --font (Inter) */
-    --font-head:'Playfair Display','Georgia','Times New Roman',serif;
+    /* All headings render in this rounded sans; body and UI use --font (Inter) */
+    --font-head:'Rubik','Inter',system-ui,sans-serif;
     --ease:cubic-bezier(.22,1,.36,1);
     /* Floating menu-toggle/search pills sit at top:max(16px,safe-area) and are
        44px tall — flat pages need at least that much clearance so their first
@@ -752,12 +752,11 @@
   .dp-controls{order:4}
   .dp-backdrop{order:5}
   .dp-summary-wrap{order:6}
-  /* Split hero (movies/shows): art → actions → meta → tagline → credits */
+  /* Split hero (movies/shows): art → actions → meta → tagline */
   .dp-hero--split .dp-poster{order:2}
   .dp-hero--split .dp-actions{order:3}
   .dp-hero--split .dp-meta{order:4;margin-top:auto}
   .dp-hero--split .dp-dropquote{order:5}
-  .dp-hero--split .dp-film-credits{order:6}
   /* Header: serif title, wave divider, italic tagline — centered on mobile.
      Top padding aligns the title with the floating back button. */
   .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
@@ -769,19 +768,19 @@
   .dp-kicker .svgi{width:14px;height:14px}
   .dp-title{font-size:clamp(34px,8vw,52px);font-weight:900;letter-spacing:-.04em;
     line-height:1.02;margin:0;max-width:18ch}
-  /* SVG wave divider between title and stars */
-  .wave-wrap{margin:18px 0;display:flex;justify-content:center}
+  /* SVG wave divider between title and stars — equal gap above and below */
+  .wave-wrap{margin:14px 0;display:flex;justify-content:center}
   .wave-wrap svg{width:100%;max-width:240px;display:block}
   /* Pull quote — tagline sits between the poster art and the film credits */
-  .dp-dropquote{margin:0 auto;font-family:var(--font-head);font-style:italic;
-    font-weight:500;font-size:clamp(22px,5vw,34px);line-height:1.35;color:var(--text);
-    text-align:center;padding:24px var(--edge) 16px;max-width:20ch;position:relative}
+  .dp-dropquote{margin:0 auto;font-family:var(--font-head);font-style:normal;
+    font-weight:400;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--dim);
+    text-align:center;padding:24px var(--edge) 16px;max-width:28ch;position:relative}
   .dp-dropquote::before,.dp-dropquote::after{content:"";display:block;width:32px;height:2px;
     border-radius:2px;background:var(--quote-accent,var(--accent));opacity:.85;margin:0 auto}
   .dp-dropquote::before{margin-bottom:24px}
   .dp-dropquote::after{margin-top:24px}
   /* Stars inside the header, directly under the wave divider */
-  .dp-head .dp-rate{padding:2px 0 0;width:auto}
+  .dp-head .dp-rate{padding:0;width:auto}
   .dp-head .rate-stars button{width:34px;height:34px}
   /* Square art poster (1:1) — full bleed on mobile, directly under the header */
   .dp-poster{width:100%;background:var(--bg2);overflow:hidden;position:relative;flex-shrink:0;
@@ -797,10 +796,9 @@
   .dp-meta{padding:22px var(--edge) 0;font-size:13.5px;color:var(--dim);font-weight:500;
     display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;width:100%}
   .dp-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--faint);flex:0 0 auto}
-  /* Film credits — centered role/name pairs inside the fold (below tagline, above poster) */
+  /* Film credits — standalone section between cast and extras rails */
   .dp-film-credits{width:100%;display:flex;flex-direction:column;align-items:center;
-    padding:0 var(--edge) 8px;gap:10px}
-  .dp-film-credits{padding-bottom:24px}
+    padding:24px var(--edge) 24px;gap:10px;border-top:1px solid var(--line)}
   .dp-film-credit{display:flex;justify-content:center;align-items:baseline;
     gap:16px;width:100%;max-width:340px}
   .dp-fc-role{font-family:var(--font-head);font-style:italic;font-size:11px;
@@ -864,9 +862,8 @@
   .dp-stat:nth-last-child(2){border-bottom:none}
   .dp-sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
     color:var(--faint);display:block;margin-bottom:8px}
-  /* Stats values in serif for character and dimension */
   .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block;
-    font-family:'Playfair Display',Georgia,'Times New Roman',serif}
+    font-family:var(--font-head)}
   /* Awards one-liner — below stats grid */
   .dp-award{font-style:italic;color:var(--dim);font-size:13.5px;line-height:1.5;
     padding:0 var(--edge) 32px;margin:0}
@@ -1479,12 +1476,12 @@
        ~78%, leaving a black gap on the right where the meta line sits. */
     .dp-hero.dp-hero--split{display:grid;position:relative;
       grid-template-columns:1.22fr .88fr;column-gap:48px;align-items:start;
-      grid-template-areas:"quote quote" "backdrop backdrop" "actions head" "credits head" "summary poster";
+      grid-template-areas:"quote quote" "backdrop backdrop" "actions head" "summary poster";
       padding-top:0}
     .dp-hero.dp-hero--split>*{order:0}
     /* Pull quote sits full-width above the billboard art */
     .dp-hero.dp-hero--split .dp-dropquote{grid-area:quote;margin:0 auto;
-      padding:40px var(--edge) 36px;max-width:32ch}
+      padding:40px var(--edge) 36px;max-width:40ch}
     .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:78%;margin-bottom:10px}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 56px);
       width:auto;padding:0;justify-content:flex-end}
@@ -1492,13 +1489,8 @@
       padding:10px var(--edge) 0 0}
     .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-head .dp-rate{padding:4px 0 0;justify-content:flex-end}
-    /* Collection pages still use dp-controls — keep it in the credits grid cell */
-    .dp-hero.dp-hero--split .dp-controls{grid-area:credits;align-items:flex-start;
+    .dp-hero.dp-hero--split .dp-controls{grid-area:actions;align-items:flex-start;
       padding:8px 0 0 var(--edge)}
-    .dp-hero.dp-hero--split .dp-film-credits{grid-area:credits;align-items:flex-start;
-      padding:12px 0 0 var(--edge)}
-    .dp-hero.dp-hero--split .dp-film-credit{justify-content:flex-start;max-width:none}
-    .dp-hero.dp-hero--split .dp-fc-role{text-align:right;flex:0 0 130px}
     .dp-hero.dp-hero--split .dp-actions{grid-area:actions;justify-content:flex-start;padding:16px 0 0 var(--edge)}
     .dp-hero.dp-hero--split .dp-keywords{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{justify-content:flex-start;padding-left:var(--edge)}
@@ -1949,11 +1941,11 @@ function _loadGFont(family){
   l.href=`https://fonts.googleapis.com/css2?family=${family.replace(/ /g,"+")}:wght@400;500;600;700;800;900&display=swap`;
   document.head.appendChild(l);
 }
-// Typography is fixed: Inter for body/UI, Playfair Display for all headings.
+// Typography is fixed: Inter for body/UI, Rubik for all headings.
 // (applyFont ignores its argument — kept as a no-op shim for legacy callers.)
 function applyFont(){
   document.documentElement.style.setProperty("--font",FONT_STACKS.inter);
-  _loadGFont("Inter"); _loadGFont("Playfair Display");
+  _loadGFont("Inter"); _loadGFont("Rubik");
 }
 applyFont();
 // Restore TV mode (applies body class before paint so cursor:none is immediate)
@@ -4246,14 +4238,20 @@ function dpSummaryHTML(summary,genres,over,badges){
     ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
   </div>`;
 }
+function dpFilmCreditsHTML(m){
+  const directors=(m.Director||[]).slice(0,2).map(d=>esc(d.tag)).join(", ");
+  const writers=(m.Writer||[]).slice(0,2).map(w=>esc(w.tag)).join(", ");
+  return `<div class="dp-film-credits" id="dpFilmCredits">
+    ${directors?`<div class="dp-film-credit"><span class="dp-fc-role">Directed by</span><span class="dp-fc-name">${directors}</span></div>`:""}
+    ${writers?`<div class="dp-film-credit"><span class="dp-fc-role">Written by</span><span class="dp-fc-name">${writers}</span></div>`:""}
+  </div>`;
+}
 function detailHero(m,isMovie,actionsHTML,extras){
   const top3genres=(m.Genre||[]).slice(0,3).map(g=>esc(g.tag)).join(", ");
   const badges=ratingBadgesHTML(m);
   const trailer=trailerIconBtnHTML(extras);
   const squareUrl=(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url||"";
   const hasBackdrop=!!m.art&&(squareUrl?true:m.art!==m.thumb);
-  const directors=(m.Director||[]).slice(0,2).map(d=>esc(d.tag)).join(", ");
-  const writers=(m.Writer||[]).slice(0,2).map(w=>esc(w.tag)).join(", ");
   return `<div class="dp-hero dp-hero--split">
     ${hasBackdrop?`<div class="dp-backdrop"><img id="dpBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
     <div class="dp-fold">
@@ -4266,10 +4264,6 @@ function detailHero(m,isMovie,actionsHTML,extras){
       <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
       <div class="dp-meta">${metaBits(m,isMovie)}</div>
       ${m.tagline?`<p class="dp-dropquote">${esc(m.tagline)}</p>`:""}
-      <div class="dp-film-credits" id="dpFilmCredits">
-        ${directors?`<div class="dp-film-credit"><span class="dp-fc-role">Directed by</span><span class="dp-fc-name">${directors}</span></div>`:""}
-        ${writers?`<div class="dp-film-credit"><span class="dp-fc-role">Written by</span><span class="dp-fc-name">${writers}</span></div>`:""}
-      </div>
     </div>
     ${dpSummaryHTML(m.summary,top3genres,hasBackdrop,badges)}
   </div>`;
@@ -4905,13 +4899,14 @@ function wireRateFloat(c,m){
   const group=root.querySelector(".rate-stars");
   const current=()=>(m.userRating||0)/2;
   paintStars(root,current());
+  const buttons=[...group.querySelectorAll("button")];
   const valueFromEvent=(b,e)=>{
     const n=+b.dataset.star;
     if(!e.clientX&&!e.clientY) return n;
     const r=b.getBoundingClientRect();
     return (e.clientX-r.left)<r.width/2?n-0.5:n;
   };
-  group.querySelectorAll("button").forEach(b=>{
+  buttons.forEach(b=>{
     b.onmousemove=e=>paintStars(root,valueFromEvent(b,e));
     b.onclick=async e=>{
       const val=valueFromEvent(b,e), prev=current(), next=val===prev?0:val;
@@ -4921,6 +4916,29 @@ function wireRateFloat(c,m){
     };
   });
   group.onmouseleave=()=>paintStars(root,current());
+  // Touch swipe: drag across stars to rate; drag left of all stars to reset to 0
+  const starFromTouch=t=>{
+    for(const b of buttons){
+      const r=b.getBoundingClientRect();
+      if(t.clientX>=r.left&&t.clientX<=r.right) return +b.dataset.star;
+    }
+    if(buttons.length&&t.clientX<buttons[0].getBoundingClientRect().left) return 0;
+    return +buttons[buttons.length-1].dataset.star;
+  };
+  let touchMoved=false, pendingVal=null;
+  group.addEventListener("touchstart",()=>{ touchMoved=false; pendingVal=null; },{passive:true});
+  group.addEventListener("touchmove",e=>{
+    touchMoved=true; pendingVal=starFromTouch(e.touches[0]);
+    paintStars(root,pendingVal); e.preventDefault();
+  },{passive:false});
+  group.addEventListener("touchend",async()=>{
+    if(!touchMoved||pendingVal===null) return;
+    const prev=current(), next=pendingVal;
+    paintStars(root,next);
+    try{ await rateItem(m.ratingKey,next); m.userRating=next*2; }
+    catch(_){ paintStars(root,prev); }
+  },{passive:true});
+  group.addEventListener("touchcancel",()=>paintStars(root,current()),{passive:true});
 }
 /* Flat editorial art loader for movie/show/episode pages.
    Uses Plex backgroundSquare (1:1) for the poster, m.art for the backdrop strip.
@@ -4993,7 +5011,7 @@ async function openMovie(it){
       <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
     c.classList.add("dp-wrap");
-    c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+extrasRailHTML(extras);
+    c.innerHTML=detailHero(m,true,resume,extras)+castRailHTML(m)+dpFilmCreditsHTML(m)+extrasRailHTML(extras);
     appendRelatedRails(c,related,m);
     c.insertAdjacentHTML("beforeend",'<div id="dpFilmStatsAnchor"></div>');
     wireDetailArt(c,m,false);
@@ -5036,6 +5054,7 @@ async function openShow(it,jumpSeasonKey){
         <div class="season-rail" id="seasonRail"></div></div>`:"")
       +`<div class="section" style="padding-bottom:0"><h3 id="epListHeading">Episodes</h3></div><div class="ep-list carousel" id="epList"></div>`
       +castRailHTML(show)
+      +dpFilmCreditsHTML(show)
       +extrasRailHTML(extras);
     appendRelatedRails(c,related,show);
     c.insertAdjacentHTML("beforeend",'<div id="dpFilmStatsAnchor"></div>');
