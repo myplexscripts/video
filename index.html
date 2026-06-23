@@ -764,19 +764,19 @@
   .dp-kicker .svgi{width:14px;height:14px}
   .dp-title{font-size:clamp(30px,8vw,52px);font-weight:900;letter-spacing:-.04em;
     line-height:1.02;margin:0;max-width:18ch}
-  /* SVG wave divider between title and tagline */
-  .wave-wrap{margin:14px 0 12px;display:flex;justify-content:center}
+  /* SVG wave divider between title and stars */
+  .wave-wrap{margin:18px 0;display:flex;justify-content:center}
   .wave-wrap svg{width:100%;max-width:240px;display:block}
-  /* Drop/pull quote — tagline repositioned above the summary block */
-  .dp-dropquote{margin:0;font-family:var(--font-head);font-style:italic;
-    font-size:clamp(17px,2.8vw,26px);line-height:1.45;color:var(--dim);
-    padding:52px var(--edge) 36px;max-width:44ch;position:relative}
-  .dp-dropquote::before{content:"\201C";font-size:2.4em;line-height:0;
-    vertical-align:-.35em;color:var(--accent);opacity:.7;margin-right:.06em}
-  .dp-dropquote::after{content:"\201D";font-size:2.4em;line-height:0;
-    vertical-align:-.35em;color:var(--accent);opacity:.7;margin-left:.06em}
+  /* Pull quote — tagline sits above the billboard art (order:2 on mobile),
+     a clean centered editorial treatment with a short accent rule above */
+  .dp-dropquote{order:2;margin:0 auto;font-family:var(--font-head);font-style:italic;
+    font-weight:500;font-size:clamp(19px,4.4vw,28px);line-height:1.4;color:var(--text);
+    text-align:center;padding:48px var(--edge) 44px;max-width:22ch;position:relative}
+  .dp-dropquote::before{content:"";display:block;width:32px;height:2px;border-radius:2px;
+    background:var(--accent);opacity:.85;margin:0 auto 22px}
   /* Stars inside the header, directly under the wave divider */
-  .dp-head .dp-rate{padding:14px 0 0;width:auto}
+  .dp-head .dp-rate{padding:2px 0 0;width:auto}
+  .dp-head .rate-stars button{width:34px;height:34px}
   /* Square art poster (1:1) — full bleed on mobile, directly under the header */
   .dp-poster{width:100%;background:var(--bg2);overflow:hidden;position:relative;flex-shrink:0;
     margin-top:22px}
@@ -812,6 +812,9 @@
   .rate-stars button:hover{transform:scale(1.15);color:var(--accent2)}
   .dp-badges{padding:16px var(--edge) 0;display:flex;justify-content:center;width:100%}
   .dp-badges .ratings-row{margin:0;justify-content:center}
+  /* Critic ratings live below the summary + squiggle, left-aligned to the edge */
+  .dp-summary-wrap .dp-badges{justify-content:flex-start;padding:8px var(--edge) 4px}
+  .dp-summary-wrap .dp-badges .ratings-row{justify-content:flex-start}
   .dp-actions{display:flex;gap:16px;padding:24px var(--edge) 32px;flex-wrap:wrap;
     justify-content:center;width:100%}
   /* Pill buttons — override global --radius:0 for detail page actions */
@@ -834,10 +837,12 @@
   /* Two-column body: vertical squiggle | summary text */
   .dp-summary-body{display:grid;grid-template-columns:24px 1fr;gap:0 16px;
     padding:18px var(--edge) 48px;align-items:stretch}
-  /* align-self:stretch + align-items:stretch lets the squiggle cell fill the
-     exact row height (= summary text height); SVG stretches via preserveAspectRatio=none */
-  .dp-squiggle{align-self:stretch;width:24px;overflow:hidden;min-height:40px}
-  .dp-squiggle svg{width:100%;height:100%;display:block}
+  /* The cell stretches to the row height (= summary text height). The SVG is
+     absolutely positioned to fill that cell — percentage SVG heights are
+     unreliable against grid-stretched cells, so inset:0 forces an exact match
+     and preserveAspectRatio="none" lets the wave squash/stretch to fit. */
+  .dp-squiggle{align-self:stretch;width:24px;overflow:hidden;position:relative}
+  .dp-squiggle svg{position:absolute;inset:0;width:100%;height:100%;display:block}
   .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim)}
   /* Large headings for child rails */
   .dp-wrap .section{padding-top:40px;padding-bottom:0}
@@ -1458,23 +1463,21 @@
        ~78%, leaving a black gap on the right where the meta line sits. */
     .dp-hero.dp-hero--split{display:grid;position:relative;
       grid-template-columns:1.22fr .88fr;column-gap:48px;align-items:start;
-      grid-template-areas:"backdrop backdrop" "controls head" "summary poster";
+      grid-template-areas:"quote quote" "backdrop backdrop" "controls head" "summary poster";
       padding-top:0}
     .dp-hero.dp-hero--split>*{order:0}
+    /* Pull quote sits full-width above the billboard art */
+    .dp-hero.dp-hero--split .dp-dropquote{grid-area:quote;margin:0 auto;
+      padding:40px var(--edge) 36px;max-width:32ch}
     .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:78%;margin-bottom:10px}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 56px);
       width:auto;padding:0;justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-end;text-align:right;
       padding:10px var(--edge) 0 0}
     .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
-    .dp-hero.dp-hero--split .dp-head .dp-rate{padding:16px 0 0;justify-content:flex-end}
-    .dp-hero.dp-hero--split .dp-dropquote{text-align:left;max-width:44ch;
-      padding-left:var(--edge);padding-right:24px}
+    .dp-hero.dp-hero--split .dp-head .dp-rate{padding:4px 0 0;justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-controls{grid-area:controls;align-items:flex-start;
       padding:8px 0 0 var(--edge)}
-    .dp-hero.dp-hero--split .dp-rate{justify-content:flex-start;padding:8px 0 0 0}
-    .dp-hero.dp-hero--split .dp-badges{justify-content:flex-start;padding:18px 0 0 0}
-    .dp-hero.dp-hero--split .dp-badges .ratings-row{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:24px 0 0 0}
     .dp-hero.dp-hero--split .dp-poster{grid-area:poster;align-self:start;margin-right:var(--edge)}
     .dp-hero.dp-hero--split .dp-summary-wrap{grid-area:summary;margin-top:0;padding-top:24px}
@@ -4166,16 +4169,16 @@ function dpStatsHTML(m,isMovie){
 /* Shared summary block for all dp-* heroes: heading, comma genre line,
    then vertical squiggle + body text. `over` overlaps the heading onto the
    backdrop scrim directly above it (mobile flow only). */
-function dpSummaryHTML(summary,genres,over,tagline){
-  if(!summary&&!genres&&!tagline) return "";
+function dpSummaryHTML(summary,genres,over,badges){
+  if(!summary&&!genres&&!badges) return "";
   return `<div class="dp-summary-wrap${over?" over-backdrop":""}">
-    ${tagline?`<p class="dp-dropquote">${esc(tagline)}</p>`:""}
     <h2>Summary</h2>
     ${genres?`<div class="dp-genres">${genres}</div>`:""}
     <div class="dp-summary-body">
       <div class="dp-squiggle">${waveVertSVG()}</div>
       ${summary?`<div class="dp-summary">${esc(summary)}</div>`:"<div></div>"}
     </div>
+    ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
   </div>`;
 }
 function detailHero(m,isMovie,actionsHTML,extras){
@@ -4201,11 +4204,11 @@ function detailHero(m,isMovie,actionsHTML,extras){
       <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high">${creditsHTML}</div>
       <div class="dp-meta">${metaBits(m,isMovie)}</div>
       <div class="dp-controls">
-        ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
         <div class="dp-actions">${actionsHTML}${trailer}</div>
       </div>
     </div>
-    ${dpSummaryHTML(m.summary,top3genres,hasBackdrop,m.tagline||"")}
+    ${m.tagline?`<p class="dp-dropquote">${esc(m.tagline)}</p>`:""}
+    ${dpSummaryHTML(m.summary,top3genres,hasBackdrop,badges)}
   </div>`;
 }
 /* ---- EPISODE DETAIL HERO ---- */
@@ -4224,11 +4227,10 @@ function episodeHero(m,actionsHTML){
       <div class="dp-poster dp-poster--wide"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
       <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
       <div class="dp-controls">
-        ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
         <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
       </div>
     </div>
-    ${dpSummaryHTML(m.summary,"",false)}
+    ${dpSummaryHTML(m.summary,"",false,badges)}
   </div>`;
 }
 /* ---- RATINGS ROW ----
