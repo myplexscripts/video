@@ -824,54 +824,84 @@
   .rate-stars button .svgi.filled{color:var(--accent)}
   .rate-stars button:hover{transform:scale(1.15);color:var(--accent2)}
 
-  /* ==== DETAIL PAGE v2 ==== */
+  /* ==== DETAIL PAGE v2 ====
+     Mobile-first: a centered editorial hero (title, tagline, portrait poster,
+     stars, meta, ratings, actions), a wide backdrop strip, then left-aligned
+     content sections with large headings and a stats grid at the foot.
+     Desktop (>680px) reflows the hero into two columns (info left, poster
+     right) while keeping the same type scale and full-bleed rails. */
   .dp-wrap{background:var(--bg)}
-  .dp-hero{display:flex;flex-direction:column}
-  .dp-head{padding:calc(var(--pill-clear)+28px) var(--edge) 22px}
-  .dp-kicker{display:inline-flex;align-items:center;gap:10px;font-size:11px;letter-spacing:1.3px;
-    text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:16px;
+  .dp-hero{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;
+    padding:calc(var(--pill-clear)+24px) var(--edge) 0}
+  .dp-kicker{display:inline-flex;align-items:center;gap:9px;font-size:11px;letter-spacing:1.3px;
+    text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px;
     background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
   .dp-kicker:hover{opacity:.75}
-  .dp-title{font-size:clamp(28px,8vw,56px);font-weight:900;letter-spacing:-.04em;line-height:1.03;margin:0}
-  .dp-divider{height:1px;background:var(--line);margin:14px 0 10px}
-  .dp-tagline{margin:0;font-style:italic;color:var(--dim);font-size:14px;line-height:1.5}
-  .dp-art{width:100%;position:relative;overflow:hidden;background:var(--bg2)}
-  .dp-art img{width:100%;display:block;object-fit:cover;aspect-ratio:16/9}
-  .dp-rate{padding:22px var(--edge) 0}
-  .dp-rate .rate-stars{display:flex;gap:4px}
-  .dp-rate .rate-stars button{width:44px;height:44px;font-size:34px;padding:0}
-  .dp-meta{padding:12px var(--edge) 0;font-size:14px;color:var(--dim);
-    display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .dp-badges{padding:12px var(--edge) 0}
-  .dp-badges .ratings-row{margin:0}
-  .dp-actions{display:flex;gap:10px;padding:20px var(--edge) 4px;flex-wrap:wrap}
-  .dp-section{padding:36px var(--edge) 0}
-  .dp-section h2{font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:0 0 14px}
-  .dp-genres{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
-    color:var(--faint);margin:0 0 14px;text-align:center}
-  .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim)}
-  /* Large headings for ALL sections inside detail pages */
-  .dp-wrap .section{padding-left:0;padding-right:0}
-  .dp-wrap .section,.dp-wrap .rail-section{padding-top:36px}
-  .dp-wrap .rail-head{margin:0;padding:0 var(--edge) 14px}
-  .dp-wrap .rail-head h3,.dp-wrap .section h3{font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:-.03em;line-height:1.1}
-  /* Stats 2×2 grid (4-col on desktop) */
-  .dp-stats{display:grid;grid-template-columns:1fr 1fr;margin:40px var(--edge) 56px;border:1px solid var(--line)}
-  .dp-stat{padding:18px 18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .dp-kicker .svgi{width:14px;height:14px}
+  .dp-title{font-size:clamp(30px,8vw,52px);font-weight:900;letter-spacing:-.04em;
+    line-height:1.02;margin:0;max-width:18ch}
+  .dp-divider{width:64px;height:2px;background:var(--accent);opacity:.5;margin:16px 0 12px}
+  .dp-tagline{margin:0;font-style:italic;color:var(--dim);font-size:14.5px;line-height:1.55;max-width:36ch}
+  .dp-poster{width:100%;margin-top:24px;background:var(--bg2);overflow:hidden;position:relative}
+  .dp-poster img{width:100%;height:auto;display:block;opacity:0;transition:opacity .5s var(--ease)}
+  .dp-poster img.loaded{opacity:1}
+  .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}
+  .dp-backdrop img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:0;
+    transition:opacity .5s var(--ease)}
+  .dp-backdrop img.loaded{opacity:1}
+  .dp-backdrop--hero{margin-top:24px}
+  .dp-rate{padding:26px var(--edge) 0;display:flex;justify-content:center;width:100%}
+  .dp-rate .rate-stars{display:flex;gap:6px}
+  .dp-rate .rate-stars button{width:42px;height:42px;font-size:32px;padding:0}
+  .dp-meta{padding:18px var(--edge) 0;font-size:14px;color:var(--dim);font-weight:500;
+    display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;width:100%}
+  .dp-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+  .dp-badges{padding:16px var(--edge) 0;display:flex;justify-content:center;width:100%}
+  .dp-badges .ratings-row{margin:0;justify-content:center}
+  .dp-actions{display:flex;gap:10px;padding:24px var(--edge) 4px;flex-wrap:wrap;
+    justify-content:center;width:100%}
+  /* Content sections — left-aligned heading, centered genre kicker */
+  .dp-section{padding:40px var(--edge) 0;text-align:left}
+  .dp-section h2{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
+    line-height:1.08;margin:0 0 16px}
+  .dp-genres{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 16px;text-align:center}
+  .dp-summary{font-size:14.5px;line-height:1.68;color:var(--dim);max-width:760px}
+  /* Large headings for ALL child rails (cast, extras, related) */
+  .dp-wrap .section{padding-top:40px;padding-bottom:0}
+  .dp-wrap .rail-section{padding-top:40px}
+  .dp-wrap .rail-head{margin:0;padding:0 var(--edge) 16px}
+  .dp-wrap .rail-head h3,.dp-wrap .section h3{font-size:clamp(24px,6vw,34px);font-weight:800;
+    letter-spacing:-.03em;line-height:1.08}
+  /* Stats grid (2-col mobile, 4-col desktop) */
+  .dp-stats{display:grid;grid-template-columns:1fr 1fr;margin:48px var(--edge) 56px;border:1px solid var(--line)}
+  .dp-stat{padding:18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
   .dp-stat:nth-child(even){border-right:none}
   .dp-stat:nth-last-child(-n+2){border-bottom:none}
-  .dp-sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);display:block;margin-bottom:8px}
-  .dp-sv{font-size:20px;font-weight:700;letter-spacing:-.02em;display:block}
-  /* Desktop: 2-col hero, 4-col stats */
+  .dp-sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
+    color:var(--faint);display:block;margin-bottom:8px}
+  .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block}
+  /* ---- DESKTOP ----
+     The centered editorial hero is kept (matching the mockup's centred title /
+     poster / stars), but the poster and backdrop are capped and centred so they
+     don't balloon on wide screens. Section headings and full-bleed rails stay
+     left-aligned at --edge, giving the same "centred hero → left-aligned body"
+     rhythm the mockup shows. */
   @media(min-width:681px){
-    .dp-hero{display:grid;grid-template-columns:45fr 55fr;min-height:500px}
-    .dp-head{display:flex;flex-direction:column;justify-content:flex-end;
-      padding:calc(var(--pill-clear)+36px) var(--edge) 48px}
-    .dp-art{height:100%;min-height:380px}
-    .dp-art img{aspect-ratio:unset;height:100%;width:100%;object-fit:cover}
-    .dp-stats{grid-template-columns:repeat(4,1fr);margin:48px var(--edge) 64px}
+    .dp-head{padding-top:calc(var(--pill-clear)+44px)}
+    .dp-title{font-size:clamp(44px,5vw,68px);max-width:20ch}
+    .dp-tagline{font-size:16px;max-width:48ch}
+    .dp-poster{max-width:340px;margin-left:auto;margin-right:auto}
+    .dp-backdrop{max-width:1040px;margin-left:auto;margin-right:auto}
+    .dp-backdrop--hero{max-width:920px}
+    .dp-rate .rate-stars button{width:46px;height:46px;font-size:36px}
+    .dp-section{max-width:1100px}
+    .dp-summary{font-size:15.5px}
+    .dp-stats{grid-template-columns:repeat(4,1fr);margin:56px var(--edge) 72px}
+    .dp-stat{border-bottom:none}
     .dp-stat:nth-child(even){border-right:1px solid var(--line)}
-    .dp-stat:nth-last-child(-n+4){border-bottom:none}
+    .dp-stat:last-child{border-right:none}
   }
 
   /* ---- RATINGS ---- flat text, no pill */
@@ -2619,6 +2649,7 @@ function setScrollY(y){
 async function route(){
   const gen=++_routeGen;
   setScrollY(0);   // fresh navigation starts at top; pages that restore a saved position override this in their render
+  $("#content")?.classList.remove("dp-wrap");   // detail pages add this marker; clear it for every other page
   closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
@@ -4303,12 +4334,14 @@ function extraCardHTML(e){
 }
 function extrasRailHTML(extras){
   if(!extras||!extras.length) return "";
+  // One combined "Trailers & Extras" rail (trailers first, then the rest) to
+  // match the detail-page design; wireExtras handles per-card behaviour by subtype.
   const trailers=extras.filter(e=>/trailer/i.test(e.subtype||""));
   const others=extras.filter(e=>!/trailer/i.test(e.subtype||""));
-  const rail=(title,items)=>!items.length?"":
-    `<div class="rail-section"><div class="rail-head"><h3>${title}</h3><span class="count">${items.length}</span></div>
+  const items=[...trailers,...others];
+  if(!items.length) return "";
+  return `<div class="rail-section"><div class="rail-head"><h3>Trailers &amp; Extras</h3><span class="count">${items.length}</span></div>
       <div class="carousel">${items.map(extraCardHTML).join("")}</div></div>`;
-  return rail("Trailers",trailers)+rail("Extras",others);
 }
 function wireExtras(c,extras,trailerBtnId){
   c.querySelectorAll(".extra-card").forEach(b=>{
@@ -4419,7 +4452,7 @@ function crewHTML(m){
 function castRailHTML(m){
   const cast=(m.Role||[]).slice(0,12);
   if(!cast.length) return "";
-  return `<div class="rail-section"><div class="rail-head"><h3>Cast</h3><span class="count">${cast.length}</span></div>
+  return `<div class="rail-section"><div class="rail-head"><h3>Cast &amp; Crew</h3><span class="count">${cast.length}</span></div>
     <div class="cast-row" id="castRow">`+cast.map(r=>{
       // Extract person ratingKey from multiple possible sources in priority order:
       // (1) r.ratingKey — direct field (some Plex versions)
@@ -4730,45 +4763,45 @@ function detailPageHTML(m,isMovie,actionsHTML,extras){
   const genres=(m.Genre||[]).slice(0,5).map(g=>esc(g.tag)).join(", ");
   const badges=ratingBadgesHTML(m);
   const trailer=trailerIconBtnHTML(extras);
-  return `<div class="dp-wrap">
-    <div class="dp-hero">
+  // A wide backdrop strip sits above the summary — but only when the item has a
+  // landscape backdrop distinct from its poster (so we never show the poster twice).
+  const hasBackdrop=!!m.art && m.art!==m.thumb;
+  return `<div class="dp-hero">
       <div class="dp-head">
         <h1 class="dp-title">${esc(m.title||"")}</h1>
         ${m.tagline?`<div class="dp-divider"></div><p class="dp-tagline">${esc(m.tagline)}</p>`:""}
       </div>
-      <div class="dp-art"><img id="dpArtImg" alt="" decoding="async" fetchpriority="high"></div>
+      <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
+      ${dpStarsHTML()}
+      <div class="dp-meta">${metaBits(m,isMovie)}</div>
+      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+      <div class="dp-actions">${actionsHTML}${trailer}</div>
     </div>
-    ${dpStarsHTML()}
-    <div class="dp-meta">${metaBits(m,isMovie)}</div>
-    ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
-    <div class="dp-actions">${actionsHTML}${trailer}</div>
+    ${hasBackdrop?`<div class="dp-backdrop"><img id="dpBackdropImg" alt="" loading="lazy" decoding="async"></div>`:""}
     ${genres||m.summary?`<div class="dp-section">
       <h2>Summary</h2>
       ${genres?`<div class="dp-genres">${genres}</div>`:""}
       ${m.summary?`<div class="dp-summary">${esc(m.summary)}</div>`:""}
-    </div>`:""}
-  </div>`;
+    </div>`:""}`;
 }
 function episodePageHTML(m,actionsHTML){
   const bits=[fmtAirDate(m.originallyAvailableAt),fmtDur(m.duration)].filter(Boolean);
   if(m.contentRating) bits.push(`<span class="pill">${esc(m.contentRating)}</span>`);
   const badges=ratingBadgesHTML(m);
-  return `<div class="dp-wrap">
-    <div class="dp-hero">
+  // Episodes have no portrait poster — the 16:9 still (.dp-backdrop--hero) is
+  // the hero artwork, otherwise the centered editorial layout is identical.
+  return `<div class="dp-hero">
       <div class="dp-head">
-        <button class="dp-kicker" id="epBackBtn">
-          ${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}
-        </button>
+        <button class="dp-kicker" id="epBackBtn">${svgIcon("back")} ${esc(m.grandparentTitle||"")} · Season ${m.parentIndex||0}</button>
         <h1 class="dp-title">${m.index?`${m.index}. `:""}${esc(m.title||"")}</h1>
       </div>
-      <div class="dp-art"><img id="dpArtImg" alt="" decoding="async" fetchpriority="high"></div>
+      <div class="dp-backdrop dp-backdrop--hero"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
+      ${dpStarsHTML()}
+      <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
+      ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
+      <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
     </div>
-    ${dpStarsHTML()}
-    <div class="dp-meta">${bits.join('<span class="sep"></span>')}</div>
-    ${badges?`<div class="dp-badges"><div class="ratings-row">${badges}</div></div>`:""}
-    <div class="dp-actions">${actionsHTML}${watchedToggleHTML(m,true)}</div>
-    ${m.summary?`<div class="dp-section"><h2>Summary</h2><div class="dp-summary">${esc(m.summary)}</div></div>`:""}
-  </div>`;
+    ${m.summary?`<div class="dp-section"><h2>Summary</h2><div class="dp-summary">${esc(m.summary)}</div></div>`:""}`;
 }
 
 /* ---- RATE FLOAT ----
@@ -4822,13 +4855,30 @@ function wireBackdrop(c,art,mobileArt){
   const useSq=isMobile&&pref==="square"&&!!mobileArt;
   const src=useSq?mobileArt:art;
   setUltraBlur(src);
-  const dpImg=c.querySelector("#dpArtImg");
-  if(dpImg){
-    if(src) dpImg.src=img(src,isMobile?800:1600,isMobile?450:900);
-    applyBackdropContrast(c.querySelector(".dp-hero"),src);
-    return;
-  }
   wireDetailBg(c,art,mobileArt);
+}
+/* Detail page v2 artwork loader. The hero shows a portrait poster (movie/show)
+   or the 16:9 still (episode); movies/shows also get a wide backdrop strip
+   above the summary. The page background stays solid — no ambient blur — to
+   match the flat editorial layout, so we clear any lingering ultrablur. */
+function wireDetailArt(c,m,isEp){
+  clearUltraBlur();
+  const posterImg=c.querySelector("#dpPosterImg");
+  if(posterImg){
+    const src=isEp?(m.thumb||m.art||m.grandparentArt):(m.thumb||m.art);
+    if(src){
+      posterImg.onload=()=>posterImg.classList.add("loaded");
+      posterImg.src=isEp?img(src,960,540):img(src,640,960);
+    }
+  }
+  const backdropImg=c.querySelector("#dpBackdropImg");
+  if(backdropImg){
+    const src=m.art||m.grandparentArt||m.thumb;
+    if(src){
+      backdropImg.onload=()=>backdropImg.classList.add("loaded");
+      backdropImg.src=img(src,1600,900);
+    }
+  }
 }
 function wireDetailBg(c,art,mobileArt){
   if(!art) return;
@@ -4852,10 +4902,11 @@ async function openMovie(it){
     const resume=(m.viewOffset?`<button class="btn lg" id="resumeBtn">${svgIcon("play-fill")} Resume · ${fmtClock(m.viewOffset/1000)}</button>
       <button class="btn glass lg" id="restartBtn">${svgIcon("arrow-counter-clockwise")} Start over</button>`
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`)+watchedToggleHTML(m,true);
+    c.classList.add("dp-wrap");
     c.innerHTML=detailPageHTML(m,true,resume,extras)+castRailHTML(m)+crewHTML(m)+extrasRailHTML(extras);
     appendRelatedRails(c,related,m);
     c.insertAdjacentHTML("beforeend",dpStatsHTML(m,true));
-    wireBackdrop(c,m.art||m.thumb,(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url);
+    wireDetailArt(c,m,false);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
     if(m.viewOffset){ $("#resumeBtn").onclick=()=>playItem(m,m.viewOffset); $("#restartBtn").onclick=()=>playItem(m,0); }
@@ -4888,6 +4939,7 @@ async function openShow(it,jumpSeasonKey){
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
     const actions=`<button class="btn lg" id="playShow">${svgIcon("play-fill")} Play</button>
       <button class="btn glass lg" id="shuffleShow">${svgIcon("shuffle")} Shuffle</button>${watchedToggleHTML(show,false)}`;
+    c.classList.add("dp-wrap");
     c.innerHTML=detailPageHTML(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
         <div class="season-rail" id="seasonRail"></div></div>`:"")
@@ -4896,7 +4948,7 @@ async function openShow(it,jumpSeasonKey){
       +castRailHTML(show)+crewHTML(show)+extrasRailHTML(extras);
     appendRelatedRails(c,related,show);
     c.insertAdjacentHTML("beforeend",dpStatsHTML(show,false));
-    wireBackdrop(c,show.art||show.thumb,(show.Image||[]).find(i=>i.type==="backgroundSquare")?.url);
+    wireDetailArt(c,show,false);
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
     injectFirstWatched(show.ratingKey,true);
@@ -5062,6 +5114,7 @@ async function openEpisode(it){
       :`<button class="btn lg" id="playBtnD">${svgIcon("play-fill")} Play</button>`;
     const siblingsMc=m.parentRatingKey?await api(`/library/metadata/${m.parentRatingKey}/children`).catch(()=>({})):{};
     const siblings=(siblingsMc.Metadata||[]).filter(s=>s.type==="episode");
+    c.classList.add("dp-wrap");
     c.innerHTML=episodePageHTML(m,resume)+crewHTML(m)+castRailHTML(m)
       +(siblings.length?`<div class="rail-section"><div class="rail-head"><h3>More from Season ${m.parentIndex||""}</h3><span class="count">${siblings.length}</span></div>
         <div class="carousel" id="epSiblingRail"></div></div>`:"");
@@ -5080,7 +5133,7 @@ async function openEpisode(it){
       });
       row.appendChild(sfrag);
     }
-    wireBackdrop(c,m.thumb||m.art||m.grandparentArt);
+    wireDetailArt(c,m,true);
     wireCastRail(c);
     const back=$("#epBackBtn");
     if(back) back.onclick=()=>navigate(`/show/${m.grandparentRatingKey}/season/${m.parentRatingKey}`);
