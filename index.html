@@ -873,11 +873,18 @@
     color:var(--faint);display:block;margin-bottom:8px}
   .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block;
     font-family:var(--font-head)}
-  /* Production Information section (budget, box office, awards) */
+  /* Production Information section (budget, box office, awards detail) */
   .dp-prod-section{padding-top:60px}
   .dp-prod-section>h3{font-size:clamp(24px,6vw,34px);font-weight:800;
     letter-spacing:-.03em;line-height:1.08;padding:0 var(--edge) 24px}
-  .dp-prod-section .dp-stats{margin-top:0;margin-bottom:56px}
+  .dp-prod-section .dp-stats{margin-top:0;margin-bottom:40px}
+  .dp-awards-list{list-style:none;margin:0;padding:0 var(--edge) 56px;
+    display:flex;flex-direction:column;gap:0}
+  .dp-awards-list li{font-size:14px;line-height:1.5;color:var(--text);
+    padding:14px 0 14px 28px;border-bottom:1px solid var(--line);position:relative}
+  .dp-awards-list li:last-child{border-bottom:none}
+  .dp-awards-list li::before{content:"◆";position:absolute;left:0;top:17px;
+    color:var(--accent);font-size:8px;line-height:1}
   /* Keyword / theme pills — revealed by tapping the toggle (spoiler guard) */
   .dp-tags{display:flex;flex-direction:column;align-items:center;gap:18px;padding:0 var(--edge) 40px}
   .dp-tags-toggle{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
@@ -4253,51 +4260,30 @@ function dpStatsHTML(m,isMovie){
     `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
   ).join("")}</div>`;
 }
-function parseAwards(str){
-  if(!str||str==="N/A") return [];
-  const rows=[];
-  const prizes='Oscars?|Golden Globes?|BAFTAs?|Emmys?|Grammys?|SAG Awards?|Primetime Emmys?';
-  // "Won 4 Oscars" / "Won 1 Golden Globe"
-  const wonM=str.match(new RegExp(`Won (\\d+) (${prizes})`,'i'));
-  if(wonM){
-    const n=wonM[1], prize=wonM[2].replace(/s$/i,'');
-    rows.push({l:`${prize}${parseInt(n)!==1?'s':''} Won`,v:n});
-  }
-  // "Nominated for 3 Oscars"
-  const nomM=str.match(new RegExp(`Nominated for (\\d+) (${prizes})`,'i'));
-  if(nomM){
-    const n=nomM[1], prize=nomM[2].replace(/s$/i,'');
-    rows.push({l:`${prize}${parseInt(n)!==1?'s':''} Nominated`,v:n});
-  }
-  // Total wins: "Another X wins" (added to any named lead) or standalone "X win(s)"
-  const leadWins=wonM?parseInt(wonM[1]):0;
-  const addlM=str.match(/Another (\d+) wins?/i);
-  const soloM=!addlM&&str.match(/(?:^|\s)(\d+) wins?/i);
-  let totalWins=null;
-  if(addlM) totalWins=leadWins+parseInt(addlM[1]);
-  else if(soloM) totalWins=parseInt(soloM[1]);
-  if(totalWins!==null){
-    if(wonM&&totalWins>leadWins) rows.push({l:'Total Wins',v:String(totalWins)});
-    else if(!wonM) rows.push({l:'Wins',v:String(totalWins)});
-  }
-  // Total nominations
-  const totalNomM=str.match(/(\d+) nominations?/i);
-  if(totalNomM) rows.push({l:'Nominations',v:totalNomM[1]});
-  return rows;
-}
 function dpFilmStatsHTML(td,od,isMovie){
-  const items=[];
+  // Budget + box office in the grid (movies only)
+  const gridItems=[];
   if(isMovie){
-    if(td?.budget>0) items.push({l:"Budget",v:fmtMoney(td.budget)});
+    if(td?.budget>0) gridItems.push({l:"Budget",v:fmtMoney(td.budget)});
     const gross=td?.revenue>0?fmtMoney(td.revenue):(od?.BoxOffice&&od.BoxOffice!=="N/A"?od.BoxOffice:null);
-    if(gross) items.push({l:"Box Office",v:gross});
+    if(gross) gridItems.push({l:"Box Office",v:gross});
   }
-  parseAwards(od?.Awards).forEach(r=>items.push(r));
-  if(!items.length) return "";
-  return `<section class="dp-prod-section"><h3>Production Information</h3>`+
-    `<div class="dp-stats dp-film-stats">${items.map(s=>
+  // Awards sentences — split "Won 2 Golden Globes. Nominated for 4 Oscars. Another 14 wins…"
+  // into individual lines so users see the actual awards, not just counts.
+  const awardsStr=od?.Awards&&od.Awards!=="N/A"?od.Awards:"";
+  const sentences=awardsStr.replace(/\s+/g," ").trim()
+    .split(/\.\s+/)
+    .map(s=>s.replace(/\.+$/,"").trim())
+    .filter(Boolean);
+  if(!gridItems.length&&!sentences.length) return "";
+  let html=`<section class="dp-prod-section"><h3>Production Information</h3>`;
+  if(gridItems.length)
+    html+=`<div class="dp-stats dp-film-stats">${gridItems.map(s=>
       `<div class="dp-stat"><span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
-    ).join("")}</div></section>`;
+    ).join("")}</div>`;
+  if(sentences.length)
+    html+=`<ul class="dp-awards-list">${sentences.map(s=>`<li>${esc(s)}</li>`).join("")}</ul>`;
+  return html+`</section>`;
 }
 /* Shared summary block for all dp-* heroes: heading, comma genre line,
    then vertical squiggle + body text. `over` overlaps the heading onto the
