@@ -1524,10 +1524,11 @@
     .dp-hero.dp-hero--split>*{order:0}
     /* Billboard art flush with the top-left corner of the page */
     .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:72%;margin:0}
+    .dp-hero.dp-hero--split .dp-backdrop img{aspect-ratio:unset;min-height:calc(100dvh - 130px);object-position:50% center}
     /* Title sits in the first viewport, right-aligned in the right column */
     .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-end;text-align:right;
       padding:16px var(--edge) 0 0;position:relative;z-index:3}
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-160px,-10vw,-90px)}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-260px,-17vw,-140px)}
     .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-head .dp-rate{padding:6px 0 0;justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
