@@ -785,17 +785,18 @@
   .dp-kicker .svgi{width:14px;height:14px}
   .dp-title{font-family:var(--font-display);font-size:clamp(52px,12vw,84px);
     font-weight:400;letter-spacing:.03em;text-transform:uppercase;
-    line-height:.92;margin:0;max-width:18ch}
-  /* SVG wave divider between title and stars — equal gap above and below */
+    line-height:.92;margin:0;max-width:18ch;color:var(--squiggle-color,var(--text))}
+  /* SVG wave divider between title and stars — slight negative top overlaps title bottom */
   .wave-wrap{margin:14px 0;display:flex;justify-content:center}
+  .dp-head .wave-wrap{margin-top:-6px}
   .wave-wrap svg{width:100%;max-width:240px;display:block}
   /* Pull quote — tagline sits between the poster art and the film credits */
   .dp-dropquote{margin:0 auto;font-family:var(--font-head);font-style:normal;
     font-weight:600;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--squiggle-color,var(--dim));
-    text-align:center;padding:24px var(--edge) 0;max-width:28ch;position:relative}
-  /* Triple wave under the tagline — tinted by --quote-accent */
+    text-align:center;padding:24px var(--edge) 0;max-width:28ch;position:relative;z-index:1}
+  /* Triple wave under the tagline — pulled up to overlap the tagline text */
   .dp-quote-wave{display:flex;justify-content:center;padding:10px var(--edge) 8px;
-    color:var(--quote-accent,var(--accent))}
+    color:var(--quote-accent,var(--accent));margin-top:-20px;position:relative;z-index:2}
   .dp-quote-wave svg{width:62%;max-width:300px;height:auto;display:block}
   /* Stars inside the header, directly under the wave divider */
   .dp-rate-row{display:flex;align-items:center;justify-content:center;gap:20px;width:100%}
