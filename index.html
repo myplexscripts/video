@@ -873,10 +873,11 @@
     color:var(--faint);display:block;margin-bottom:8px}
   .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block;
     font-family:var(--font-head)}
-  /* Awards one-liner — below stats grid */
-  .dp-award{font-style:italic;color:var(--dim);font-size:13.5px;line-height:1.5;
-    padding:0 var(--edge) 32px;margin:0}
-  .dp-award::before{content:"◆  ";color:var(--accent);font-style:normal;font-size:9px}
+  /* Production Information section (budget, box office, awards) */
+  .dp-prod-section{padding-top:60px}
+  .dp-prod-section>h3{font-size:clamp(24px,6vw,34px);font-weight:800;
+    letter-spacing:-.03em;line-height:1.08;padding:0 var(--edge) 24px}
+  .dp-prod-section .dp-stats{margin-top:0;margin-bottom:56px}
   /* Keyword / theme pills — revealed by tapping the toggle (spoiler guard) */
   .dp-tags{display:flex;flex-direction:column;align-items:center;gap:18px;padding:0 var(--edge) 40px}
   .dp-tags-toggle{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
@@ -1538,6 +1539,11 @@
     .dp-stat{border-bottom:none}
     .dp-stat:nth-child(even){border-right:1px solid var(--line)}
     .dp-stat:last-child{border-right:none}
+    /* Production info stays 2-col on desktop; restore row border logic */
+    .dp-prod-section .dp-stats{grid-template-columns:1fr 1fr;margin-bottom:72px}
+    .dp-prod-section .dp-stat{border-bottom:1px solid var(--line)}
+    .dp-prod-section .dp-stat:nth-last-child(-n+2){border-bottom:none}
+    .dp-prod-section .dp-stat:nth-child(even){border-right:none}
   }
   @media(max-width:900px){
     .rate-stars{gap:5px}
@@ -4247,16 +4253,51 @@ function dpStatsHTML(m,isMovie){
     `<span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
   ).join("")}</div>`;
 }
+function parseAwards(str){
+  if(!str||str==="N/A") return [];
+  const rows=[];
+  const prizes='Oscars?|Golden Globes?|BAFTAs?|Emmys?|Grammys?|SAG Awards?|Primetime Emmys?';
+  // "Won 4 Oscars" / "Won 1 Golden Globe"
+  const wonM=str.match(new RegExp(`Won (\\d+) (${prizes})`,'i'));
+  if(wonM){
+    const n=wonM[1], prize=wonM[2].replace(/s$/i,'');
+    rows.push({l:`${prize}${parseInt(n)!==1?'s':''} Won`,v:n});
+  }
+  // "Nominated for 3 Oscars"
+  const nomM=str.match(new RegExp(`Nominated for (\\d+) (${prizes})`,'i'));
+  if(nomM){
+    const n=nomM[1], prize=nomM[2].replace(/s$/i,'');
+    rows.push({l:`${prize}${parseInt(n)!==1?'s':''} Nominated`,v:n});
+  }
+  // Total wins: "Another X wins" (added to any named lead) or standalone "X win(s)"
+  const leadWins=wonM?parseInt(wonM[1]):0;
+  const addlM=str.match(/Another (\d+) wins?/i);
+  const soloM=!addlM&&str.match(/(?:^|\s)(\d+) wins?/i);
+  let totalWins=null;
+  if(addlM) totalWins=leadWins+parseInt(addlM[1]);
+  else if(soloM) totalWins=parseInt(soloM[1]);
+  if(totalWins!==null){
+    if(wonM&&totalWins>leadWins) rows.push({l:'Total Wins',v:String(totalWins)});
+    else if(!wonM) rows.push({l:'Wins',v:String(totalWins)});
+  }
+  // Total nominations
+  const totalNomM=str.match(/(\d+) nominations?/i);
+  if(totalNomM) rows.push({l:'Nominations',v:totalNomM[1]});
+  return rows;
+}
 function dpFilmStatsHTML(td,od,isMovie){
-  if(!isMovie) return "";
   const items=[];
-  if(td?.budget>0) items.push({l:"Budget",v:fmtMoney(td.budget)});
-  const gross=td?.revenue>0?fmtMoney(td.revenue):(od?.BoxOffice&&od.BoxOffice!=="N/A"?od.BoxOffice:null);
-  if(gross) items.push({l:"Box Office",v:gross});
+  if(isMovie){
+    if(td?.budget>0) items.push({l:"Budget",v:fmtMoney(td.budget)});
+    const gross=td?.revenue>0?fmtMoney(td.revenue):(od?.BoxOffice&&od.BoxOffice!=="N/A"?od.BoxOffice:null);
+    if(gross) items.push({l:"Box Office",v:gross});
+  }
+  parseAwards(od?.Awards).forEach(r=>items.push(r));
   if(!items.length) return "";
-  return `<div class="dp-stats dp-film-stats">${items.map(s=>
-    `<div class="dp-stat"><span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
-  ).join("")}</div>`;
+  return `<section class="dp-prod-section"><h3>Production Information</h3>`+
+    `<div class="dp-stats dp-film-stats">${items.map(s=>
+      `<div class="dp-stat"><span class="dp-sl">${esc(s.l)}</span><span class="dp-sv">${esc(s.v)}</span></div>`
+    ).join("")}</div></section>`;
 }
 /* Shared summary block for all dp-* heroes: heading, comma genre line,
    then vertical squiggle + body text. `over` overlaps the heading onto the
@@ -4841,11 +4882,6 @@ function enrichDetailPage(c,m,isMovie,appendStats){
       if(anchor){
         const filmStats=dpFilmStatsHTML(td,od,isMovie);
         if(filmStats) anchor.insertAdjacentHTML("afterend",filmStats);
-        const awards=od?.Awards&&od.Awards!=="N/A"?od.Awards:null;
-        if(awards){
-          const insertAfter=c.querySelector(".dp-film-stats")||anchor;
-          insertAfter.insertAdjacentHTML("afterend",`<p class="dp-award">${esc(awards)}</p>`);
-        }
       }
       // 3. Personal stats grid (at very bottom, before keywords)
       if(appendStats){ c.insertAdjacentHTML("beforeend",dpStatsHTML(m,isMovie)); injectFirstWatched(m.ratingKey,!isMovie); }
