@@ -768,8 +768,10 @@
   /* Split hero (movies/shows): art → meta → actions → tagline */
   .dp-hero--split .dp-poster{order:2}
   .dp-hero--split .dp-meta{order:3;margin-top:auto}
-  .dp-hero--split .dp-actions{order:4}
+  .dp-hero--split .dp-actions-wrap{order:4}
   .dp-hero--split .dp-quote-block{order:5}
+  .dp-actions-wrap{display:flex;flex-direction:column;width:100%}
+  .dp-fold-badges{display:none}
   /* Header: serif title, wave divider, italic tagline — centered on mobile.
      Top padding aligns the title with the floating back button. */
   .dp-head{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;
@@ -1525,17 +1527,20 @@
     /* Title sits in the first viewport, right-aligned in the right column */
     .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-end;text-align:right;
       padding:16px var(--edge) 0 0;position:relative;z-index:3}
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-104px,-6.5vw,-58px)}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-160px,-10vw,-90px)}
     .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-head .dp-rate{padding:6px 0 0;justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
       width:auto;padding:0;justify-content:flex-end;z-index:3}
     .dp-hero.dp-hero--split .dp-controls{grid-area:actions;align-items:flex-start;
       padding:18px 0 0 var(--edge)}
-    .dp-hero.dp-hero--split .dp-actions{grid-area:actions;justify-content:flex-start;padding:20px 0 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;display:flex;flex-direction:row;
+      align-items:center;flex-wrap:wrap;gap:10px 24px;padding:20px 0 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:0}
+    .dp-fold-badges{display:flex}
+    .dp-hero.dp-hero--split .dp-fold-badges .ratings-row{margin:0;justify-content:flex-start;gap:10px}
+    .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{display:none}
     .dp-hero.dp-hero--split .dp-keywords{justify-content:flex-start}
-    .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{justify-content:flex-start;padding-left:var(--edge)}
-    .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges .ratings-row{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-poster{grid-area:poster;align-self:start;margin-right:var(--edge)}
     .dp-hero.dp-hero--split .dp-summary-wrap{grid-area:summary;margin-top:0;padding-top:32px}
     .dp-hero.dp-hero--split .dp-summary-wrap h2{padding:0 24px 0 var(--edge)}
@@ -4360,7 +4365,10 @@ function detailHero(m,isMovie,actionsHTML,extras){
         ${dpStarsHTML()}
       </div>
       <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
-      <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
+      <div class="dp-actions-wrap">
+        <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
+        ${badges?`<div class="dp-fold-badges"><div class="ratings-row">${badges}</div></div>`:""}
+      </div>
       <div class="dp-meta">${metaBits(m,isMovie)}</div>
       ${m.tagline?`<div class="dp-quote-block"><p class="dp-dropquote">${esc(m.tagline)}</p>${waveTriSVG()}</div>`:""}
     </div>
