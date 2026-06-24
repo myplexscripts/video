@@ -73,7 +73,7 @@
     --shadow-lg:0 12px 48px rgba(0,0,0,.55);
     --font:'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     /* All headings render in this rounded sans; body and UI use --font (Inter) */
-    --font-head:'Rubik','Inter',system-ui,sans-serif;
+    --font-head:'Anton','Rubik',sans-serif;
     --font-display:'Anton','Impact','Arial Narrow',sans-serif;
     --ease:cubic-bezier(.22,1,.36,1);
     /* Floating menu-toggle/search pills sit at top:max(16px,safe-area) and are
@@ -170,8 +170,8 @@
   input,textarea{user-select:text;-webkit-user-select:text}
   button,input{font-family:inherit;color:inherit}
   button{cursor:pointer}
-  /* All headings render serif; body and UI stay Inter (--font) */
-  h1,h2,h3,h4{font-family:var(--font-head)}
+  /* All headings render in Anton (display) — uppercase, body/UI stay Inter */
+  h1,h2,h3,h4{font-family:var(--font-head);text-transform:uppercase;letter-spacing:.04em}
   img{display:block;-webkit-touch-callout:none;-webkit-user-drag:none;user-drag:none}
   .hidden{display:none !important}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
@@ -347,7 +347,7 @@
     text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
   .hero-kicker i,.hero-kicker .svgi{font-size:16px}
   /* Editorial title — larger, tighter tracking, cinematic depth shadow */
-  .hero h2{font-size:clamp(40px,8vw,110px);font-weight:900;letter-spacing:-.05em;line-height:.9;
+  .hero h2{font-size:clamp(40px,8vw,110px);font-weight:900;letter-spacing:.04em;line-height:.9;
     text-shadow:0 2px 40px rgba(0,0,0,.45),0 4px 80px rgba(0,0,0,.35)}
   /* Tagline: uppercase kicker beneath title */
   .hero-tagline{font-size:clamp(10px,1.1vw,13px);letter-spacing:.16em;text-transform:uppercase;
@@ -401,7 +401,7 @@
   .rail-head{display:flex;align-items:flex-end;gap:12px;margin:0 var(--edge) 16px;position:relative}
   .rail-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
   .rail-lib{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:var(--fw-bold)}
-  .rail-head h3{font-size:var(--t-section);font-weight:var(--fw-xbold);letter-spacing:-.02em}
+  .rail-head h3{font-size:var(--t-section);font-weight:var(--fw-xbold);letter-spacing:.04em}
   .featured .rail-head h3{font-size:var(--t-feature)}
   .rail-head .count{display:none}
   .rail-summary{color:var(--dim);font-size:13px;line-height:1.55;margin:-8px var(--edge) 12px;
@@ -557,12 +557,12 @@
      pages so it's always clear what the user is looking at. */
   .page-head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 var(--edge) 18px}
   .page-head-text{display:flex;flex-direction:column;gap:5px;min-width:0}
-  .page-head h2{font-size:var(--t-page);font-weight:var(--fw-black);letter-spacing:-.03em}
+  .page-head h2{font-size:var(--t-page);font-weight:var(--fw-black);letter-spacing:.04em}
   .page-head .count{font-size:13px;color:var(--faint);font-weight:500;padding-bottom:3px}
 
   /* ---- SEARCH RESULTS HEADER ---- */
   .search-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 var(--edge) 8px}
-  .search-head h2{font-size:var(--t-page);font-weight:var(--fw-black);letter-spacing:-.03em}
+  .search-head h2{font-size:var(--t-page);font-weight:var(--fw-black);letter-spacing:.04em}
   .search-head .count{font-size:13px;color:var(--faint);font-weight:500}
   .lib-ctrl-wrap{position:relative}
   .lib-ctrl{display:inline-flex;align-items:center;gap:8px;background:var(--frost-bg);
@@ -660,7 +660,7 @@
   /* ---- BILLBOARD CARD ----
      Secondary showcase card: square art + centered logo + blurred-art
      metadata panel beneath. Rules: only in billboard rails. */
-  .carousel .card.billboard{width:var(--card-w-wide);display:flex;flex-direction:column;
+  .carousel .card.billboard{width:calc(2 * 180px + var(--rail-gap));display:flex;flex-direction:column;
     position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate;
     background:var(--bg2);transform:translateZ(0);clip-path:inset(0)}
   /* Shared blurred-art wash behind the whole card: the art's bottom dissolves
@@ -697,7 +697,7 @@
     color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
   /* Suppress legacy card text rows — all metadata lives in .bill-meta */
   .card.billboard .ct,.card.billboard > .cs,.bill-desc{display:none}
-  @media(max-width:680px){.carousel .card.billboard{width:220px}}
+  @media(max-width:680px){.carousel .card.billboard{width:calc(2 * 150px + var(--rail-gap))}}
 
   /* ---- EDITORIAL SECTION — magazine-style featured items ----
      Each card: square 1:1 art on the left, large overlapping title straddling
@@ -1591,6 +1591,7 @@
     .coll-meta{justify-content:center}
     .coll-actions{justify-content:center}
     .carousel .card{width:150px}.carousel .card.wide{width:216px}
+    .carousel .card.billboard{width:calc(2 * 150px + var(--rail-gap))}
     .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:272px}
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
@@ -1746,6 +1747,7 @@
     .ec-summary{-webkit-line-clamp:3}
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
+    .carousel .card.billboard{width:calc(2 * 130px + var(--rail-gap))}
     .featured .carousel .card{width:170px}
     /* Detail page v2 mobile: single-column, poster full-width */
     .dp-title{font-size:clamp(40px,11vw,64px)}
@@ -4233,9 +4235,9 @@ function trailerIconBtnHTML(extras){
 /* SVG wave helpers — horizontal divider and vertical squiggle.
    Both use currentColor so --squiggle-color (set dynamically from art) drives the tint. */
 function waveHorizSVG(){
-  return `<div class="wave-wrap"><svg viewBox="0 0 360 28" xmlns="http://www.w3.org/2000/svg" style="color:var(--squiggle-color,white)">
-    <path d="M 12 14 C 18 8, 24 8, 30 14 S 42 20, 48 14 S 60 8, 66 14 S 78 20, 84 14 S 96 8, 102 14 S 114 20, 120 14 S 132 8, 138 14 S 150 20, 156 14 S 168 8, 174 14 S 186 20, 192 14 S 204 8, 210 14 S 222 20, 228 14 S 240 8, 246 14 S 258 20, 264 14 S 276 8, 282 14 S 294 20, 300 14 S 312 8, 318 14 S 330 20, 336 14 S 348 8, 354 14"
-      fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  return `<div class="wave-wrap"><svg viewBox="0 0 380 32" xmlns="http://www.w3.org/2000/svg" style="color:var(--quote-accent,var(--accent))">
+    <path d="M 8 13 C 28 5, 44 24, 66 17 C 86 11, 104 27, 128 20 C 150 13, 168 28, 192 21 C 212 15, 232 29, 256 22 C 276 16, 298 30, 322 23 C 342 17, 362 30, 374 22"
+      fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
   </svg></div>`;
 }
 function waveVertSVG(){
