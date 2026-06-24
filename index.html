@@ -4870,11 +4870,11 @@ function enrichDetailPage(c,m,isMovie,appendStats){
       //    image hashing never blocks the rest of the enrichment); inserts just
       //    below the hero once ready.
       const fullPlot=od?.Plot&&od.Plot!=="N/A"?od.Plot:"";
-      const norm=s=>(s||"").toLowerCase().replace(/\s+/g," ").trim();
-      // Only suppress the full plot if it's word-for-word the hero summary —
-      // a longer/different OMDb synopsis is exactly what we want to surface.
-      const dupOfSummary=norm(fullPlot)&&norm(fullPlot)===norm(m.summary);
-      if(fullPlot&&!dupOfSummary){
+      const wordCount=s=>(s||"").trim().split(/\s+/).filter(Boolean).length;
+      // Only show OMDb full plot if it's more than 50 words longer than the Plex summary —
+      // if it's shorter or only marginally longer it's not adding anything substantial.
+      const plotWords=wordCount(fullPlot), summaryWords=wordCount(m.summary);
+      if(fullPlot&&plotWords>summaryWords+50){
         const paras=splitParagraphs(fullPlot);
         (async()=>{
           const imgs=await pickUniqueBackdrops(td?.images?.backdrops,paras.length);
