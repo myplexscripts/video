@@ -4760,7 +4760,11 @@ async function pickUniqueBackdrops(backdrops,max){
   const pool=(backdrops||[])
     .filter(b=>b.file_path&&b.aspect_ratio>=1.6&&b.aspect_ratio<=2.0)
     .filter(b=>!seen.has(b.file_path)&&seen.add(b.file_path))
-    .sort((a,b)=>(b.vote_average-a.vote_average)||(b.width-a.width))
+    // no-language (null iso_639_1) first — clean images without text overlays
+    .sort((a,b)=>{
+      const aLang=a.iso_639_1==null?0:1, bLang=b.iso_639_1==null?0:1;
+      return (aLang-bLang)||(b.vote_average-a.vote_average)||(b.width-a.width);
+    })
     .slice(1,9);  // skip index 0 — it's usually the hero backdrop already shown
   const loaded=await Promise.all(pool.map(async b=>{
     const im=await _loadCorsImg(`https://image.tmdb.org/t/p/w300${b.file_path}`);
