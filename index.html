@@ -663,6 +663,8 @@
   .carousel .card.billboard{width:calc(2 * 180px + var(--rail-gap));display:flex;flex-direction:column;
     position:relative;overflow:hidden;border-radius:var(--radius);isolation:isolate;
     background:var(--bg2);transform:translateZ(0);clip-path:inset(0)}
+  /* Featured rails have larger cards (260px) so billboard must scale up too */
+  .featured .carousel .card.billboard{width:calc(2 * 260px + var(--rail-gap))}
   /* Shared blurred-art wash behind the whole card: the art's bottom dissolves
      into it and the meta strip rides on it, so there's no hard seam between them. */
   .card.billboard::before{content:'';position:absolute;inset:0;z-index:0;
@@ -697,7 +699,7 @@
     color:rgba(255,255,255,.82);white-space:normal;line-height:1.4;margin-top:0}
   /* Suppress legacy card text rows — all metadata lives in .bill-meta */
   .card.billboard .ct,.card.billboard > .cs,.bill-desc{display:none}
-  @media(max-width:680px){.carousel .card.billboard{width:calc(2 * 150px + var(--rail-gap))}}
+  @media(max-width:680px){.carousel .card.billboard{width:calc(2 * 150px + var(--rail-gap))}.featured .carousel .card.billboard{width:calc(2 * 200px + var(--rail-gap))}}
 
   /* ---- EDITORIAL SECTION — magazine-style featured items ----
      Each card: square 1:1 art on the left, large overlapping title straddling
@@ -1594,6 +1596,7 @@
     .carousel .card{width:150px}.carousel .card.wide{width:216px}
     .carousel .card.billboard{width:calc(2 * 150px + var(--rail-gap))}
     .featured .carousel .card{width:200px}.featured .carousel .card.wide{width:272px}
+    .featured .carousel .card.billboard{width:calc(2 * 200px + var(--rail-gap))}
     .ep-card{width:260px}
     #player.min{width:260px;height:146px;bottom:14px;right:14px}
     .p-pause{padding:0 44px 120px}
@@ -1749,6 +1752,7 @@
     .next-up{right:12px;left:12px;width:auto;bottom:100px}
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .carousel .card.billboard{width:calc(2 * 130px + var(--rail-gap))}
+    .featured .carousel .card.billboard{width:calc(2 * 170px + var(--rail-gap))}
     .featured .carousel .card{width:170px}
     /* Detail page v2 mobile: single-column, poster full-width */
     .dp-title{font-size:clamp(40px,11vw,64px)}
