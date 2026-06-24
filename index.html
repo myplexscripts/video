@@ -1544,15 +1544,16 @@
        the art, and ratings+stars drop to the bottom of the bar beside Play. */
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{height:120px;padding:0 var(--edge) 24px 0}
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-title{position:absolute;right:var(--edge);bottom:100%}
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .wave-wrap{margin:0;transform:translateY(-44px);position:relative;z-index:4}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .wave-wrap{margin:0;transform:translateY(-14px);position:relative;z-index:4}
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-rate-row{margin-top:auto}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
       width:auto;padding:0;justify-content:flex-end;z-index:3}
     .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;height:120px;display:flex;
-      align-items:flex-end;padding:0 0 24px var(--edge)}
+      align-items:flex-end;gap:24px;padding:0 0 24px var(--edge)}
     .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:0;width:auto}
     .dp-fold-badges{display:flex}
-    .dp-hero.dp-hero--split .dp-fold-badges .ratings-row{margin:0;justify-content:flex-end;gap:10px}
+    .dp-hero.dp-hero--split .dp-fold-badges{align-items:center;padding-bottom:10px}
+    .dp-hero.dp-hero--split .dp-fold-badges .ratings-row{margin:0;justify-content:flex-start;gap:12px}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{display:none}
     .dp-hero.dp-hero--split .dp-keywords{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-poster{grid-area:poster;align-self:start;margin-right:var(--edge)}
@@ -4379,13 +4380,13 @@ function detailHero(m,isMovie,actionsHTML,extras){
         <h1 class="dp-title">${esc(m.title||"")}</h1>
         ${waveHorizSVG()}
         <div class="dp-rate-row">
-          ${badges?`<div class="dp-fold-badges"><div class="ratings-row">${badges}</div></div>`:""}
           ${dpStarsHTML()}
         </div>
       </div>
       <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
       <div class="dp-actions-wrap">
         <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
+        ${badges?`<div class="dp-fold-badges"><div class="ratings-row">${badges}</div></div>`:""}
       </div>
       <div class="dp-meta">${metaBits(m,isMovie)}</div>
       ${m.tagline?`<div class="dp-quote-block"><p class="dp-dropquote">${esc(m.tagline)}</p>${waveTriSVG()}</div>`:""}
