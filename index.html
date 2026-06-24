@@ -795,6 +795,7 @@
     color:var(--quote-accent,var(--accent))}
   .dp-quote-wave svg{width:62%;max-width:300px;height:auto;display:block}
   /* Stars inside the header, directly under the wave divider */
+  .dp-rate-row{display:flex;align-items:center;justify-content:center;gap:20px;width:100%}
   .dp-head .dp-rate{padding:0;width:auto}
   .dp-head .rate-stars button{width:44px;height:44px;font-size:34px}
   /* Square art poster (1:1) — full bleed on mobile, directly under the header */
@@ -1525,23 +1526,28 @@
     /* Billboard art flush with the top-left corner of the page */
     .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:72%;margin:0}
     .dp-hero.dp-hero--split .dp-backdrop img{aspect-ratio:unset;height:calc(100dvh - 120px);min-height:420px;object-position:50% center}
-    /* Title sits in the first viewport, right-aligned in the right column */
-    .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-end;text-align:right;
-      padding:16px var(--edge) 0 0;position:relative;z-index:3}
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-300px,-20vw,-150px)}
-    /* One-line title that overflows left, biting into the billboard's right edge */
-    .dp-hero.dp-hero--split .dp-title{white-space:nowrap;max-width:none;overflow:visible}
-    .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
-    .dp-hero.dp-hero--split .dp-head .dp-rate{padding:6px 0 0;justify-content:flex-end}
+    /* Right column header: title, squiggle divider, then ratings+stars — right-aligned */
+    .dp-hero.dp-hero--split .dp-head{grid-area:head;position:relative;z-index:3;
+      display:flex;flex-direction:column;align-items:flex-end;text-align:right;
+      padding:16px var(--edge) 0 0}
+    .dp-hero.dp-hero--split .dp-title{margin:0;max-width:min(74vw,880px);overflow:visible}
+    .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end;margin:10px 0 0}
+    .dp-hero.dp-hero--split .dp-rate-row{width:auto;gap:18px;justify-content:flex-end;margin-top:14px}
+    .dp-hero.dp-hero--split .dp-head .dp-rate{padding:0;justify-content:flex-end}
+    /* With a backdrop: the controls bar is the 120px strip below the art. The
+       squiggle pins to the backdrop's bottom edge, the title stacks upward into
+       the art, and ratings+stars drop to the bottom of the bar beside Play. */
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{height:120px;padding:0 var(--edge) 24px 0}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-title{position:absolute;right:var(--edge);bottom:100%}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .wave-wrap{margin:0}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-rate-row{margin-top:auto}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
       width:auto;padding:0;justify-content:flex-end;z-index:3}
-    .dp-hero.dp-hero--split .dp-controls{grid-area:actions;align-items:flex-start;
-      padding:18px 0 0 var(--edge)}
-    .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;height:120px;display:flex;flex-direction:row;
-      align-items:flex-start;flex-wrap:wrap;gap:10px 24px;padding:26px 0 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;height:120px;display:flex;
+      align-items:flex-end;padding:0 0 24px var(--edge)}
     .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:0;width:auto}
     .dp-fold-badges{display:flex}
-    .dp-hero.dp-hero--split .dp-fold-badges .ratings-row{margin:0;justify-content:flex-start;gap:10px}
+    .dp-hero.dp-hero--split .dp-fold-badges .ratings-row{margin:0;justify-content:flex-end;gap:10px}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{display:none}
     .dp-hero.dp-hero--split .dp-keywords{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-poster{grid-area:poster;align-self:start;margin-right:var(--edge)}
@@ -4365,12 +4371,14 @@ function detailHero(m,isMovie,actionsHTML,extras){
       <div class="dp-head">
         <h1 class="dp-title">${esc(m.title||"")}</h1>
         ${waveHorizSVG()}
-        ${dpStarsHTML()}
+        <div class="dp-rate-row">
+          ${badges?`<div class="dp-fold-badges"><div class="ratings-row">${badges}</div></div>`:""}
+          ${dpStarsHTML()}
+        </div>
       </div>
       <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
       <div class="dp-actions-wrap">
         <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
-        ${badges?`<div class="dp-fold-badges"><div class="ratings-row">${badges}</div></div>`:""}
       </div>
       <div class="dp-meta">${metaBits(m,isMovie)}</div>
       ${m.tagline?`<div class="dp-quote-block"><p class="dp-dropquote">${esc(m.tagline)}</p>${waveTriSVG()}</div>`:""}
