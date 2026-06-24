@@ -1524,19 +1524,21 @@
     .dp-hero.dp-hero--split>*{order:0}
     /* Billboard art flush with the top-left corner of the page */
     .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:72%;margin:0}
-    .dp-hero.dp-hero--split .dp-backdrop img{aspect-ratio:unset;min-height:calc(100dvh - 130px);object-position:50% center}
+    .dp-hero.dp-hero--split .dp-backdrop img{aspect-ratio:unset;height:calc(100dvh - 120px);min-height:420px;object-position:50% center}
     /* Title sits in the first viewport, right-aligned in the right column */
     .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-end;text-align:right;
       padding:16px var(--edge) 0 0;position:relative;z-index:3}
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-260px,-17vw,-140px)}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-300px,-20vw,-150px)}
+    /* One-line title that overflows left, biting into the billboard's right edge */
+    .dp-hero.dp-hero--split .dp-title{white-space:nowrap;max-width:none;overflow:visible}
     .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-head .dp-rate{padding:6px 0 0;justify-content:flex-end}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
       width:auto;padding:0;justify-content:flex-end;z-index:3}
     .dp-hero.dp-hero--split .dp-controls{grid-area:actions;align-items:flex-start;
       padding:18px 0 0 var(--edge)}
-    .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;display:flex;flex-direction:row;
-      align-items:center;flex-wrap:wrap;gap:10px 24px;padding:20px 0 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;height:120px;display:flex;flex-direction:row;
+      align-items:flex-start;flex-wrap:wrap;gap:10px 24px;padding:26px 0 0 var(--edge)}
     .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:0;width:auto}
     .dp-fold-badges{display:flex}
     .dp-hero.dp-hero--split .dp-fold-badges .ratings-row{margin:0;justify-content:flex-start;gap:10px}
@@ -5168,25 +5170,28 @@ function wireDetailArt(c,m,isEp){
   clearUltraBlur();
   const hero=c.querySelector(".dp-hero");
   const posterImg=c.querySelector("#dpPosterImg");
+  let posterSampled=false;
+  // Sample the dominant hue from a CORS-clean copy (the visible <img> has no
+  // crossOrigin so it always paints; getImageData on it would taint the canvas).
+  const sampleAccent=u=>{ if(u) _loadCorsImg(u).then(ci=>{ if(ci) extractImgAccent(ci,hero); }); };
   if(posterImg){
     if(isEp){
       const src=m.thumb||m.art||m.grandparentArt;
-      if(src){posterImg.onload=()=>{posterImg.classList.add("loaded");extractImgAccent(posterImg,hero);};posterImg.src=img(src,960,540);}
+      if(src){const u=img(src,960,540);posterImg.onload=()=>posterImg.classList.add("loaded");posterImg.src=u;posterSampled=true;sampleAccent(u);}
     } else {
       const squareUrl=(m.Image||[]).find(i=>i.type==="backgroundSquare")?.url;
       const src=squareUrl||m.thumb||m.art;
-      if(src){posterImg.onload=()=>{posterImg.classList.add("loaded");extractImgAccent(posterImg,hero);};posterImg.src=img(src,800,800);}
+      if(src){const u=img(src,800,800);posterImg.onload=()=>posterImg.classList.add("loaded");posterImg.src=u;posterSampled=true;sampleAccent(u);}
     }
   }
   const backdropImg=c.querySelector("#dpBackdropImg");
   if(backdropImg){
     const src=m.art||m.grandparentArt||m.thumb;
     if(src){
-      backdropImg.onload=()=>{
-        backdropImg.classList.add("loaded");
-        if(!posterImg||!posterImg.src) extractImgAccent(backdropImg,hero);
-      };
-      backdropImg.src=img(src,1600,900);
+      const bu=img(src,1600,900);
+      backdropImg.onload=()=>backdropImg.classList.add("loaded");
+      backdropImg.src=bu;
+      if(!posterSampled) sampleAccent(bu);
     }
   }
 }
