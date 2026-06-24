@@ -401,7 +401,7 @@
   .rail-lib{font-size:var(--t-label);text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:var(--fw-bold)}
   .rail-head h3{font-size:var(--t-section);font-weight:var(--fw-xbold);letter-spacing:-.02em}
   .featured .rail-head h3{font-size:var(--t-feature)}
-  .rail-head .count{font-size:12px;color:var(--faint);font-weight:500;padding-bottom:3px}
+  .rail-head .count{display:none}
   .rail-summary{color:var(--dim);font-size:13px;line-height:1.55;margin:-8px var(--edge) 12px;
     max-width:680px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   /* ---- HUB CAROUSEL STYLE ----
@@ -475,9 +475,10 @@
       overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none}
   }
   .rail-head.with-avatar{align-items:center}
-  .rail-head-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 auto;
-    box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--frost-border),var(--frost-shadow-sm)}
-  .rail-head-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  /* Actor/person photo: right-aligned, borderless, stretches to text height */
+  .rail-head-avatar{width:36px;align-self:stretch;border-radius:4px;overflow:hidden;
+    flex:0 0 auto;margin-left:auto}
+  .rail-head-avatar img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
   .see-all{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;
     font-weight:600;color:var(--dim);background:none;border:none;cursor:pointer;
     padding-bottom:3px;font-family:var(--font);transition:color .15s var(--ease)}
@@ -2835,7 +2836,7 @@ function genreRailSection(genreItems,style){
   if(style==="grid"){
     const sec=el("div","rail-section");
     const head=el("div","rail-head");
-    head.innerHTML=`<div class="rail-head-text"><h3>Browse by Genre</h3></div><span class="count">${genreItems.length}</span>`;
+    head.innerHTML=`<div class="rail-head-text"><h3>Browse by Genre</h3></div>`;
     sec.appendChild(head);
     const grid=el("div","hub-grid");
     genreItems.forEach(g=>{
@@ -2852,7 +2853,7 @@ function genreRailSection(genreItems,style){
   }
   const sec=el("div","rail-section");
   const head=el("div","rail-head");
-  head.innerHTML=`<div class="rail-head-text"><h3>Browse by Genre</h3></div><span class="count">${genreItems.length}</span>`;
+  head.innerHTML=`<div class="rail-head-text"><h3>Browse by Genre</h3></div>`;
   const viewport=el("div","rail-viewport");
   const row=el("div","carousel");
   const frag=document.createDocumentFragment();
@@ -2904,7 +2905,7 @@ function setRailStyle(key,style){
 function carouselHubSection(hub){
   const sec=el("div","rail-section hub-carousel-section");
   const head=el("div","rail-head");
-  head.innerHTML=`<div class="rail-head-text">${hub.lib?`<div class="rail-lib">${esc(hub.lib)}</div>`:""}<h3>${esc(hub.title)}</h3></div><span class="count">${hub.items.length}</span>`;
+  head.innerHTML=`<div class="rail-head-text">${hub.lib?`<div class="rail-lib">${esc(hub.lib)}</div>`:""}<h3>${esc(hub.title)}</h3></div>`;
   sec.appendChild(head);
   if(hub.summary&&getHubSummaries()){ const p=el("p","rail-summary"); p.textContent=hub.summary; sec.appendChild(p); }
   const car=el("div","hub-carousel");
@@ -3014,7 +3015,7 @@ function gridHubSection(hub){
   const firstArt=first&&(first.art||first.grandparentArt||first.thumb);
   if(firstArt){const amb=el("div","rail-ambient");amb.style.backgroundImage=`url('${imgAmbient(firstArt)}')`;sec.appendChild(amb);}
   const head=el("div","rail-head");
-  head.innerHTML=`<div class="rail-head-text">${hub.lib?`<div class="rail-lib">${esc(hub.lib)}</div>`:""}<h3>${esc(hub.title)}</h3></div><span class="count">${hub.items.length}</span>`;
+  head.innerHTML=`<div class="rail-head-text">${hub.lib?`<div class="rail-lib">${esc(hub.lib)}</div>`:""}<h3>${esc(hub.title)}</h3></div>`;
   sec.appendChild(head);
   if(hub.summary&&getHubSummaries()){const p=el("p","rail-summary");p.textContent=hub.summary;sec.appendChild(p);}
   const grid=el("div","hub-grid");
@@ -3294,8 +3295,17 @@ function railSection(title,items,wide,featured,libLabel,seeAll,actorThumb,summar
     sec.appendChild(amb);
   }
   const showSeeAllBtn=seeAll||collId;
+  // Split "More with/from/in [Name]" into a small prefix kicker + the name
+  const prefixM=(title||"").match(/^(More (?:with|from|in|like)|Also in|Related to)\s+/i);
+  const railPrefix=prefixM?prefixM[1]:null;
+  const railTitle=prefixM?title.slice(prefixM[0].length).trim():title;
   const head=el("div","rail-head"+(actorThumb?" with-avatar":""));
-  head.innerHTML=`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}<div class="rail-head-text">${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h3>${esc(title)}</h3></div><span class="count">${items.length}</span>${showSeeAllBtn?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
+  head.innerHTML=`<div class="rail-head-text">`
+    +`${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}`
+    +`${railPrefix?`<div class="rail-lib">${esc(railPrefix)}</div>`:""}`
+    +`<h3>${esc(railTitle)}</h3></div>`
+    +`${actorThumb?`<div class="rail-head-avatar"><img loading="lazy" alt="" src="${img(actorThumb,96,96)}"></div>`:""}`
+    +`${showSeeAllBtn?`<button class="see-all">See All ${svgIcon("arrow-right")}</button>`:""}`;
   if(showSeeAllBtn) head.querySelector(".see-all").onclick=()=>{
     if(collId){ navigate("/collection/"+collId); return; }
     seeAllCache={title,items,wide,libLabel,summary}; navigate("/see-all");
@@ -3483,7 +3493,7 @@ function editorialSection(title,items,libLabel){
   const sec=el("div","editorial-section");
   if(title){
     const head=el("div","editorial-head");
-    head.innerHTML=`${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h2>${esc(title)}</h2><span class="count">${items.length}</span>`;
+    head.innerHTML=`${libLabel?`<div class="rail-lib">${esc(libLabel)}</div>`:""}<h2>${esc(title)}</h2>`;
     sec.appendChild(head);
   }
   const frag=document.createDocumentFragment();
@@ -3952,9 +3962,9 @@ async function openPlaylist(p){
     c.innerHTML=collHero(pl,"Playlist",items,true)
       +(items.length
         ? allEpisodes
-          ? `<div class="rail-section"><div class="rail-head"><h3>Episodes</h3><span class="count">${items.length}</span></div>
+          ? `<div class="rail-section"><div class="rail-head"><h3>Episodes</h3></div>
             <div class="ep-row-list"></div></div>`
-          : `<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
+          : `<div class="rail-section"><div class="rail-head"><h3>Items</h3></div>
             <div class="grid-view"></div></div>`
         : `<div class='empty'>${svgIcon("playlist")}This playlist is empty.</div>`);
     fillCollItems(c,items,allEpisodes);
@@ -3991,9 +4001,9 @@ async function openCollection(it){
     c.innerHTML=collHero(m,"Collection",items,false)
       +(items.length
         ? allEpisodes
-          ? `<div class="rail-section"><div class="rail-head"><h3>Episodes</h3><span class="count">${items.length}</span></div>
+          ? `<div class="rail-section"><div class="rail-head"><h3>Episodes</h3></div>
             <div class="ep-row-list"></div></div>`
-          : `<div class="rail-section"><div class="rail-head"><h3>Items</h3><span class="count">${items.length}</span></div>
+          : `<div class="rail-section"><div class="rail-head"><h3>Items</h3></div>
             <div class="grid-view"></div></div>`
         : `<div class='empty'>${svgIcon("stack")}This collection is empty.</div>`);
     fillCollItems(c,items,allEpisodes);
@@ -4460,7 +4470,7 @@ function extrasRailHTML(extras){
   const others=extras.filter(e=>!/trailer/i.test(e.subtype||""));
   const items=[...trailers,...others];
   if(!items.length) return "";
-  return `<div class="rail-section"><div class="rail-head"><h3>Trailers &amp; Extras</h3><span class="count">${items.length}</span></div>
+  return `<div class="rail-section"><div class="rail-head"><h3>Trailers &amp; Extras</h3></div>
     <div class="carousel">${items.map(extraCardHTML).join("")}</div></div>`;
 }
 function wireExtras(c,extras,trailerBtnId){
