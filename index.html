@@ -475,10 +475,13 @@
       overflow:hidden;white-space:nowrap;text-overflow:ellipsis;pointer-events:none}
   }
   .rail-head.with-avatar{align-items:center}
-  /* Actor/person photo: right-aligned, borderless, stretches to text height */
-  .rail-head-avatar{width:36px;align-self:stretch;border-radius:4px;overflow:hidden;
+  /* Actor/person photo: circular. Mobile → right-aligned; desktop → left of the header. */
+  .rail-head-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;
     flex:0 0 auto;margin-left:auto}
   .rail-head-avatar img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+  @media(min-width:681px){
+    .rail-head-avatar{width:68px;height:68px;margin-left:0;margin-right:20px;order:-1}
+  }
   .see-all{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;
     font-weight:600;color:var(--dim);background:none;border:none;cursor:pointer;
     padding-bottom:3px;font-family:var(--font);transition:color .15s var(--ease)}
@@ -786,9 +789,9 @@
     font-weight:400;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--dim);
     text-align:center;padding:24px var(--edge) 0;max-width:28ch;position:relative}
   /* Triple wave under the tagline — tinted by --quote-accent */
-  .dp-quote-wave{display:flex;justify-content:center;padding:18px var(--edge) 8px;
+  .dp-quote-wave{display:flex;justify-content:center;padding:10px var(--edge) 8px;
     color:var(--quote-accent,var(--accent))}
-  .dp-quote-wave svg{width:70%;max-width:420px;height:auto;display:block}
+  .dp-quote-wave svg{width:62%;max-width:300px;height:auto;display:block}
   /* Stars inside the header, directly under the wave divider */
   .dp-head .dp-rate{padding:0;width:auto}
   .dp-head .rate-stars button{width:44px;height:44px;font-size:34px}
@@ -889,7 +892,11 @@
   .dp-tags-toggle .svgi{width:14px;height:14px}
   .dp-tags-hint{font-size:9px;letter-spacing:.1em;color:var(--faint);font-weight:600}
   .dp-tags.revealed .dp-tags-hint{display:none}
-  .dp-tags .dp-keywords{padding:0}
+  /* Spoiler guard: keywords always occupy their space (no layout jump) — just
+     blurred until revealed by tapping the toggle or the pills themselves. */
+  .dp-tags .dp-keywords{padding:0;filter:blur(7px);transition:filter .35s var(--ease);
+    cursor:pointer;-webkit-user-select:none;user-select:none}
+  .dp-tags.revealed .dp-keywords{filter:none;cursor:default;-webkit-user-select:auto;user-select:auto}
   .dp-keywords{display:flex;flex-wrap:wrap;gap:8px;padding:0 var(--edge) 40px;justify-content:center}
   .dp-keywords[hidden]{display:none}
   .dp-keyword{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
@@ -1497,39 +1504,50 @@
     /* Fold wrapper dissolves on desktop so its children land in the grid
        (split heroes) or in normal flow (single-column episode heroes) */
     .dp-fold{display:contents}
-    /* Editorial asymmetric grid (matches the desktop mockup):
-         row1: backdrop (left, partial width) | meta floats top-right
-         row2: stars/badges/buttons (left)    | title/wave/tagline (right)
-         row3: summary (left)                 | square art (right)
-       The 16:9 backdrop deliberately does NOT span full width — it stops at
-       ~78%, leaving a black gap on the right where the meta line sits. */
+    /* Editorial asymmetric grid:
+         row1: billboard backdrop, flush to the top-left corner (~72% width)
+         row2: title — overlaps the bottom-left corner of the backdrop
+         row3: play buttons (left)
+         row4: summary (left)            | square art (right)
+         row5: tagline + scribble (left) | square art continues
+       Meta floats in the empty top-right gap beside the backdrop. */
     .dp-hero.dp-hero--split{display:grid;position:relative;
-      grid-template-columns:1.22fr .88fr;column-gap:48px;align-items:start;
-      grid-template-areas:"quote quote" "backdrop backdrop" "actions head" "summary poster";
+      grid-template-columns:1.25fr .75fr;column-gap:48px;align-items:start;
+      grid-template-areas:
+        "backdrop backdrop"
+        "head     ."
+        "actions  ."
+        "summary  poster"
+        "quote    poster";
       padding-top:0}
     .dp-hero.dp-hero--split>*{order:0}
-    /* Pull quote sits full-width above the billboard art */
-    .dp-hero.dp-hero--split .dp-quote-block{grid-area:quote;display:flex;flex-direction:column;
-      align-items:center;padding:40px var(--edge) 28px}
-    .dp-hero.dp-hero--split .dp-dropquote{margin:0 auto;padding:0;max-width:40ch}
-    .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:78%;margin-bottom:10px}
-    .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 56px);
-      width:auto;padding:0;justify-content:flex-end}
-    .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-end;text-align:right;
-      padding:10px var(--edge) 0 0}
-    .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end}
-    .dp-hero.dp-hero--split .dp-head .dp-rate{padding:4px 0 0;justify-content:flex-end}
+    /* Billboard art flush with the top-left corner of the page */
+    .dp-hero.dp-hero--split .dp-backdrop{grid-area:backdrop;width:72%;margin:0}
+    /* Title sits in the first viewport, overlapping the art's bottom-left corner */
+    .dp-hero.dp-hero--split .dp-head{grid-area:head;align-items:flex-start;text-align:left;
+      padding:16px var(--edge) 0;position:relative;z-index:3}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{margin-top:clamp(-104px,-6.5vw,-58px)}
+    .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-head .dp-rate{padding:6px 0 0;justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
+      width:auto;padding:0;justify-content:flex-end;z-index:3}
     .dp-hero.dp-hero--split .dp-controls{grid-area:actions;align-items:flex-start;
-      padding:8px 0 0 var(--edge)}
-    .dp-hero.dp-hero--split .dp-actions{grid-area:actions;justify-content:flex-start;padding:16px 0 0 var(--edge)}
+      padding:18px 0 0 var(--edge)}
+    .dp-hero.dp-hero--split .dp-actions{grid-area:actions;justify-content:flex-start;padding:20px 0 0 var(--edge)}
     .dp-hero.dp-hero--split .dp-keywords{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{justify-content:flex-start;padding-left:var(--edge)}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges .ratings-row{justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-poster{grid-area:poster;align-self:start;margin-right:var(--edge)}
-    .dp-hero.dp-hero--split .dp-summary-wrap{grid-area:summary;margin-top:0;padding-top:24px}
+    .dp-hero.dp-hero--split .dp-summary-wrap{grid-area:summary;margin-top:0;padding-top:32px}
     .dp-hero.dp-hero--split .dp-summary-wrap h2{padding:0 24px 0 var(--edge)}
     .dp-hero.dp-hero--split .dp-genres{text-align:left;padding:14px 24px 0 var(--edge)}
     .dp-hero.dp-hero--split .dp-summary-body{padding:18px 24px 8px var(--edge)}
+    /* Tagline + scribble: under the summary, to the left of the square art */
+    .dp-hero.dp-hero--split .dp-quote-block{grid-area:quote;display:flex;flex-direction:column;
+      align-items:flex-start;padding:4px var(--edge) 36px}
+    .dp-hero.dp-hero--split .dp-dropquote{margin:0;padding:0;max-width:34ch;text-align:left}
+    .dp-hero.dp-hero--split .dp-quote-wave{justify-content:flex-start;padding:14px 0 0;width:100%}
+    .dp-hero.dp-hero--split .dp-quote-wave svg{width:64%;max-width:300px}
     /* Single-column heroes (episodes) centered and constrained on desktop */
     .dp-hero:not(.dp-hero--split){max-width:920px;margin:0 auto}
     .dp-hero:not(.dp-hero--split) .dp-poster{margin-top:28px}
@@ -4211,8 +4229,8 @@ function waveVertSVG(){
 /* Looping flourish wave — sits under the tagline. Uses currentColor so the
    --quote-accent tint (set dynamically from art) drives the stroke. */
 function waveTriSVG(){
-  return `<div class="dp-quote-wave"><svg viewBox="0 0 240 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M0 24 C12 10 24 10 24 24 C24 38 12 38 12 24 C12 10 36 10 48 24 C60 38 72 38 72 24 C72 10 60 10 60 24 C60 38 84 38 96 24 C108 10 120 10 120 24 C120 38 108 38 108 24 C108 10 132 10 144 24 C156 38 168 38 168 24 C168 10 156 10 156 24 C156 38 180 38 192 24 C204 10 216 10 216 24 C216 38 204 38 204 24 C204 10 228 10 240 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  return `<div class="dp-quote-wave"><svg viewBox="0 0 420 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M26 46 C104 24, 198 22, 316 26 C356 27, 382 28, 400 30 C330 33, 266 42, 202 58 C176 64, 154 74, 154 88 C154 104, 184 106, 190 92 C196 78, 168 78, 172 94 C176 112, 212 112, 232 98" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </svg></div>`;
 }
 /* Dominant-colour extraction — samples the poster/art at 48×48,
@@ -4897,14 +4915,16 @@ function enrichDetailPage(c,m,isMovie,appendStats){
         c.insertAdjacentHTML("beforeend",
           `<div class="dp-tags" id="dpTags">`+
           `<button class="dp-tags-toggle" type="button" aria-expanded="false" aria-controls="dpKeywords">${svgIcon("tag")} Tags <span class="dp-tags-hint">may contain spoilers</span></button>`+
-          `<div class="dp-keywords" id="dpKeywords" hidden>${kws.map(k=>`<span class="dp-keyword">${esc(k.name)}</span>`).join("")}</div>`+
+          `<div class="dp-keywords" id="dpKeywords">${kws.map(k=>`<span class="dp-keyword">${esc(k.name)}</span>`).join("")}</div>`+
           `</div>`);
         const tags=c.querySelector("#dpTags"), tBtn=tags?.querySelector(".dp-tags-toggle"), tKw=tags?.querySelector("#dpKeywords");
-        if(tBtn&&tKw) tBtn.onclick=()=>{
-          const show=tKw.hasAttribute("hidden");
-          if(show){ tKw.removeAttribute("hidden"); tags.classList.add("revealed"); }
-          else{ tKw.setAttribute("hidden",""); tags.classList.remove("revealed"); }
-          tBtn.setAttribute("aria-expanded",show?"true":"false");
+        if(tBtn) tBtn.onclick=()=>{
+          const on=tags.classList.toggle("revealed");
+          tBtn.setAttribute("aria-expanded",on?"true":"false");
+        };
+        // Tapping the blurred pills also reveals them.
+        if(tKw) tKw.onclick=()=>{
+          if(!tags.classList.contains("revealed")){ tags.classList.add("revealed"); tBtn.setAttribute("aria-expanded","true"); }
         };
       }
       // 5. Storyline — OMDb full plot split into paragraphs with de-duplicated
