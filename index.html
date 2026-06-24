@@ -25,6 +25,7 @@
 <link rel="dns-prefetch" href="https://api.themoviedb.org">
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
 <!-- Preload the two font weights that render above the fold -->
 <link rel="preload" href="assets/fonts/Circular/Circular-Book.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="assets/fonts/Circular/Circular-Bold.ttf" as="font" type="font/ttf" crossorigin>
@@ -73,6 +74,7 @@
     --font:'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     /* All headings render in this rounded sans; body and UI use --font (Inter) */
     --font-head:'Rubik','Inter',system-ui,sans-serif;
+    --font-display:'Anton','Impact','Arial Narrow',sans-serif;
     --ease:cubic-bezier(.22,1,.36,1);
     /* Floating menu-toggle/search pills sit at top:max(16px,safe-area) and are
        44px tall — flat pages need at least that much clearance so their first
@@ -781,14 +783,15 @@
     background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
   .dp-kicker:hover{opacity:.75}
   .dp-kicker .svgi{width:14px;height:14px}
-  .dp-title{font-size:clamp(34px,8vw,52px);font-weight:900;letter-spacing:-.04em;
-    line-height:1.02;margin:0;max-width:18ch}
+  .dp-title{font-family:var(--font-display);font-size:clamp(52px,12vw,84px);
+    font-weight:400;letter-spacing:.03em;text-transform:uppercase;
+    line-height:.92;margin:0;max-width:18ch}
   /* SVG wave divider between title and stars — equal gap above and below */
   .wave-wrap{margin:14px 0;display:flex;justify-content:center}
   .wave-wrap svg{width:100%;max-width:240px;display:block}
   /* Pull quote — tagline sits between the poster art and the film credits */
   .dp-dropquote{margin:0 auto;font-family:var(--font-head);font-style:normal;
-    font-weight:400;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--dim);
+    font-weight:400;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--quote-accent,var(--dim));
     text-align:center;padding:24px var(--edge) 0;max-width:28ch;position:relative}
   /* Triple wave under the tagline — tinted by --quote-accent */
   .dp-quote-wave{display:flex;justify-content:center;padding:10px var(--edge) 8px;
@@ -848,8 +851,9 @@
   .dp-summary-wrap{position:relative;z-index:2;padding:38px 0 0}
   /* When a backdrop sits directly above (mobile flow), the heading overlaps its scrim */
   .dp-summary-wrap.over-backdrop{margin-top:-46px;padding-top:0}
-  .dp-summary-wrap h2{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
-    line-height:1.08;margin:0;padding:0 var(--edge)}
+  .dp-summary-wrap h2{font-family:var(--font-display);font-size:clamp(28px,7vw,42px);
+    font-weight:400;letter-spacing:.04em;text-transform:uppercase;
+    line-height:.95;margin:0;padding:0 var(--edge)}
   .dp-genres{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
     color:var(--faint);padding:14px var(--edge) 0;text-align:right;line-height:1.6}
   /* Two-column body: vertical squiggle | summary text */
@@ -903,8 +907,8 @@
   .dp-keywords{display:flex;flex-wrap:wrap;gap:8px;padding:0 var(--edge) 40px;justify-content:center}
   .dp-keywords[hidden]{display:none}
   .dp-keyword{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:5px 10px;
-    line-height:1}
+    color:var(--dim);border:1px solid color-mix(in srgb,var(--squiggle-color,var(--line)) 35%,var(--line));
+    border-radius:4px;padding:5px 10px;line-height:1}
   /* Storyline — full plot with interleaved 16:9 backdrops */
   .dp-story{padding:60px var(--edge) 0;max-width:760px;margin:0 auto}
   .dp-story-head h3{font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:-.03em;
@@ -1539,7 +1543,7 @@
        the art, and ratings+stars drop to the bottom of the bar beside Play. */
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{height:120px;padding:0 var(--edge) 24px 0}
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-title{position:absolute;right:var(--edge);bottom:100%}
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .wave-wrap{margin:0}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .wave-wrap{margin:0;transform:translateY(-44px);position:relative;z-index:4}
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-rate-row{margin-top:auto}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
       width:auto;padding:0;justify-content:flex-end;z-index:3}
@@ -1564,7 +1568,7 @@
     /* Single-column heroes (episodes) centered and constrained on desktop */
     .dp-hero:not(.dp-hero--split){max-width:920px;margin:0 auto}
     .dp-hero:not(.dp-hero--split) .dp-poster{margin-top:28px}
-    .dp-title{font-size:clamp(40px,4vw,66px);max-width:16ch}
+    .dp-title{font-size:clamp(64px,6vw,108px);max-width:16ch}
     .rate-stars button{width:44px;height:44px;font-size:34px}
     .dp-summary{font-size:17px}
     .dp-stats{grid-template-columns:repeat(4,1fr);margin:56px var(--edge) 72px}
@@ -1743,7 +1747,7 @@
     .carousel .card{width:130px}.carousel .card.wide{width:188px}
     .featured .carousel .card{width:170px}
     /* Detail page v2 mobile: single-column, poster full-width */
-    .dp-title{font-size:clamp(26px,7.5vw,40px)}
+    .dp-title{font-size:clamp(40px,11vw,64px)}
     .dp-summary-body{grid-template-columns:20px 1fr;gap:0 12px}
     .dp-squiggle{width:20px}
     .ep-card{width:220px}
@@ -4268,14 +4272,14 @@ function extractImgAccent(imgEl,heroEl){
     const buckets=new Array(36).fill(0);
     for(let i=0;i<px.length;i+=4){
       const [h,s,l]=_rgbToHsl(px[i],px[i+1],px[i+2]);
-      if(s>.2&&l>.1&&l<.88) buckets[Math.floor(h/10)%36]++;
+      if(s>.15&&l>.08&&l<.9) buckets[Math.floor(h/10)%36]+=s;
     }
     let best=0,bestN=0;
     buckets.forEach((n,i)=>{if(n>bestN){bestN=n;best=i;}});
     if(!bestN) return;
     const h=best*10+5;
-    heroEl.style.setProperty("--squiggle-color",`hsl(${h},70%,62%)`);
-    heroEl.style.setProperty("--quote-accent",`hsl(${(h+180)%360},65%,65%)`);
+    heroEl.style.setProperty("--squiggle-color",`hsl(${h},88%,56%)`);
+    heroEl.style.setProperty("--quote-accent",`hsl(${(h+180)%360},82%,60%)`);
   }catch(_){}
 }
 function dpStarsHTML(){
