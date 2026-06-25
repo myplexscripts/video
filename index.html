@@ -775,6 +775,7 @@
   .dp-hero--split .dp-actions-wrap{order:4}
   .dp-hero--split .dp-quote-block{order:5}
   .dp-actions-wrap{display:flex;flex-direction:column;width:100%}
+  .dp-actions-line{display:contents}
   .dp-fold-badges{display:none}
   /* Header: serif title, wave divider, italic tagline — centered on mobile.
      Top padding aligns the title with the floating back button. */
@@ -1550,11 +1551,16 @@
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-rate-row{margin-top:auto}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
       width:auto;padding:0;justify-content:flex-end;z-index:3}
-    .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;height:120px;display:flex;
-      align-items:flex-end;gap:24px;padding:0 0 24px var(--edge)}
+    /* Left controls block: play + stars on one line, critic ratings below —
+       all left-aligned under the bottom-left of the backdrop art. */
+    .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;min-height:120px;display:flex;
+      flex-direction:column;align-items:flex-start;gap:14px;padding:20px 0 24px var(--edge)}
+    .dp-hero.dp-hero--split .dp-actions-line{display:flex;align-items:center;gap:24px}
     .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:0;width:auto}
+    .dp-hero.dp-hero--split .dp-actions-line .dp-rate-row{width:auto;margin:0;gap:0;justify-content:flex-start}
+    .dp-hero.dp-hero--split .dp-actions-line .dp-rate{padding:0;width:auto;justify-content:flex-start}
     .dp-fold-badges{display:flex}
-    .dp-hero.dp-hero--split .dp-fold-badges{align-items:center;padding-bottom:10px}
+    .dp-hero.dp-hero--split .dp-fold-badges{align-items:center;padding:0}
     .dp-hero.dp-hero--split .dp-fold-badges .ratings-row{margin:0;justify-content:flex-start;gap:12px}
     .dp-hero.dp-hero--split .dp-summary-wrap .dp-badges{display:none}
     .dp-hero.dp-hero--split .dp-keywords{justify-content:flex-start}
@@ -4390,7 +4396,9 @@ function detailHero(m,isMovie,actionsHTML,extras){
       </div>
       <div class="dp-poster"><img id="dpPosterImg" alt="" decoding="async" fetchpriority="high"></div>
       <div class="dp-actions-wrap">
-        <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
+        <div class="dp-actions-line">
+          <div class="dp-actions" id="dpActions">${actionsHTML}${trailer}</div>
+        </div>
         ${badges?`<div class="dp-fold-badges"><div class="ratings-row">${badges}</div></div>`:""}
       </div>
       <div class="dp-meta">${metaBits(m,isMovie)}</div>
@@ -5172,6 +5180,27 @@ function wireRateFloat(c,m){
   },{passive:true});
   group.addEventListener("touchcancel",()=>paintStars(root,current()),{passive:true});
 }
+/* Split heroes show the stars beside the play buttons (left, under the art) on
+   desktop, but under the title on mobile. CSS can't reparent, so we move the
+   single .dp-rate-row node between its mobile home (.dp-head) and the desktop
+   action line. One shared resize listener keeps it correct across breakpoints. */
+function placeDpRateRow(c){
+  const rate=c.querySelector(".dp-hero--split .dp-rate-row"); if(!rate) return;
+  const head=c.querySelector(".dp-hero--split .dp-head");
+  const line=c.querySelector(".dp-hero--split .dp-actions-line");
+  if(!head||!line) return;
+  if(window.matchMedia("(min-width:681px)").matches){
+    if(rate.parentElement!==line) line.appendChild(rate);
+  }else if(rate.parentElement!==head){
+    head.appendChild(rate);
+  }
+}
+let _dpRateResizeBound=false;
+function ensureDpRateResize(){
+  if(_dpRateResizeBound) return;
+  _dpRateResizeBound=true;
+  window.addEventListener("resize",()=>{ const c=$("#content"); if(c) placeDpRateRow(c); });
+}
 /* Flat editorial art loader for movie/show/episode pages.
    Uses Plex backgroundSquare (1:1) for the poster, m.art for the backdrop strip.
    No ambient blur — flat editorial look. */
@@ -5256,6 +5285,7 @@ async function openMovie(it){
     else $("#playBtnD").onclick=()=>playItem(m,0);
     wireWatchedToggle(c,m,true);
     wireRateFloat(c,m);
+    placeDpRateRow(c); ensureDpRateResize();
     enrichDetailPage(c,m,true,true);
 
     navDone();
@@ -5297,6 +5327,7 @@ async function openShow(it,jumpSeasonKey){
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
     wireRateFloat(c,show);
+    placeDpRateRow(c); ensureDpRateResize();
     enrichDetailPage(c,show,false,true);
 
     const rail=$("#seasonRail");
