@@ -12,21 +12,34 @@
     .dp-wrap .rate-stars button .svgi.filled{color:var(--accent-colour,var(--accent-color,var(--triad-accent,var(--accent))))!important}
     .dp-wrap .rate-stars button:hover{color:var(--accent-colour,var(--accent-color,var(--triad-accent,var(--accent2))))!important}
 
-    /* Keep the vertical summary squiggle as a fixed drawn mark, not a stretched spring. */
-    .dp-summary-body{align-items:start!important}
+    /* Vertical summary squiggle: match the text column height, but repeat the
+       drawn wave instead of scaling it like a spring. */
+    .dp-summary-body{align-items:stretch!important}
     .dp-squiggle{
-      align-self:start!important;
+      align-self:stretch!important;
       width:24px!important;
-      height:clamp(132px,18vw,220px)!important;
-      min-height:132px!important;
-      overflow:visible!important;
+      min-height:100%!important;
+      height:auto!important;
+      overflow:hidden!important;
       position:relative!important;
+      color:var(--main-colour,var(--main-color,var(--squiggle-color,var(--accent))))!important;
     }
-    .dp-squiggle svg{
-      position:static!important;
-      width:24px!important;
-      height:100%!important;
-      display:block!important;
+    .dp-squiggle svg{display:none!important}
+    .dp-squiggle::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      width:24px;
+      min-height:100%;
+      background:currentColor;
+      -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='96' viewBox='0 0 24 96'%3E%3Cpath d='M12 0 C2 8 2 16 12 24 C22 32 22 40 12 48 C2 56 2 64 12 72 C22 80 22 88 12 96' fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='96' viewBox='0 0 24 96'%3E%3Cpath d='M12 0 C2 8 2 16 12 24 C22 32 22 40 12 48 C2 56 2 64 12 72 C22 80 22 88 12 96' fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      -webkit-mask-repeat:repeat-y;
+      mask-repeat:repeat-y;
+      -webkit-mask-size:24px 96px;
+      mask-size:24px 96px;
+      -webkit-mask-position:top center;
+      mask-position:top center;
     }
 
     /* Slightly open up heavy display headings without changing their weight. */
