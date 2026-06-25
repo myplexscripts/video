@@ -4,6 +4,54 @@
    Loaded after app.js so it replaces the artwork accent sampler with the same
    palette logic, plus an actual WCAG contrast-ratio comparison for foregrounds. */
 (function(){
+  const style=document.createElement("style");
+  style.id="detail-layout-fix";
+  style.textContent=`
+    /* Rating stars use the third triadic colour instead of the main accent. */
+    .dp-wrap .rate-stars button .svgi.filled{color:var(--triad-accent,var(--accent))!important}
+    .dp-wrap .rate-stars button:hover{color:var(--triad-accent,var(--accent2))!important}
+
+    @media (min-width:901px){
+      /* Desktop split hero: keep the editorial overlap, but prevent the title from
+         climbing into the top control/meta area. */
+      .dp-hero.dp-hero--split .dp-head{
+        align-items:flex-start!important;
+        text-align:left!important;
+      }
+      .dp-hero.dp-hero--split .dp-head .wave-wrap{
+        justify-content:flex-start!important;
+      }
+      .dp-hero.dp-hero--split .dp-title{
+        font-size:clamp(72px,6.25vw,112px)!important;
+        line-height:.91;
+        max-width:min(74vw,920px)!important;
+      }
+      .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{
+        margin-top:clamp(34px,6vh,64px);
+        min-height:126px;
+        padding:0 var(--edge) 24px 0!important;
+      }
+      .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-title{
+        right:auto!important;
+        left:clamp(-176px,-9vw,-84px);
+        bottom:100%;
+      }
+      .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .wave-wrap{
+        justify-content:flex-start!important;
+        transform:translate(clamp(-176px,-9vw,-84px),-14px)!important;
+      }
+      .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-rate-row{
+        justify-content:flex-start!important;
+        transform:translateX(clamp(-176px,-9vw,-84px));
+        max-width:calc(100% + 176px);
+      }
+      .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .dp-rate{
+        justify-content:flex-start!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
   const DARK_TEXT="#141005";
   const LIGHT_TEXT="#ffffff";
 
