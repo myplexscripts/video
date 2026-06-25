@@ -129,17 +129,17 @@
        ==================================================================== */
     /* TYPE SCALE
        label   → 11 px uppercase metadata/kickers   (--t-label)
-       sm      → 12 px secondary counts/captions    (--t-sm)
-       base    → 13 px body text, button labels     (--t-base)
-       body    → 14 px descriptions, list text      (--t-body)
-       ui      → 15 px prominent UI labels          (--t-ui)
-       section → 21 px rail / grid section headings (--t-section)
-       feature → 27 px featured-rail heading        (--t-feature)
+       sm      → 13 px secondary counts/captions    (--t-sm)
+       base    → 14 px body text, button labels     (--t-base)
+       body    → 15 px descriptions, list text      (--t-body)
+       ui      → 16 px prominent UI labels          (--t-ui)
+       section → 28 px rail / grid section headings (--t-section)
+       feature → 36 px featured-rail heading        (--t-feature)
        page    → 28 px page-level heading           (--t-page)
        display → clamp(28,3.8vw,48px) detail title  (--t-display)
        hero    → clamp(40,7.5vw,92px) hero / top    (--t-hero) */
-    --t-label:11px; --t-sm:12px; --t-base:13px; --t-body:14px; --t-ui:15px;
-    --t-section:21px; --t-feature:27px; --t-page:28px;
+    --t-label:11px; --t-sm:13px; --t-base:14px; --t-body:15px; --t-ui:16px;
+    --t-section:28px; --t-feature:36px; --t-page:32px;
     --t-display:clamp(28px,3.8vw,48px); --t-hero:clamp(40px,7.5vw,92px);
     /* FONT WEIGHTS */
     --fw-normal:400; --fw-medium:500; --fw-semi:600; --fw-bold:700; --fw-xbold:800; --fw-black:900;
@@ -224,7 +224,7 @@
     justify-content:space-between;align-items:center;gap:18px;box-shadow:var(--frost-shadow)}
   .server-card .sn{font-weight:600;font-size:15px}
   .server-card .meta{font-size:12px;color:var(--dim);margin-top:4px;display:flex;align-items:center;gap:8px}
-  .badge{font-size:10px;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:0;
+  .badge{font-size:11px;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:0;
     background:rgba(110,231,160,.12);color:#6ee7a0;font-weight:600}
   .badge.remote{background:var(--accent-wash);color:var(--accent)}
   .badge.relay{background:rgba(255,100,100,.1);color:#ff9090}
@@ -251,9 +251,9 @@
   .brand{display:flex;align-items:center;gap:10px;padding:22px 20px 20px}
   .brand i,.brand .svgi{font-size:24px;width:24px;height:24px;color:var(--accent)}
   .brand b{font-size:18px;font-weight:800;letter-spacing:-.02em}
-  .brand .ver{font-size:10px;color:var(--faint);margin-left:4px}
+  .brand .ver{font-size:11px;color:var(--faint);margin-left:4px}
   .nav{display:flex;flex-direction:column;padding:4px 10px;gap:2px}
-  .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--faint);
+  .nav-label{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--faint);
     padding:18px 12px 6px;font-weight:700}
   .nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-xs);
     color:var(--dim);background:transparent;border:none;text-align:left;font-size:14px;font-weight:500;
@@ -633,7 +633,7 @@
   .card.current .art{outline:2.5px solid var(--accent);outline-offset:2px}
   .card.current .ct{color:var(--accent)}
   .art .now-badge{position:absolute;left:8px;top:8px;z-index:3;display:inline-flex;align-items:center;gap:5px;
-    background:var(--accent);color:#141005;font-size:10px;font-weight:800;text-transform:uppercase;
+    background:var(--accent);color:#141005;font-size:11px;font-weight:800;text-transform:uppercase;
     letter-spacing:.4px;padding:4px 9px;box-shadow:0 2px 12px rgba(0,0,0,.45)}
   .art .now-badge i,.art .now-badge .svgi{font-size:11px;width:11px;height:11px}
 
@@ -857,7 +857,7 @@
   .dp-summary-wrap h2{font-family:var(--font-display);font-size:clamp(28px,7vw,42px);
     font-weight:400;letter-spacing:.04em;text-transform:uppercase;
     line-height:.95;margin:0;padding:0 var(--edge)}
-  .dp-genres{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  .dp-genres{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
     color:var(--faint);padding:14px var(--edge) 0;text-align:right;line-height:1.6}
   /* Two-column body: vertical squiggle | summary text */
   .dp-summary-body{display:grid;grid-template-columns:24px 1fr;gap:0 16px;
@@ -883,7 +883,7 @@
   /* When budget/box office cells are injected, restore border logic for 4-cell grids */
   .dp-stat:last-child{border-bottom:none}
   .dp-stat:nth-last-child(2){border-bottom:none}
-  .dp-sl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
+  .dp-sl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
     color:var(--faint);display:block;margin-bottom:8px}
   .dp-sv{font-size:19px;font-weight:700;letter-spacing:-.02em;display:block;
     font-family:var(--font-head)}
@@ -900,7 +900,7 @@
     transition:color .15s,border-color .15s}
   .dp-tags-toggle:hover{color:var(--text);border-color:var(--frost-border)}
   .dp-tags-toggle .svgi{width:14px;height:14px}
-  .dp-tags-hint{font-size:9px;letter-spacing:.1em;color:var(--faint);font-weight:600}
+  .dp-tags-hint{font-size:11px;letter-spacing:.1em;color:var(--faint);font-weight:600}
   .dp-tags.revealed .dp-tags-hint{display:none}
   /* Spoiler guard: keywords always occupy their space (no layout jump) — just
      blurred until revealed by tapping the toggle or the pills themselves. */
@@ -940,7 +940,7 @@
   /* ---- SETTINGS PAGE ---- */
   .settings-wrap{max-width:720px;padding:0 var(--edge) 48px}
   .settings-group{margin-bottom:8px}
-  .settings-group-head{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;
+  .settings-group-head{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;
     color:var(--faint);font-weight:700;padding:28px 0 10px}
   .settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px;
     padding:13px 0;border-bottom:1px solid var(--line)}
@@ -1067,7 +1067,7 @@
 
   /* ---- EXTRAS (trailers, deleted scenes, featurettes...) ---- */
   .extra-badge{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
-    color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+    color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
     padding:4px 8px}
   .extra-dur{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
     color:#fff;font-size:11px;font-weight:600;padding:3px 7px}
@@ -1121,7 +1121,7 @@
   .ep-card .ep-thumb:hover img,.ep-card .ep-thumb:focus-visible img{transform:scale(1.045)}
   .ep-card .ep-thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .ep-tag{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
-    color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+    color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
     padding:5px 10px}
   .ep-tag.upcoming{background:var(--accent-wash);color:var(--accent)}
   .ep-card .ep-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -1392,7 +1392,7 @@
     border:1px solid var(--frost-border);border-radius:var(--radius);overflow-y:auto;min-width:260px;display:none;
     box-shadow:var(--frost-shadow-lg);max-height:min(70vh,520px)}
   .p-menu.open{display:block}
-  .p-menu .mh{padding:12px 18px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;
+  .p-menu .mh{padding:12px 18px 6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;
     color:var(--faint);font-weight:700}
   .p-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;
     border:none;color:var(--text);padding:11px 18px;font-size:13px;font-weight:500;
@@ -1437,7 +1437,7 @@
   .next-up img{width:140px;aspect-ratio:16/9;border-radius:var(--radius-xs);object-fit:cover;flex:0 0 auto;
     background:var(--bg2)}
   .nu-body{flex:1;min-width:0}
-  .nu-k{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+  .nu-k{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:700}
   .nu-t{font-size:13.5px;font-weight:600;margin:6px 0 12px;line-height:1.3;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .nu-actions{display:flex;gap:8px}
@@ -1628,7 +1628,7 @@
     flex:1;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:4px;
     padding:8px 4px;background:none;border:none;cursor:pointer;
-    color:var(--faint);font-size:10px;font-weight:600;letter-spacing:.03em;
+    color:var(--faint);font-size:11px;font-weight:600;letter-spacing:.03em;
     transition:color .15s var(--ease)}
   .tab-btn .svgi{width:22px;height:22px}
   .tab-btn.active{color:var(--accent)}
