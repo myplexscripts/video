@@ -723,15 +723,32 @@
   .dp-actions .btn.icon i,.dp-actions .btn.icon .svgi{font-size:26px;width:26px;height:26px}
   /* Mobile: primary play/resume button on its own row, icon buttons centered below it */
   .dp-actions .btn:not(.icon){flex:1 1 100%}
-  /* Detail-page colours come from the artwork — never the gold accent */
-  .dp-wrap .dp-actions .btn:not(.glass){background:var(--dp-btn,#f5f5f7);
-    color:var(--dp-btn-text,#141005);border:none;box-shadow:none}
-  .dp-wrap .dp-actions .btn.glass.icon{box-shadow:none}
-  .dp-wrap .dp-actions .btn.glass.icon .svgi{color:var(--squiggle-color,var(--text))}
-  .dp-wrap .dp-actions .btn.icon.active{background:var(--dp-btn,var(--frost-bg));
-    color:var(--dp-btn-text,#141005);border-color:transparent;box-shadow:none}
-  .dp-wrap .dp-actions .btn.icon.active .svgi{color:var(--dp-btn-text,#141005)}
+  /* Detail-page: strip ALL borders/shadows/backdrop from every action button */
+  .dp-wrap .dp-actions .btn{border:none!important;box-shadow:none!important;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  /* Play/Resume: flat, extracted colour, adaptive text */
+  .dp-wrap .dp-actions .btn:not(.glass):not(.icon){background:var(--dp-btn,#f5f5f7);
+    color:var(--dp-btn-text,#141005)}
+  /* Restart/Start over: keep frost bg but no border */
+  .dp-wrap .dp-actions .btn.glass:not(.icon){background:var(--frost-bg);color:var(--text)}
+  /* Icon buttons: completely bare — no bg, no border, just the icon */
+  .dp-wrap .dp-actions .btn.icon{background:none!important;color:var(--squiggle-color,var(--dim))}
+  .dp-wrap .dp-actions .btn.icon:hover{background:rgba(255,255,255,.1)!important}
+  .dp-wrap .dp-actions .btn.icon.active{background:none!important;
+    color:var(--squiggle-color,var(--text))}
+  /* All gold accents within the detail page replaced with extracted colour */
   .dp-wrap .dp-kicker{color:var(--squiggle-color,var(--dim))}
+  .dp-wrap .rate-stars button .svgi.filled{color:var(--squiggle-color,var(--accent))}
+  .dp-wrap .rate-stars button:hover{color:var(--squiggle-color,var(--accent))}
+  .dp-wrap .art .unwatched-dot{background:var(--squiggle-color,var(--accent))}
+  .dp-wrap .art .unwatched-badge{background:var(--squiggle-color,var(--accent));
+    color:var(--dp-btn-text,#141005)}
+  .dp-wrap .art .watched-check{color:var(--squiggle-color,var(--accent))}
+  .dp-wrap .art .now-badge{background:var(--squiggle-color,var(--accent));
+    color:var(--dp-btn-text,#141005)}
+  .dp-wrap .art .watch-prog>i{background:var(--squiggle-color,var(--accent))}
+  .dp-wrap .card.current .art{outline-color:var(--squiggle-color,var(--accent))}
+  .dp-wrap .card.current .ct{color:var(--squiggle-color,var(--accent))}
   #nav .nav-item.active{--accent:var(--dp-nav-accent,#e8b825)}
   /* Backdrop strip — full bleed with bottom-up dark gradient */
   .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}

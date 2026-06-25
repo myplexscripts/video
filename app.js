@@ -2065,7 +2065,7 @@ function collHero(m,kicker,items,square){
   const metaHTML=`<div class="coll-meta">${bits.map(esc).join('<span class="sep"></span>')}</div>`;
   const playBtns=items.length?`
         <button class="btn lg" id="collPlay">${svgIcon("play-fill")} Play</button>
-        <button class="btn glass lg" id="collShuffle">${svgIcon("shuffle")} Shuffle</button>`:"";
+        <button class="btn glass icon" id="collShuffle" aria-label="Shuffle" title="Shuffle">${svgIcon("shuffle")}</button>`:"";
   // Only render the in-hero backdrop layer when there's a real backdrop image;
   // with none, the hero stays transparent so the page's ambient ultrablur
   // shows through instead (item 2).
@@ -3283,7 +3283,7 @@ async function openShow(it,jumpSeasonKey){
     const show=(meta.Metadata||[])[0]||it;
     const seasons=(seasonsMc.Metadata||[]).filter(s=>s.type==="season");
     const actions=`<button class="btn lg" id="playShow">${svgIcon("play-fill")} Play</button>
-      <button class="btn glass lg icon" id="shuffleShow" aria-label="Shuffle" title="Shuffle">${svgIcon("shuffle")}</button>${watchedToggleHTML(show,false)}`;
+      <button class="btn glass icon" id="shuffleShow" aria-label="Shuffle" title="Shuffle">${svgIcon("shuffle")}</button>${watchedToggleHTML(show,false)}`;
     c.classList.add("dp-wrap");
     c.innerHTML=detailHero(show,false,actions,extras)
       +(seasons.length?`<div class="rail-section"><div class="rail-head"><h3>Seasons</h3><span class="count">${seasons.length}</span></div>
