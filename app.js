@@ -2272,8 +2272,9 @@ function extractImgAccent(imgEl,heroEl){
     heroEl.style.setProperty("--quote-accent",`hsl(${h2},82%,${al}%)`);
     heroEl.style.setProperty("--dp-btn",`hsl(${h},75%,${bl}%)`);
     // Pick black or white button text for whichever gives more contrast on the
-    // extracted button colour (light buttons → dark text, dark buttons → white).
-    heroEl.style.setProperty("--dp-btn-text",_hslLuminance(h,75,bl)>0.4?"#141005":"#fff");
+    // extracted button colour. The WCAG crossover (equal contrast vs #fff and a
+    // near-black) sits at luminance ≈0.19, so anything brighter takes dark text.
+    heroEl.style.setProperty("--dp-btn-text",_hslLuminance(h,75,bl)>0.2?"#141005":"#fff");
     document.body.style.setProperty("--dp-nav-accent",`hsl(${h2},82%,${al}%)`);
   }catch(_){}
 }
@@ -3151,26 +3152,25 @@ function wireRateFloat(c,m){
   },{passive:true});
   group.addEventListener("touchcancel",()=>paintStars(root,current()),{passive:true});
 }
-/* Split heroes show the stars beside the play buttons (left, under the art) on
-   desktop, but under the title on mobile. CSS can't reparent, so we move the
-   single .dp-rate-row node between its mobile home (.dp-head) and the desktop
-   action line. One shared resize listener keeps it correct across breakpoints. */
+/* Stars live under the title + squiggle in .dp-head on every breakpoint (the
+   HTML already nests them there); this keeps the node in place defensively.
+   Also wraps the trailing icon buttons so they form their own centered row
+   below the play button on mobile. */
 function placeDpRateRow(c){
   const rate=c.querySelector(".dp-hero--split .dp-rate-row"); if(!rate) return;
   const head=c.querySelector(".dp-hero--split .dp-head");
-  const line=c.querySelector(".dp-hero--split .dp-actions-line");
-  if(!head||!line) return;
-  if(window.matchMedia("(min-width:681px)").matches){
-    if(rate.parentElement!==line) line.appendChild(rate);
-  }else if(rate.parentElement!==head){
-    head.appendChild(rate);
-  }
+  if(head && rate.parentElement!==head) head.appendChild(rate);
 }
-let _dpRateResizeBound=false;
-function ensureDpRateResize(){
-  if(_dpRateResizeBound) return;
-  _dpRateResizeBound=true;
-  window.addEventListener("resize",()=>{ const c=$("#content"); if(c) placeDpRateRow(c); });
+function groupActionIcons(c){
+  c.querySelectorAll(".dp-actions").forEach(act=>{
+    if(act.querySelector(".dp-action-icons")) return;
+    const icons=[...act.querySelectorAll(":scope > .btn.icon")];
+    if(!icons.length) return;
+    const wrap=document.createElement("div");
+    wrap.className="dp-action-icons";
+    act.insertBefore(wrap,icons[0]);
+    icons.forEach(i=>wrap.appendChild(i));
+  });
 }
 /* Flat editorial art loader for movie/show/episode pages.
    Uses Plex backgroundSquare (1:1) for the poster, m.art for the backdrop strip.
@@ -3256,7 +3256,7 @@ async function openMovie(it){
     else $("#playBtnD").onclick=()=>playItem(m,0);
     wireWatchedToggle(c,m,true);
     wireRateFloat(c,m);
-    placeDpRateRow(c); ensureDpRateResize();
+    placeDpRateRow(c); groupActionIcons(c);
     enrichDetailPage(c,m,true,true);
 
     navDone();
@@ -3298,7 +3298,7 @@ async function openShow(it,jumpSeasonKey){
     wireExtras(c,extras,"ratingsTrailerBtn");
     wireCastRail(c);
     wireRateFloat(c,show);
-    placeDpRateRow(c); ensureDpRateResize();
+    placeDpRateRow(c); groupActionIcons(c);
     enrichDetailPage(c,show,false,true);
 
     const rail=$("#seasonRail");
@@ -3488,6 +3488,7 @@ async function openEpisode(it){
     wireWatchedToggle(c,m,true);
     injectFirstWatched(m.ratingKey,false);
     wireRateFloat(c,m);
+    groupActionIcons(c);
     enrichDetailPage(c,m,true);
 
     navDone();

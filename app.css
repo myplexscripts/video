@@ -713,16 +713,19 @@
   /* Critic ratings live below the summary + squiggle, centered on mobile */
   .dp-summary-wrap .dp-badges{justify-content:center;padding:8px var(--edge) 4px}
   .dp-summary-wrap .dp-badges .ratings-row{justify-content:center}
-  .dp-actions{display:flex;gap:16px;padding:24px var(--edge) 32px;flex-wrap:wrap;
-    justify-content:center;width:100%}
+  /* Mobile: play/resume button (auto width, centered) stacks above a centered
+     row of icon buttons. Desktop switches back to a single inline row below. */
+  .dp-actions{display:flex;flex-direction:column;align-items:center;gap:16px;
+    padding:24px var(--edge) 32px;width:100%}
   /* Pill buttons — override global --radius:0 for detail page actions */
-  .dp-actions .btn{border-radius:999px;height:54px;padding-top:0;padding-bottom:0}
-  .dp-actions .btn.lg{padding:0 30px}
-  .dp-actions .btn.icon{width:54px;height:54px;padding:0;font-size:26px}
+  .dp-actions .btn{border-radius:999px;height:54px;padding-top:0;padding-bottom:0;
+    justify-content:center}
+  .dp-actions .btn.lg{padding:0 34px}
+  .dp-actions .btn.icon{width:54px;height:54px;padding:0}
   .dp-actions .btn i,.dp-actions .btn .svgi{font-size:19px;width:19px;height:19px}
-  .dp-actions .btn.icon i,.dp-actions .btn.icon .svgi{font-size:26px;width:26px;height:26px}
-  /* Mobile: primary play/resume button on its own row, icon buttons centered below it */
-  .dp-actions .btn:not(.icon){flex:1 1 100%}
+  /* Icon glyphs fill their button so the icon itself is the visible control */
+  .dp-actions .btn.icon i,.dp-actions .btn.icon .svgi{font-size:40px;width:40px;height:40px}
+  .dp-action-icons{display:flex;justify-content:center;align-items:center;gap:18px}
   /* Detail-page: strip ALL borders/shadows/backdrop from every action button */
   .dp-wrap .dp-actions .btn{border:none!important;box-shadow:none!important;
     backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
@@ -1423,13 +1426,13 @@
     .dp-hero.dp-hero--split .dp-head .wave-wrap{justify-content:flex-end;margin:10px 0 0}
     .dp-hero.dp-hero--split .dp-rate-row{width:auto;gap:18px;justify-content:flex-end;margin-top:14px}
     .dp-hero.dp-hero--split .dp-head .dp-rate{padding:0;justify-content:flex-end}
-    /* With a backdrop: the controls bar is the 120px strip below the art. The
-       squiggle pins to the backdrop's bottom edge, the title stacks upward into
-       the art, and ratings+stars drop to the bottom of the bar beside Play. */
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{height:120px;padding:0 var(--edge) 24px 0}
+    /* With a backdrop: the squiggle pins to the backdrop's bottom edge, the title
+       stacks upward into the art, and the stars sit right beneath the squiggle —
+       right-aligned so they line up with the title's right edge. */
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head{min-height:120px;padding:0 var(--edge) 24px 0}
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-title{position:absolute;right:var(--edge);bottom:100%}
     .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-head .wave-wrap{margin:0;transform:translateY(-14px);position:relative;z-index:4}
-    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-rate-row{margin-top:auto}
+    .dp-hero.dp-hero--split:has(.dp-backdrop) .dp-rate-row{margin-top:6px}
     .dp-hero.dp-hero--split .dp-meta{position:absolute;top:24px;right:calc(var(--edge) + 8px);
       width:auto;padding:0;justify-content:flex-end;z-index:3}
     /* Left controls block: play + stars on one line, critic ratings below —
@@ -1437,9 +1440,10 @@
     .dp-hero.dp-hero--split .dp-actions-wrap{grid-area:actions;min-height:120px;display:flex;
       flex-direction:column;align-items:flex-start;gap:14px;padding:20px 0 24px var(--edge)}
     .dp-hero.dp-hero--split .dp-actions-line{display:flex;align-items:center;gap:24px}
+    /* Desktop: single inline row of buttons (mobile stacks play above icons) */
+    .dp-actions{flex-direction:row;align-items:center}
+    .dp-action-icons{display:contents}
     .dp-hero.dp-hero--split .dp-actions{justify-content:flex-start;padding:0;width:auto}
-    /* Desktop: play + icon buttons sit inline (mobile stacks the play full-width) */
-    .dp-actions .btn:not(.icon){flex:0 0 auto}
     .dp-hero.dp-hero--split .dp-actions-line .dp-rate-row{width:auto;margin:0;gap:0;justify-content:flex-start}
     .dp-hero.dp-hero--split .dp-actions-line .dp-rate{padding:0;width:auto;justify-content:flex-start}
     .dp-fold-badges{display:flex}
