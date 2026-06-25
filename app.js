@@ -2271,6 +2271,9 @@ function extractImgAccent(imgEl,heroEl){
     heroEl.style.setProperty("--squiggle-color",`hsl(${h},88%,${sl}%)`);
     heroEl.style.setProperty("--quote-accent",`hsl(${h2},82%,${al}%)`);
     heroEl.style.setProperty("--dp-btn",`hsl(${h},75%,${bl}%)`);
+    // Pick black or white button text for whichever gives more contrast on the
+    // extracted button colour (light buttons → dark text, dark buttons → white).
+    heroEl.style.setProperty("--dp-btn-text",_hslLuminance(h,75,bl)>0.4?"#141005":"#fff");
     document.body.style.setProperty("--dp-nav-accent",`hsl(${h2},82%,${al}%)`);
   }catch(_){}
 }
