@@ -16,7 +16,7 @@ const FONT_STACKS={
 function _loadGFont(family){
   const id="gf-"+family.toLowerCase(); if(document.getElementById(id)) return;
   const l=document.createElement("link"); l.id=id; l.rel="stylesheet";
-  l.href=`https:
+  l.href=`https://fonts.googleapis.com/css2?family=${family.replace(/ /g,"+")}:wght@400;500;600;700;800;900&display=swap`;
   document.head.appendChild(l);
 }
 // Typography is fixed: Inter for body/UI, Rubik for all headings.
@@ -2211,7 +2211,7 @@ function waveHorizSVG(){
   </svg></div>`;
 }
 function waveVertSVG(){
-  return `<svg viewBox="0 0 28 360" xmlns="http:
+  return `<svg viewBox="0 0 28 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="color:var(--squiggle-color,var(--faint))">
     <path d="M 14 12 C 8 18, 8 24, 14 30 S 20 42, 14 48 S 8 60, 14 66 S 20 78, 14 84 S 8 96, 14 102 S 20 114, 14 120 S 8 132, 14 138 S 20 150, 14 156 S 8 168, 14 174 S 20 186, 14 192 S 8 204, 14 210 S 20 222, 14 228 S 8 240, 14 246 S 20 258, 14 264 S 8 276, 14 282 S 20 294, 14 300 S 8 312, 14 318 S 20 330, 14 336 S 8 348, 14 354"
       fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
   </svg>`;
@@ -2749,7 +2749,7 @@ function knownForSectionTmdb(tmdbCast,libByNorm,libByRk){
         +(posterUrl?`<img loading="lazy" decoding="async" alt="${esc(title)}" src="${posterUrl}" onerror="this.closest('.art').classList.add('broken')">`:"")
         +`<span class="art-fallback">${svgIcon(cr.media_type==="tv"?"television":"movies")}</span></div>`
         +`<div class="ct">${esc(title)}</div><div class="cs">${esc(sub)}</div>`;
-      b.onclick=()=>window.open(`https:
+      b.onclick=()=>window.open(`https://www.themoviedb.org/${cr.media_type==="tv"?"tv":"movie"}/${cr.id}`,"_blank","noopener,noreferrer");
       kfrag.appendChild(b);
     }
   });
