@@ -24,6 +24,8 @@ let SERVER = null;
 const SHELL = [
   "./",
   "./index.html",
+  "./app.css",
+  "./app.js",
   "./manifest.webmanifest",
   "./assets/favicon.png",
   "./assets/icon-192.png",
