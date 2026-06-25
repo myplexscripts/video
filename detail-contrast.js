@@ -12,6 +12,33 @@
     .dp-wrap .rate-stars button .svgi.filled{color:var(--accent-colour,var(--accent-color,var(--triad-accent,var(--accent))))!important}
     .dp-wrap .rate-stars button:hover{color:var(--accent-colour,var(--accent-color,var(--triad-accent,var(--accent2))))!important}
 
+    /* Keep the vertical summary squiggle as a fixed drawn mark, not a stretched spring. */
+    .dp-summary-body{align-items:start!important}
+    .dp-squiggle{
+      align-self:start!important;
+      width:24px!important;
+      height:clamp(132px,18vw,220px)!important;
+      min-height:132px!important;
+      overflow:visible!important;
+      position:relative!important;
+    }
+    .dp-squiggle svg{
+      position:static!important;
+      width:24px!important;
+      height:100%!important;
+      display:block!important;
+    }
+
+    /* Slightly open up heavy display headings without changing their weight. */
+    .dp-title{letter-spacing:.045em!important}
+    .dp-summary-wrap h2,
+    .dp-wrap .rail-head h3,
+    .dp-wrap .section h3,
+    .dp-prod-section>h3,
+    .dp-story-head h3{
+      letter-spacing:.01em!important;
+    }
+
     @media (min-width:901px){
       /* Desktop split hero: keep the editorial overlap, but prevent the title from
          climbing into the top control/meta area. */
