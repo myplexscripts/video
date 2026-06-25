@@ -739,19 +739,16 @@
   .dp-wrap .dp-actions .btn.icon:hover{background:rgba(255,255,255,.1)!important}
   .dp-wrap .dp-actions .btn.icon.active{background:none!important;
     color:var(--squiggle-color,var(--text))}
-  /* All gold accents within the detail page replaced with extracted colour */
-  .dp-wrap .dp-kicker{color:var(--squiggle-color,var(--dim))}
-  .dp-wrap .rate-stars button .svgi.filled{color:var(--squiggle-color,var(--accent))}
-  .dp-wrap .rate-stars button:hover{color:var(--squiggle-color,var(--accent))}
-  .dp-wrap .art .unwatched-dot{background:var(--squiggle-color,var(--accent))}
-  .dp-wrap .art .unwatched-badge{background:var(--squiggle-color,var(--accent));
-    color:var(--dp-btn-text,#141005)}
-  .dp-wrap .art .watched-check{color:var(--squiggle-color,var(--accent))}
-  .dp-wrap .art .now-badge{background:var(--squiggle-color,var(--accent));
-    color:var(--dp-btn-text,#141005)}
-  .dp-wrap .art .watch-prog>i{background:var(--squiggle-color,var(--accent))}
-  .dp-wrap .card.current .art{outline-color:var(--squiggle-color,var(--accent))}
-  .dp-wrap .card.current .ct{color:var(--squiggle-color,var(--accent))}
+  /* Detail/collection pages drop the gold accent ENTIRELY: --accent is remapped
+     to the colour sampled from the artwork (set on .dp-wrap by extractImgAccent),
+     so every var(--accent) usage — borders, badges, dots, checks, progress bars,
+     outlines, kicker, focus rings — becomes the art colour automatically. The
+     fallback is a neutral grey, never gold, for the brief pre-sample moment. */
+  .dp-wrap{--accent:var(--squiggle-color,#9a9aa2);
+    --accent2:var(--squiggle-color,#86868e);
+    --accent-glass:var(--squiggle-color,#9a9aa2);
+    --accent-glass-hover:var(--squiggle-color,#86868e);
+    --accent-wash:color-mix(in srgb,var(--squiggle-color,#9a9aa2) 14%,transparent)}
   #nav .nav-item.active{--accent:var(--dp-nav-accent,#e8b825)}
   /* Backdrop strip — full bleed with bottom-up dark gradient */
   .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}

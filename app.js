@@ -681,7 +681,9 @@ function setScrollY(y){
 async function route(){
   const gen=++_routeGen;
   setScrollY(0);   
-  $("#content")?.classList.remove("dp-wrap");
+  const _content=$("#content");
+  if(_content){ _content.classList.remove("dp-wrap");
+    ["--squiggle-color","--quote-accent","--dp-btn","--dp-btn-text"].forEach(v=>_content.style.removeProperty(v)); }
   document.body.style.removeProperty("--dp-nav-accent");
   closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
@@ -2268,13 +2270,16 @@ function extractImgAccent(imgEl,heroEl){
     if(!bestN) return;
     const h=best*10+5,h2=(h+180)%360;
     const sl=_boostL(h,88,56),al=_boostL(h2,82,60),bl=_boostL(h,75,48);
-    heroEl.style.setProperty("--squiggle-color",`hsl(${h},88%,${sl}%)`);
-    heroEl.style.setProperty("--quote-accent",`hsl(${h2},82%,${al}%)`);
-    heroEl.style.setProperty("--dp-btn",`hsl(${h},75%,${bl}%)`);
+    // Set on the whole .dp-wrap container (not just the hero) so the sampled
+    // colour reaches the rails below — season/episode cards, badges, etc.
+    const root=heroEl.closest(".dp-wrap")||heroEl;
+    root.style.setProperty("--squiggle-color",`hsl(${h},88%,${sl}%)`);
+    root.style.setProperty("--quote-accent",`hsl(${h2},82%,${al}%)`);
+    root.style.setProperty("--dp-btn",`hsl(${h},75%,${bl}%)`);
     // Pick black or white button text for whichever gives more contrast on the
     // extracted button colour. The WCAG crossover (equal contrast vs #fff and a
     // near-black) sits at luminance ≈0.19, so anything brighter takes dark text.
-    heroEl.style.setProperty("--dp-btn-text",_hslLuminance(h,75,bl)>0.2?"#141005":"#fff");
+    root.style.setProperty("--dp-btn-text",_hslLuminance(h,75,bl)>0.2?"#141005":"#fff");
     document.body.style.setProperty("--dp-nav-accent",`hsl(${h2},82%,${al}%)`);
   }catch(_){}
 }
@@ -3186,6 +3191,9 @@ function wireCollArt(c,m){
     const src=collBackdrop(m);
     if(src){backdropImg.onload=()=>backdropImg.classList.add("loaded");backdropImg.src=img(src,1600,900);}
   }
+  // Sample an accent from the collection art so this page drops the gold too.
+  const accentSrc=m.thumb?img(m.thumb,600,600):(collBackdrop(m)?img(collBackdrop(m),800,450):null);
+  if(accentSrc) _loadCorsImg(accentSrc).then(ci=>{ if(ci) extractImgAccent(ci,c); });
 }
 function wireDetailArt(c,m,isEp){
   clearUltraBlur();
