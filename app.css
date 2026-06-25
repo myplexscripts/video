@@ -668,7 +668,7 @@
   .wave-wrap svg{width:100%;max-width:240px;display:block}
   /* Pull quote — tagline sits between the poster art and the film credits */
   .dp-dropquote{margin:0 auto;font-family:var(--font-head);font-style:normal;
-    font-weight:600;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--squiggle-color,var(--dim));
+    font-weight:600;font-size:clamp(20px,5vw,32px);line-height:1.35;color:var(--triad-accent,var(--dim));
     text-align:center;padding:24px var(--edge) 0;max-width:28ch;position:relative;z-index:1}
   /* Triple wave under the tagline — pulled up to overlap the tagline text */
   .dp-quote-wave{display:flex;justify-content:center;padding:10px var(--edge) 8px;
@@ -749,6 +749,10 @@
     --accent-glass:var(--squiggle-color,#9a9aa2);
     --accent-glass-hover:var(--squiggle-color,#86868e);
     --accent-wash:color-mix(in srgb,var(--squiggle-color,#9a9aa2) 14%,transparent)}
+  /* Third triadic colour — badges, watched dots/checks, tagline text */
+  .dp-wrap .art .unwatched-dot{background:var(--triad-accent,var(--accent))}
+  .dp-wrap .art .watched-check{color:var(--triad-accent,var(--accent))}
+  .dp-wrap .art .unwatched-badge{background:var(--triad-accent,var(--accent))}
   #nav .nav-item.active{--accent:var(--dp-nav-accent,#e8b825)}
   /* Backdrop strip — full bleed with bottom-up dark gradient */
   .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}

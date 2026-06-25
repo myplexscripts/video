@@ -683,7 +683,7 @@ async function route(){
   setScrollY(0);   
   const _content=$("#content");
   if(_content){ _content.classList.remove("dp-wrap");
-    ["--squiggle-color","--quote-accent","--dp-btn","--dp-btn-text"].forEach(v=>_content.style.removeProperty(v)); }
+    ["--squiggle-color","--quote-accent","--triad-accent","--dp-btn","--dp-btn-text"].forEach(v=>_content.style.removeProperty(v)); }
   document.body.style.removeProperty("--dp-nav-accent");
   closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
@@ -2268,13 +2268,14 @@ function extractImgAccent(imgEl,heroEl){
     let best=0,bestN=0;
     buckets.forEach((n,i)=>{if(n>bestN){bestN=n;best=i;}});
     if(!bestN) return;
-    const h=best*10+5,h2=(h+180)%360;
-    const sl=_boostL(h,88,56),al=_boostL(h2,82,60),bl=_boostL(h,75,48);
+    const h=best*10+5,h2=(h+120)%360,h3=(h+240)%360;
+    const sl=_boostL(h,88,56),al=_boostL(h2,82,60),tl=_boostL(h3,80,52),bl=_boostL(h,75,48);
     // Set on the whole .dp-wrap container (not just the hero) so the sampled
     // colour reaches the rails below — season/episode cards, badges, etc.
     const root=heroEl.closest(".dp-wrap")||heroEl;
     root.style.setProperty("--squiggle-color",`hsl(${h},88%,${sl}%)`);
     root.style.setProperty("--quote-accent",`hsl(${h2},82%,${al}%)`);
+    root.style.setProperty("--triad-accent",`hsl(${h3},80%,${tl}%)`);
     root.style.setProperty("--dp-btn",`hsl(${h},75%,${bl}%)`);
     // Pick black or white button text for whichever gives more contrast on the
     // extracted button colour. The WCAG crossover (equal contrast vs #fff and a
