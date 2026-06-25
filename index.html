@@ -786,7 +786,7 @@
     background:none;border:none;padding:0;cursor:pointer;font-family:var(--font)}
   .dp-kicker:hover{opacity:.75}
   .dp-kicker .svgi{width:14px;height:14px}
-  .dp-title{font-family:var(--font-display);font-size:clamp(52px,12vw,84px);
+  .dp-title{font-family:var(--font-display);font-size:clamp(64px,14vw,100px);
     font-weight:400;letter-spacing:.03em;text-transform:uppercase;
     line-height:.92;margin:0;max-width:18ch;color:var(--squiggle-color,var(--text))}
   /* SVG wave divider between title and stars — slight negative top overlaps title bottom */
@@ -844,6 +844,8 @@
     justify-content:center;width:100%}
   /* Pill buttons — override global --radius:0 for detail page actions */
   .dp-actions .btn{border-radius:999px}
+  .dp-wrap .dp-actions .btn:not(.glass){background:var(--dp-btn,var(--accent-glass));color:#141005}
+  #nav .nav-item.active{--accent:var(--dp-nav-accent,#e8b825)}
   /* Backdrop strip — full bleed with bottom-up dark gradient */
   .dp-backdrop{width:100%;background:var(--bg2);overflow:hidden;position:relative}
   .dp-backdrop::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -855,7 +857,7 @@
   .dp-summary-wrap{position:relative;z-index:2;padding:38px 0 0}
   /* When a backdrop sits directly above (mobile flow), the heading overlaps its scrim */
   .dp-summary-wrap.over-backdrop{margin-top:-46px;padding-top:0}
-  .dp-summary-wrap h2{font-family:var(--font-display);font-size:clamp(28px,7vw,42px);
+  .dp-summary-wrap h2{font-family:var(--font-display);font-size:clamp(36px,8vw,56px);
     font-weight:400;letter-spacing:.04em;text-transform:uppercase;
     line-height:.95;margin:0;padding:0 var(--edge)}
   .dp-genres{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
@@ -1578,7 +1580,7 @@
     /* Single-column heroes (episodes) centered and constrained on desktop */
     .dp-hero:not(.dp-hero--split){max-width:920px;margin:0 auto}
     .dp-hero:not(.dp-hero--split) .dp-poster{margin-top:28px}
-    .dp-title{font-size:clamp(64px,6vw,108px);max-width:16ch}
+    .dp-title{font-size:clamp(88px,7.5vw,140px);max-width:16ch}
     .rate-stars button{width:44px;height:44px;font-size:34px}
     .dp-summary{font-size:17px}
     .dp-stats{grid-template-columns:repeat(4,1fr);margin:56px var(--edge) 72px}
@@ -1762,7 +1764,7 @@
     .featured .carousel .card.wide{width:calc(2 * 170px + var(--rail-gap))}
     .featured .carousel .card{width:170px}
     /* Detail page v2 mobile: single-column, poster full-width */
-    .dp-title{font-size:clamp(40px,11vw,64px)}
+    .dp-title{font-size:clamp(52px,13vw,80px)}
     .dp-summary-body{grid-template-columns:20px 1fr;gap:0 12px}
     .dp-squiggle{width:20px}
     .ep-card{width:220px}
@@ -2708,6 +2710,7 @@ async function route(){
   const gen=++_routeGen;
   setScrollY(0);   // fresh navigation starts at top; pages that restore a saved position override this in their render
   $("#content")?.classList.remove("dp-wrap");
+  document.body.style.removeProperty("--dp-nav-accent");
   closeSidebar(); closeLibMenus(); cleanupHeroVideo(); cleanupCarousels(); closeTrailerModal(); hideLibNav(); closeTabLibPicker();
   const raw=location.hash.replace(/^#\/?/,"");
   const [pathPart,queryPart]=raw.split("?");
@@ -4276,6 +4279,18 @@ function _rgbToHsl(r,g,b){
   const h=max===r?((g-b)/d+(g<b?6:0)):max===g?((b-r)/d+2):((r-g)/d+4);
   return [h/6*360,s,l];
 }
+/* Returns WCAG relative luminance of an HSL colour (0–1). */
+function _hslLuminance(h,s,l){
+  s/=100;l/=100;
+  const a=s*Math.min(l,1-l);
+  const f=n=>{const k=(n+h/30)%12;return l-a*Math.max(Math.min(k-3,9-k,1),-1);};
+  return [f(0),f(8),f(4)].reduce((lum,c,i)=>{
+    const lin=c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);
+    return lum+[0.2126,0.0722,0.7152][i]*lin;
+  },0);
+}
+/* Step lightness up until contrast ≥ 4.5:1 against black (luminance ≥ 0.175). */
+function _boostL(h,s,l){while(_hslLuminance(h,s,l)<0.175&&l<95)l+=2;return l;}
 function extractImgAccent(imgEl,heroEl){
   if(!heroEl||!imgEl) return;
   try{
@@ -4292,9 +4307,12 @@ function extractImgAccent(imgEl,heroEl){
     let best=0,bestN=0;
     buckets.forEach((n,i)=>{if(n>bestN){bestN=n;best=i;}});
     if(!bestN) return;
-    const h=best*10+5;
-    heroEl.style.setProperty("--squiggle-color",`hsl(${h},88%,56%)`);
-    heroEl.style.setProperty("--quote-accent",`hsl(${(h+180)%360},82%,60%)`);
+    const h=best*10+5,h2=(h+180)%360;
+    const sl=_boostL(h,88,56),al=_boostL(h2,82,60),bl=_boostL(h,75,48);
+    heroEl.style.setProperty("--squiggle-color",`hsl(${h},88%,${sl}%)`);
+    heroEl.style.setProperty("--quote-accent",`hsl(${h2},82%,${al}%)`);
+    heroEl.style.setProperty("--dp-btn",`hsl(${h},75%,${bl}%)`);
+    document.body.style.setProperty("--dp-nav-accent",`hsl(${h2},82%,${al}%)`);
   }catch(_){}
 }
 function dpStarsHTML(){
