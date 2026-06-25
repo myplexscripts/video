@@ -162,13 +162,17 @@ let server=JSON.parse(localStorage.getItem(LS.server)||"null");
 let sections=[];
 
 /* ============================================================ AUTH */
-$("#signInBtn").addEventListener("click",startLogin);
+// window.open must be called synchronously inside the click handler — iOS Safari
+// strips the user-gesture token the moment execution enters an async function.
+$("#signInBtn").addEventListener("click",()=>{
+  $("#loginErr").classList.add("hidden");
+  const popup=window.open("about:blank","plexAuth","width=620,height=720");
+  startLogin(popup);
+});
 $("#logoutBtn").addEventListener("click",logout);
 $("#logoutFromServers").addEventListener("click",logout);
 
-async function startLogin(){
-  $("#loginErr").classList.add("hidden");
-  const popup=window.open("about:blank","plexAuth","width=620,height=720");
+async function startLogin(popup){
   try{
     const pinRes=await fetch(`${PLEX_TV}/api/v2/pins?strong=true`,{method:"POST",headers:plexHeaders()});
     const pin=await pinRes.json();
