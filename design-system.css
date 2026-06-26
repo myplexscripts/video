@@ -1,0 +1,169 @@
+/* ============================================================
+   Hume Design System
+   Source of truth for reusable visual decisions.
+   Page CSS should compose these styles, not redefine them.
+   ============================================================ */
+
+:root{
+  /* Fonts */
+  --ds-font-body:'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --ds-font-display:'Anton','Impact','Arial Narrow',sans-serif;
+
+  /* Existing app variable bridge */
+  --font:var(--ds-font-body);
+  --font-head:var(--ds-font-display);
+  --font-display:var(--ds-font-display);
+
+  /* Type scale */
+  --ds-type-hero-size:clamp(58px,11vw,140px);
+  --ds-type-display-size:clamp(44px,8vw,112px);
+  --ds-type-section-size:clamp(28px,4vw,56px);
+  --ds-type-card-size:15px;
+  --ds-type-meta-size:12px;
+  --ds-type-body-size:15px;
+
+  /* Type rhythm */
+  --ds-leading-display:.86;
+  --ds-leading-section:.95;
+  --ds-leading-card:1.05;
+  --ds-leading-body:1.45;
+  --ds-leading-ui:1.2;
+
+  /* Type texture */
+  --ds-tracking-display:-.035em;
+  --ds-tracking-section:-.025em;
+  --ds-tracking-ui:.01em;
+  --ds-weight-display:400;
+  --ds-weight-ui:700;
+}
+
+/* ------------------------------------------------------------
+   Reusable type styles
+   ------------------------------------------------------------ */
+
+.ds-type-hero,
+.ds-type-display,
+.ds-type-section,
+.ds-type-card,
+.ds-type-meta,
+.ds-type-body{
+  margin:0;
+}
+
+.ds-type-hero,
+.ds-type-display,
+.ds-type-section{
+  font-family:var(--ds-font-display);
+  font-weight:var(--ds-weight-display);
+  text-transform:uppercase;
+}
+
+.ds-type-hero{
+  font-size:var(--ds-type-hero-size);
+  line-height:var(--ds-leading-display);
+  letter-spacing:var(--ds-tracking-display);
+}
+
+.ds-type-display{
+  font-size:var(--ds-type-display-size);
+  line-height:var(--ds-leading-display);
+  letter-spacing:var(--ds-tracking-display);
+}
+
+.ds-type-section{
+  font-size:var(--ds-type-section-size);
+  line-height:var(--ds-leading-section);
+  letter-spacing:var(--ds-tracking-section);
+}
+
+.ds-type-card{
+  font-family:var(--ds-font-body);
+  font-size:var(--ds-type-card-size);
+  line-height:var(--ds-leading-card);
+  font-weight:800;
+}
+
+.ds-type-meta{
+  font-family:var(--ds-font-body);
+  font-size:var(--ds-type-meta-size);
+  line-height:var(--ds-leading-ui);
+  letter-spacing:var(--ds-tracking-ui);
+}
+
+.ds-type-body{
+  font-family:var(--ds-font-body);
+  font-size:var(--ds-type-body-size);
+  line-height:var(--ds-leading-body);
+}
+
+/* ------------------------------------------------------------
+   Existing selector map
+   This lets current pages use the design system without a full
+   markup rewrite yet.
+   ------------------------------------------------------------ */
+
+body{
+  font-family:var(--ds-font-body);
+  line-height:var(--ds-leading-ui);
+}
+
+h1,h2,h3,
+.brand b,
+#login h1,
+#servers h1,
+.view-head h1,
+.section-head h2,
+.rail-head h2,
+.billboard-copy h3,
+.editorial-card h3{
+  font-family:var(--ds-font-display);
+  font-weight:var(--ds-weight-display);
+  text-transform:uppercase;
+  letter-spacing:var(--ds-tracking-section);
+  line-height:var(--ds-leading-section);
+}
+
+.dp-title,
+.hub-title,
+.home-feature-copy h2{
+  font-family:var(--ds-font-display)!important;
+  font-size:var(--ds-type-hero-size)!important;
+  line-height:var(--ds-leading-display)!important;
+  letter-spacing:var(--ds-tracking-display)!important;
+  font-weight:var(--ds-weight-display)!important;
+  text-transform:uppercase!important;
+}
+
+.card-title,
+.media-title,
+.episode-title,
+.cast-name,
+.actor-name,
+.playlist-title,
+.collection-title{
+  font-family:var(--ds-font-body);
+  line-height:var(--ds-leading-card);
+}
+
+.meta,
+.card-meta,
+.dp-meta,
+.dp-tagline,
+.dp-summary,
+.nav-item,
+.btn,
+.pbtn,
+input,
+select,
+textarea{
+  font-family:var(--ds-font-body);
+}
+
+@media(max-width:700px){
+  :root{
+    --ds-type-hero-size:clamp(50px,16vw,92px);
+    --ds-type-display-size:clamp(42px,15vw,86px);
+    --ds-leading-display:.88;
+    --ds-tracking-display:-.03em;
+  }
+}
