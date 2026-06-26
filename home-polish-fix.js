@@ -1,41 +1,105 @@
 "use strict";
 
 /* Final homepage carousel stabilizer.
-   Loaded after home-polish.js so these rules win without touching the main app. */
+   Loaded after home-polish.js so these rules win. */
 (function(){
   const style=document.createElement("style");
   style.id="home-carousel-stabilizer";
   style.textContent=`
-    body.home-redesign #content:not(.dp-wrap){background:var(--hume-bg,#050505)!important}
+    body.home-redesign{
+      --hume-bg:#000000;
+      background:#000000!important;
+    }
 
-    /* Prevent slide bleed-through during transitions. */
+    body.home-redesign #main,
+    body.home-redesign .main,
+    body.home-redesign #content,
+    body.home-redesign .content{
+      background:#000000!important;
+    }
+
+    body.home-redesign #content:not(.dp-wrap),
+    body.home-redesign #content:not(.dp-wrap)> .home-top-cw,
+    body.home-redesign #content:not(.dp-wrap)> .hub-carousel-section,
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel,
+    body.home-redesign #content:not(.dp-wrap) .hub-cs-slide{
+      background:transparent!important;
+      background-color:transparent!important;
+      background-image:none!important;
+      box-shadow:none!important;
+      border-color:transparent!important;
+    }
+
+    body.home-redesign #content:not(.dp-wrap)> .home-top-cw::before,
+    body.home-redesign #content:not(.dp-wrap)> .home-top-cw::after,
+    body.home-redesign #content:not(.dp-wrap)> .hub-carousel-section::before,
+    body.home-redesign #content:not(.dp-wrap)> .hub-carousel-section::after,
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel::before,
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel::after,
+    body.home-redesign #content:not(.dp-wrap) .hub-cs-slide::before,
+    body.home-redesign #content:not(.dp-wrap) .hub-cs-slide::after{
+      content:none!important;
+      display:none!important;
+      background:none!important;
+      box-shadow:none!important;
+      border:0!important;
+    }
+
     body.home-redesign #content:not(.dp-wrap) .hub-carousel{
       isolation:isolate!important;
+      overflow:visible!important;
     }
+
+    /* Hard-hide inactive slides so the next slide/image never flashes while it preloads. */
     body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide{
+      display:none!important;
       opacity:0!important;
       visibility:hidden!important;
       z-index:0!important;
       pointer-events:none!important;
+      transform:none!important;
       transition:none!important;
     }
+
     body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide.active{
+      display:grid!important;
       opacity:1!important;
       visibility:visible!important;
       z-index:3!important;
       pointer-events:auto!important;
     }
 
-    /* Dots fade colour, not layout position. */
-    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-carousel-dots,
-    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cd{
-      transition:background-color .35s ease,width .35s ease,opacity .25s ease!important;
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide .hero-bg,
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide .hero-bg-blur,
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide .hero-scrim{
+      display:none!important;
+      opacity:0!important;
+      visibility:hidden!important;
     }
 
-    /* Standard rails keep the user's selected style. No special Trending layout. */
-    body.home-redesign #content:not(.dp-wrap) .rail-section:not(.home-top-cw):not(.hub-carousel-section) .hub-carousel,
-    body.home-redesign #content:not(.dp-wrap) .rail-section:not(.home-top-cw):not(.hub-carousel-section) .hub-cs-slide{
-      all:revert-layer;
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .home-feature-art{
+      background:#000000!important;
+      box-shadow:none!important;
+      border:0!important;
+    }
+
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .home-feature-art::before,
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .home-feature-art::after{
+      content:none!important;
+      display:none!important;
+    }
+
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-carousel-dots,
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cd{
+      transition:background-color .38s ease,width .32s ease,opacity .25s ease!important;
+    }
+
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cd{
+      background:var(--carousel-secondary,var(--secondary-colour,var(--secondary-color,var(--quote-accent,#ff5ec4))))!important;
+    }
+
+    body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cd.active{
+      background:var(--carousel-main,var(--main-colour,var(--main-color,var(--squiggle-color,#ffffff))))!important;
     }
 
     @media (min-width:681px){
@@ -44,12 +108,12 @@
         align-items:center!important;
         justify-content:center!important;
       }
+
       body.home-redesign #content:not(.dp-wrap)> .home-top-cw .hub-carousel{
-        overflow:visible!important;
-        background:transparent!important;
-        box-shadow:none!important;
-        border:0!important;
+        width:min(1040px,calc(100vw - (var(--edge) * 2)))!important;
+        margin:0 auto!important;
       }
+
       body.home-redesign #content:not(.dp-wrap)> .home-top-cw .hub-carousel-dots{
         position:absolute!important;
         left:50%!important;
@@ -61,6 +125,10 @@
     }
 
     @media (max-width:680px){
+      body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide.active{
+        display:flex!important;
+      }
+
       body.home-redesign #content:not(.dp-wrap)> .home-top-cw{
         padding-top:0!important;
         margin-top:0!important;
@@ -69,6 +137,7 @@
         justify-content:flex-start!important;
         overflow:hidden!important;
       }
+
       body.home-redesign #content:not(.dp-wrap)> .home-top-cw .hub-carousel{
         width:100vw!important;
         height:calc(100svh - var(--tab-h,64px))!important;
@@ -76,19 +145,19 @@
         max-height:none!important;
         margin:0!important;
         overflow:hidden!important;
-        background:var(--hume-bg,#050505)!important;
-        box-shadow:none!important;
-        border:0!important;
       }
+
       body.home-redesign #content:not(.dp-wrap)> .home-top-cw .hub-cs-slide{
         inset:0!important;
         height:100%!important;
         min-height:0!important;
       }
+
       body.home-redesign #content:not(.dp-wrap)> .home-top-cw .home-feature-art{
         margin-top:0!important;
         border:0!important;
       }
+
       body.home-redesign #content:not(.dp-wrap)> .home-top-cw .hub-carousel-dots{
         position:absolute!important;
         left:50%!important;
