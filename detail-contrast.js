@@ -26,8 +26,20 @@
       -webkit-mask-position:top center;mask-position:top center;
     }
 
-    .dp-title{letter-spacing:.045em!important;text-shadow:none!important}
+    .dp-title{
+      letter-spacing:.045em!important;
+      text-shadow:none!important;
+      filter:drop-shadow(0 8px 22px rgba(70,70,78,.42))!important;
+    }
     .dp-summary-wrap h2,.dp-wrap .rail-head h3,.dp-wrap .section h3,.dp-prod-section>h3,.dp-story-head h3{letter-spacing:.01em!important}
+
+    /* 16:9 episode cards follow wide-card math: 2 poster widths + the rail gap. */
+    .dp-wrap .ep-list.carousel .ep-card,
+    .dp-wrap #epList.carousel .ep-card{
+      width:calc(2 * 180px + var(--rail-gap,20px))!important;
+      flex:0 0 calc(2 * 180px + var(--rail-gap,20px))!important;
+      scroll-snap-align:start!important;
+    }
 
     @media (max-width:680px){
       .dp-hero--split .dp-fold{display:flex!important;flex-direction:column!important;min-height:100dvh;padding-top:0!important}
@@ -40,12 +52,18 @@
       .dp-hero--split .dp-title{
         font-size:clamp(48px,14vw,82px)!important;line-height:.88!important;
         width:100%!important;max-width:calc(100vw - 24px)!important;text-shadow:none!important;
+        filter:drop-shadow(0 7px 18px rgba(70,70,78,.46))!important;
       }
       .dp-hero--split .dp-head .wave-wrap{justify-content:center!important;width:100%!important;margin:-2px 0 8px!important;transform:none!important}
       .dp-hero--split .dp-head .wave-wrap svg{max-width:min(260px,72vw)!important}
       .dp-hero--split .dp-rate-row{justify-content:center!important;transform:none!important;max-width:100%!important;margin-top:0!important}
       .dp-hero--split .dp-head .dp-rate{justify-content:center!important}
       .dp-hero--split .dp-meta{order:3!important;margin-top:18px!important}
+      .dp-wrap .ep-list.carousel .ep-card,
+      .dp-wrap #epList.carousel .ep-card{
+        width:calc(2 * 130px + var(--rail-gap,20px))!important;
+        flex-basis:calc(2 * 130px + var(--rail-gap,20px))!important;
+      }
     }
 
     @media (min-width:901px){
