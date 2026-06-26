@@ -1,8 +1,8 @@
 "use strict";
 
 /* Fast homepage design layer.
-   Keeps the existing user-selectable rail styles, but applies the detail-page
-   editorial language without expensive full-page rescans. */
+   Applies the detail-page editorial language to the homepage without expensive
+   full-page rescans. */
 (function(){
   const HOME_LIMIT=10;
   const sampledAccentUrls=new Set();
@@ -226,13 +226,56 @@
     body.home-redesign #content:not(.dp-wrap) .see-all br{display:none!important}
     body.home-redesign #content:not(.dp-wrap) .see-all .svgi{width:24px!important;height:24px!important;flex:0 0 auto!important;margin:0!important;vertical-align:-.15em!important}
 
-    body.home-redesign #content:not(.dp-wrap) .carousel{gap:var(--rail-gap,20px)!important;padding-bottom:28px!important}
+    body.home-redesign #content:not(.dp-wrap) .carousel{gap:var(--rail-gap,20px)!important;padding-bottom:28px!important;align-items:start!important}
     body.home-redesign #content:not(.dp-wrap) .carousel .card:not(.wide):not(.billboard){width:var(--home-poster-w)!important;flex:0 0 var(--home-poster-w)!important}
     body.home-redesign #content:not(.dp-wrap) .carousel .card.wide,
     body.home-redesign #content:not(.dp-wrap) .carousel .card.billboard{width:var(--home-wide-w)!important;flex:0 0 var(--home-wide-w)!important}
-    body.home-redesign #content:not(.dp-wrap) .card .art{background:#141416!important;border:1px solid rgba(255,255,255,.08)!important}
-    body.home-redesign #content:not(.dp-wrap) .card .ct{font-size:20px!important;font-weight:800!important;line-height:1.06!important;margin-top:16px!important;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important}
-    body.home-redesign #content:not(.dp-wrap) .card .cs{font-size:15px!important;margin-top:8px!important;color:var(--dim)!important}
+
+    body.home-redesign #content:not(.dp-wrap) .carousel .card{
+      display:grid!important;
+      grid-template-rows:auto minmax(2.15em,auto) minmax(1.35em,auto) 1.25em!important;
+      align-content:start!important;
+      row-gap:0!important;
+    }
+    body.home-redesign #content:not(.dp-wrap) .card .art{grid-row:1!important;background:#141416!important;border:1px solid rgba(255,255,255,.08)!important}
+    body.home-redesign #content:not(.dp-wrap) .card .ct,
+    body.home-redesign #content:not(.dp-wrap) .card .bill-title,
+    body.home-redesign #content:not(.dp-wrap) .bill-title{
+      grid-row:2!important;
+      font-family:var(--font-head,var(--font))!important;
+      font-size:20px!important;
+      font-weight:800!important;
+      line-height:1.06!important;
+      letter-spacing:-.02em!important;
+      color:var(--text)!important;
+      margin:16px 0 0!important;
+      min-height:2.12em!important;
+      white-space:normal!important;
+      display:-webkit-box!important;
+      -webkit-line-clamp:2!important;
+      -webkit-box-orient:vertical!important;
+      overflow:hidden!important;
+    }
+    body.home-redesign #content:not(.dp-wrap) .card .cs,
+    body.home-redesign #content:not(.dp-wrap) .card .bill-meta{
+      grid-row:3!important;
+      min-height:1.35em!important;
+      font-size:15px!important;
+      line-height:1.25!important;
+      margin:8px 0 0!important;
+      color:var(--dim)!important;
+    }
+    body.home-redesign #content:not(.dp-wrap) .home-watch-status{
+      grid-row:4!important;
+      min-height:1.25em!important;
+      margin-top:10px!important;
+      color:var(--accent-colour,var(--accent-color,var(--triad-accent,var(--dim))))!important;
+      font-size:13px!important;
+      line-height:1.2!important;
+      font-weight:800!important;
+      letter-spacing:.12em!important;
+      text-transform:uppercase!important;
+    }
 
     @media(max-width:680px){
       body.home-redesign #content:not(.dp-wrap){--home-poster-w:170px;--home-wide-w:calc(2 * var(--home-poster-w) + var(--rail-gap,20px))}
@@ -261,7 +304,9 @@
       body.home-redesign #content:not(.dp-wrap) .editorial-head h2,
       body.home-redesign #content:not(.dp-wrap) .section h3{font-size:clamp(40px,11vw,64px)!important}
       body.home-redesign #content:not(.dp-wrap) .see-all{font-size:18px!important;gap:10px!important}
-      body.home-redesign #content:not(.dp-wrap) .card .ct{font-size:18px!important}
+      body.home-redesign #content:not(.dp-wrap) .card .ct,
+      body.home-redesign #content:not(.dp-wrap) .card .bill-title,
+      body.home-redesign #content:not(.dp-wrap) .bill-title{font-size:18px!important}
     }
   `;
   document.head.appendChild(style);
@@ -298,9 +343,8 @@
   }
 
   function normalizeSeeAll(btn){
-    if(!btn||btn.dataset.homePolished==="1") return;
+    if(!btn) return;
     btn.innerHTML="See All " + (typeof svgIcon==="function"?svgIcon("arrow-right"):"→");
-    btn.dataset.homePolished="1";
   }
 
   function normalizeTitle(el,text){
@@ -313,10 +357,13 @@
   }
 
   function makeSeeAll(sec,title,items,wide,libLabel,summary,collId){
+    const all=Array.isArray(items)?items:[];
+    sec.dataset.homeTotal=String(all.length);
+    sec.dataset.homeOriginalTitle=cleanEmoji(title);
     const head=sec.querySelector(":scope > .rail-head,:scope > .editorial-head");
     if(!head) return;
     let btn=head.querySelector(".see-all");
-    if((items||[]).length<=HOME_LIMIT){ btn?.remove(); return; }
+    if(all.length<=HOME_LIMIT){ btn?.remove(); return; }
     if(!btn){
       btn=document.createElement("button");
       btn.className="see-all";
@@ -326,7 +373,7 @@
     normalizeSeeAll(btn);
     btn.onclick=()=>{
       if(collId&&typeof navigate==="function"){ navigate("/collection/"+collId); return; }
-      try{ seeAllCache={title:cleanEmoji(title),items,wide,libLabel,summary}; }catch(_){ }
+      try{ seeAllCache={title:cleanEmoji(title),items:all,wide,libLabel,summary}; }catch(_){ }
       if(typeof navigate==="function") navigate("/see-all");
     };
   }
@@ -334,7 +381,8 @@
   function polishRailHead(sec,title){
     const head=sec.querySelector(":scope > .rail-head,:scope > .editorial-head");
     if(!head) return;
-    const info=splitRailTitle(title);
+    const sourceTitle=cleanEmoji(title||sec.dataset.homeOriginalTitle||head.querySelector("h2,h3")?.textContent||"");
+    const info=splitRailTitle(sourceTitle);
     const text=head.querySelector(".rail-head-text")||head;
     head.querySelectorAll(":scope .rail-lib").forEach(el=>el.remove());
 
@@ -363,6 +411,17 @@
     trim(":scope .hub-cs-slide");
     trim(":scope .hub-carousel-dots .hub-cd");
     trim(":scope .cw-filmstrip .cw-fs-card");
+  }
+
+  function syncCardSlots(sec){
+    sec.querySelectorAll?.(":scope .carousel>.card").forEach(card=>{
+      if(card.querySelector(":scope > .home-watch-status")) return;
+      const status=document.createElement("div");
+      status.className="home-watch-status";
+      const text=(card.classList.contains("watched")||card.querySelector(".watched-check,.watched-badge,[aria-label*='Watched' i]"))?"Watched":"";
+      status.textContent=text;
+      card.appendChild(status);
+    });
   }
 
   function replaceLogos(root){
@@ -452,6 +511,16 @@
     if(h) normalizeTitle(h,h.textContent);
   }
 
+  function finishSection(sec,title,total){
+    sec.dataset.homeOriginalTitle=cleanEmoji(title||sec.dataset.homeOriginalTitle||"");
+    if(total!=null) sec.dataset.homeTotal=String(total);
+    polishRailHead(sec,sec.dataset.homeOriginalTitle);
+    trimSection(sec);
+    syncCardSlots(sec);
+    replaceLogos(sec);
+    return sec;
+  }
+
   function patchFactories(){
     if(patched) return;
     patched=true;
@@ -482,10 +551,8 @@
           const all=Array.isArray(items)?items:[];
           const info=splitRailTitle(title);
           const sec=originalRailSection(info.title,all.slice(0,HOME_LIMIT),wide,featured,"",false,actorThumb,summary,collId,numbered);
-          polishRailHead(sec,title);
+          finishSection(sec,title,all.length);
           makeSeeAll(sec,title,all,wide,"",summary,collId);
-          trimSection(sec);
-          replaceLogos(sec);
           return sec;
         };
         railSection.__humePolished=true;
@@ -499,10 +566,8 @@
           const all=Array.isArray(items)?items:[];
           const info=splitRailTitle(title);
           const sec=originalSquareBoardRailSection(info.title,all.slice(0,HOME_LIMIT),"",numbered,summary);
-          polishRailHead(sec,title);
+          finishSection(sec,title,all.length);
           makeSeeAll(sec,title,all,false,"",summary,"");
-          trimSection(sec);
-          replaceLogos(sec);
           return sec;
         };
         squareBoardRailSection.__humePolished=true;
@@ -516,10 +581,8 @@
           const all=hub.items||[];
           const info=splitRailTitle(hub.title);
           const sec=originalCarouselHubSection({...hub,title:info.title,lib:"",items:all.slice(0,HOME_LIMIT)});
-          polishRailHead(sec,hub.title);
+          finishSection(sec,hub.title,all.length);
           makeSeeAll(sec,hub.title,all,true,"",hub.summary,"");
-          trimSection(sec);
-          replaceLogos(sec);
           return sec;
         };
         carouselHubSection.__humePolished=true;
@@ -533,10 +596,8 @@
           const all=Array.isArray(items)?items:[];
           const info=splitRailTitle(title);
           const sec=originalEditorialSection(info.title,all.slice(0,HOME_LIMIT),"");
-          polishRailHead(sec,title);
+          finishSection(sec,title,all.length);
           makeSeeAll(sec,title,all,false,"", "", "");
-          trimSection(sec);
-          replaceLogos(sec);
           return sec;
         };
         editorialSection.__humePolished=true;
@@ -551,7 +612,9 @@
     const head=document.createElement("div");
     head.className="rail-head";
     head.innerHTML='<div class="rail-head-text"><h3>Continue Watching</h3></div>';
+    firstRail.dataset.homeOriginalTitle="Continue Watching";
     firstRail.insertBefore(head,firstRail.firstChild);
+    syncCardSlots(firstRail);
   }
 
   function polishRenderedHome(){
@@ -565,10 +628,13 @@
     ensureHomeHeroFromDOM();
     ensureContinueWatchingLabel(content);
     content.querySelectorAll(":scope > .rail-section,:scope > .editorial-section").forEach(sec=>{
-      polishRailHead(sec,sec.querySelector("h2,h3")?.textContent||"");
+      const original=sec.dataset.homeOriginalTitle||sec.querySelector("h2,h3")?.textContent||"";
+      polishRailHead(sec,original);
       trimSection(sec);
-      const count=sec.querySelectorAll(".carousel>.card,.carousel>.genre-card,.hub-cs-slide,.editorial-card").length;
-      if(count>0&&count<=HOME_LIMIT) sec.querySelector(".see-all")?.remove();
+      syncCardSlots(sec);
+      const total=Number(sec.dataset.homeTotal||0);
+      if(total>HOME_LIMIT) normalizeSeeAll(sec.querySelector(".see-all"));
+      if(total>0&&total<=HOME_LIMIT) sec.querySelector(".see-all")?.remove();
     });
     replaceLogos(content);
   }
