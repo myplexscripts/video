@@ -52,6 +52,65 @@
       letter-spacing:.01em!important;
     }
 
+    @media (max-width:680px){
+      /* Mobile detail fold: square art first, then title/underline/stars tucked
+         under it with the title slightly overlapping the art. */
+      .dp-hero--split .dp-fold{
+        display:flex!important;
+        flex-direction:column!important;
+        min-height:100dvh;
+        padding-top:0!important;
+      }
+      .dp-hero--split .dp-poster{
+        order:1!important;
+        margin-top:0!important;
+        width:100%!important;
+        position:relative;
+        z-index:1;
+      }
+      .dp-hero--split .dp-poster img{
+        aspect-ratio:1/1!important;
+        object-position:center center;
+      }
+      .dp-hero--split .dp-head{
+        order:2!important;
+        padding:0 var(--edge) 0!important;
+        margin-top:clamp(-72px,-13vw,-42px)!important;
+        position:relative!important;
+        z-index:3!important;
+        align-items:center!important;
+        text-align:center!important;
+      }
+      .dp-hero--split .dp-title{
+        font-size:clamp(48px,14vw,82px)!important;
+        line-height:.88!important;
+        max-width:min(92vw,11ch)!important;
+        text-shadow:0 3px 24px rgba(0,0,0,.88),0 8px 54px rgba(0,0,0,.82);
+      }
+      .dp-hero--split .dp-head .wave-wrap{
+        justify-content:center!important;
+        width:100%!important;
+        margin:-2px 0 8px!important;
+        transform:none!important;
+      }
+      .dp-hero--split .dp-head .wave-wrap svg{
+        max-width:min(220px,62vw)!important;
+      }
+      .dp-hero--split .dp-rate-row{
+        justify-content:center!important;
+        transform:none!important;
+        max-width:100%!important;
+        margin-top:0!important;
+      }
+      .dp-hero--split .dp-head .dp-rate{
+        justify-content:center!important;
+      }
+      .dp-hero--split .dp-meta{
+        order:3!important;
+        margin-top:18px!important;
+      }
+    }
+
     @media (min-width:901px){
       /* Desktop split hero: keep the editorial overlap, but prevent the title from
          climbing into the top control/meta area. */
@@ -92,6 +151,33 @@
     }
   `;
   document.head.appendChild(style);
+
+  const existingPickUniqueBackdrops=window.pickUniqueBackdrops;
+  if(typeof existingPickUniqueBackdrops==="function"){
+    async function pickUniqueBackdropsSkippingFirstTmdb(backdrops,max=3){
+      const firstTmdbPath=(backdrops||[]).find(item=>item&&item.file_path)?.file_path||"";
+      let picked=[];
+
+      try{
+        picked=await existingPickUniqueBackdrops(backdrops,Math.max(max+1,4));
+      }catch(err){
+        console.warn("[tmdb-dedupe] pickUniqueBackdrops failed",err?.message||err);
+      }
+
+      const filtered=(picked||[]).filter(path=>path&&path!==firstTmdbPath);
+      if(filtered.length>=max) return filtered.slice(0,max);
+
+      const seen=new Set(filtered);
+      const extras=(backdrops||[])
+        .map(item=>item?.file_path)
+        .filter(path=>path&&path!==firstTmdbPath&&!seen.has(path));
+
+      return [...filtered,...extras].slice(0,max);
+    }
+
+    window.pickUniqueBackdrops=pickUniqueBackdropsSkippingFirstTmdb;
+    try{ pickUniqueBackdrops=pickUniqueBackdropsSkippingFirstTmdb; }catch(_){ }
+  }
 
   const DARK_BG="#050505";
   const DARK_TEXT="#141005";
