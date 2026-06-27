@@ -1,0 +1,105 @@
+/* Final mobile/home carousel tuning
+   Loaded last. Removes title shadows, places summary under squiggle, and anchors
+   mobile action buttons near the carousel dots. */
+
+:root{
+  --hume-title-shadow:none;
+}
+
+.dp-title,
+body.home-redesign #content:not(.dp-wrap) .hume-text-title,
+body.home-redesign #content:not(.dp-wrap) .hub-cs-slide h2,
+body.home-redesign #content:not(.dp-wrap)> .hero h2{
+  filter:none!important;
+  text-shadow:none!important;
+}
+
+body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide .hero-summary{
+  text-shadow:none!important;
+  filter:none!important;
+}
+
+@media(max-width:680px){
+  body.home-redesign #content:not(.dp-wrap)> .home-top-cw .hub-carousel,
+  body.home-redesign #content:not(.dp-wrap)> .hub-carousel-section:not(.home-top-cw) .hub-carousel{
+    height:calc(100svh - var(--tab-h,64px))!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:hidden!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-cs-slide.active{
+    display:flex!important;
+    position:absolute!important;
+    inset:0!important;
+    min-height:0!important;
+    height:100%!important;
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 154px)!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-top{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-top .hume-text-title,
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-top h2{
+    order:1!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-top::after{
+    order:2!important;
+    flex:0 0 auto!important;
+    margin:8px auto 10px!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-top .hero-summary{
+    order:3!important;
+    display:-webkit-box!important;
+    -webkit-line-clamp:3!important;
+    -webkit-box-orient:vertical!important;
+    overflow:hidden!important;
+    width:min(78vw,460px)!important;
+    max-width:78vw!important;
+    margin:0 auto!important;
+    color:rgba(255,255,255,.74)!important;
+    font-family:var(--font,var(--ds-font-body))!important;
+    font-size:clamp(13px,3.5vw,16px)!important;
+    line-height:1.35!important;
+    letter-spacing:.01em!important;
+    text-align:center!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-bottom{
+    position:absolute!important;
+    left:50%!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 74px)!important;
+    width:100%!important;
+    max-width:100%!important;
+    padding:0 var(--edge)!important;
+    margin:0!important;
+    transform:translateX(-50%)!important;
+    z-index:7!important;
+    text-align:center!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-actions{
+    justify-content:center!important;
+    width:100%!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hero-actions .btn{
+    height:56px!important;
+    min-width:0!important;
+    padding-inline:26px!important;
+  }
+
+  body.home-redesign #content:not(.dp-wrap) .hub-carousel .hub-carousel-dots{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 28px)!important;
+    z-index:8!important;
+  }
+}
